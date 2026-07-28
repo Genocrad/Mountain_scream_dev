@@ -1,0 +1,20 @@
+
+local NAMES = GLOBAL.STRINGS.NAMES
+
+-- Ore
+
+NAMES.MS_COPPER_ORE = "Copper Ore"
+
+-- INGOTS
+
+NAMES.MS_COPPER_INGOT = "Copper Ingot"
+
+--Structures
+
+NAMES.MS_FURNACE = "Furnace"
+NAMES.MS_FURNACE_CAMPFIRE = "Furnace"
+NAMES.MS_FURNACE_BELLOW = "Bellow"
+NAMES.MS_ANVIL = "Anvil"
+NAMES.MS_ANVIL_HELPER = "Anvil"
+
+
