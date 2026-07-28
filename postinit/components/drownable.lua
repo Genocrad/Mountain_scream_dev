@@ -1,0 +1,91 @@
+local Drownable = require("components/drownable")
+local old_OnFallInVoid =  Drownable.OnFallInVoid
+local old_ShouldFallInVoid = Drownable.ShouldFallInVoid
+
+
+local ENV = env
+GLOBAL.setfenv(1, GLOBAL)
+
+local function IsMsClouds(tile)
+  return tile == WORLD_TILES.CLOUDS_WHITE or
+         tile == WORLD_TILES.CLOUDS_DARK 
+end
+
+local function IsMsTechnicalTile(tile)
+  return tile == WORLD_TILES.VOID_TECHNICAL or
+         tile == WORLD_TILES.MS_MOUNTAIN_LOW_TECHNICAL or
+         tile == WORLD_TILES.MS_MOUNTAIN_LOW_2_TECHNICAL or
+         tile == WORLD_TILES.MS_MOUNTAIN_HIGH_TECHNICAL or
+         tile == WORLD_TILES.MS_PERMAFROST_TECHNICAL
+end
+  
+function Drownable:ShouldFallInVoid()
+  local x, y, z = self.inst.Transform:GetWorldPosition()
+  -- Oof, I cant use isvisualground for overhang. This shall do.
+  return (IsMsClouds(TheWorld.Map:GetTileAtPoint(x+1, y, z)) and 
+    IsMsClouds(TheWorld.Map:GetTileAtPoint(x-1, y, z)) and
+    IsMsClouds(TheWorld.Map:GetTileAtPoint(x, y, z-1)) and
+    IsMsClouds(TheWorld.Map:GetTileAtPoint(x, y, z+1))) or
+    old_ShouldFallInVoid(self)
+end
+
+function Drownable:OnFallInVoid(teleport_x, teleport_y, teleport_z)
+  
+	self.src_x, self.src_y, self.src_z = self.inst.Transform:GetWorldPosition()
+  -- we still need this
+  if TheWorld:HasTag("mountain_scream_dungeons") then
+    -- Find the closest one. 
+    local min_length = 100000
+    -- Level one in all fail safe scenarios
+    local level_in = 2 
+    
+    for i = 2, 8 do 
+      local level_x, level_z = TheWorld.net.components.dungeonmapoverwatch:GetPointForLevel(i)
+      if self.inst:GetDistanceSqToPoint(level_x, 0, level_z) < min_length then 
+        level_in = i
+        min_length = self.inst:GetDistanceSqToPoint(level_x, 0, level_z)
+      end
+    end
+  
+    if level_in == 2 then
+      self.dest_x, self.dest_y, self.dest_z = TheWorld.ms_worldmigrator.Transform:GetWorldPosition()
+    else
+      local level_x, level_z =  TheWorld.net.components.dungeonmapoverwatch:GetPointForLevel(level_in)
+      local delta_x, delta_z = level_x - self.src_x, level_z - self.src_z
+      
+      local level_to_x, level_to_z =  TheWorld.net.components.dungeonmapoverwatch:GetPointForLevel(level_in-1)
+      if TileGroupManager:IsLandTile(TheWorld.Map:GetTileAtPoint(level_to_x - delta_x, 2, level_to_z - delta_z)) and not IsMsTechnicalTile(TheWorld.Map:GetTileAtPoint(level_to_x - delta_x, 2, level_to_z - delta_z)) then
+        self.dest_x, self.dest_y, self.dest_z = level_to_x - delta_x, 0, level_to_z - delta_z
+      else
+        for check_x = 0, 80, 4 do -- Performance-wise would be better to make it go in steps of 4, but then it leads to some ugly results.
+          for check_z = 0, 80, 4  do
+            local check_tile = TheWorld.Map:GetTileAtPoint(level_to_x - delta_x + check_x, 0, level_to_z - delta_z + check_z)
+            if not IsMsTechnicalTile(check_tile) and TileGroupManager:IsLandTile(check_tile) then
+               self.dest_x, self.dest_y, self.dest_z = level_to_x - delta_x + check_x, 0, level_to_z - delta_z + check_z
+               return -- Found land! Abort the search!
+            end
+            check_tile = TheWorld.Map:GetTileAtPoint(level_to_x - delta_x - check_x, 0, level_to_z - delta_z + check_z)
+            if not IsMsTechnicalTile(check_tile) and TileGroupManager:IsLandTile(check_tile) then
+               self.dest_x, self.dest_y, self.dest_z = level_to_x - delta_x - check_x, 0, level_to_z - delta_z + check_z
+               return
+            end
+            check_tile = TheWorld.Map:GetTileAtPoint(level_to_x - delta_x - check_x, 0, level_to_z - delta_z - check_z)
+            if not IsMsTechnicalTile(check_tile) and TileGroupManager:IsLandTile(check_tile) then
+               self.dest_x, self.dest_y, self.dest_z = level_to_x - delta_x - check_x, 0, level_to_z - delta_z - check_z
+               return
+            end
+            check_tile = TheWorld.Map:GetTileAtPoint(level_to_x - delta_x + check_x, 0, level_to_z - delta_z - check_z)
+            if not IsMsTechnicalTile(check_tile) and TileGroupManager:IsLandTile(check_tile) then
+               self.dest_x, self.dest_y, self.dest_z = level_to_x - delta_x + check_x, 0, level_to_z - delta_z - check_z
+               return
+            end
+          end
+        end
+        self.dest_x, self.dest_y, self.dest_z = TheWorld.ms_worldmigrator.Transform:GetWorldPosition()
+        return
+      end
+    end
+  else
+    old_OnFallInVoid(self, teleport_x, teleport_y, teleport_z)
+  end
+end
