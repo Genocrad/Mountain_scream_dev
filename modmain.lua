@@ -1,59 +1,35 @@
 
-require("ms_tuning")
-
-PrefabFiles = {
-  "terraformers_mountain_dungeon",
-  "ms_ice_goat",
-  "gas_mountain_sediment",
-  "gas_mountain_wall",
-  "ms_mountain_wall",
-  "ms_cave_wall",
-  "cave_floor_7x5",
-  "tar_pit",
-  "tar_projectile",
-  "ms_anvil",
-  "ms_ingot",
-  "ms_furnace",
-  "ms_furnace_campfire",
-  "ms_furnace_campfirefire",
-  "ms_furnace_bellow",
-  "ms_ore",
-  "ms_fx",
-  "ms_climbing",
-  "ms_climbing_down",
-  "light_fake_overworld",
-  "ms_worldmigrator",
-  "ms_turfs",
-  "ms_snow_turf",
-  "ms_cave_entrance",
-  "ms_arenateleporter",
-}
-
 GLOBAL.MS_FOCALPOINT_FLOORS = {}
+GLOBAL.setmetatable(env, { __index = function(t, k) return GLOBAL.rawget(GLOBAL, k) end })
 
-modimport("postinit/standartcomponents")
+-- 测试命令
+require("debugcommands")
+-- 初始化文本
+require("ms_strings/strings")
+local characters = {
+    "wilson", -- 需要补充更多人的描述文本
+}
+for i, character in ipairs(characters) do
+    require("ms_strings/"..character)
+end
+local translation = GetModConfigData("language")
+if translation ~= "en" then
+    require("ms_strings/"..translation.."/strings")
+    for i, character in ipairs(characters) do
+        require("ms_strings/"..translation.."/"..character)
+    end
+end
 
-modimport("postinit/prefabs/player_common")
-modimport("postinit/prefabs/caves")
-
-modimport("postinit/stategraphs/wilson")
-modimport("postinit/stategraphs/wilson_client")
-
-modimport("postinit/components/camera")
-modimport("postinit/components/drownable")
-modimport("postinit/components/stewer")
-modimport("postinit/components/temperature")
-modimport("postinit/components/playervision")
-modimport("postinit/components/teleporter")
-
-modimport("postinit/widgets/mapwidget")
-
-modimport("scripts/ms_falloffs")
-modimport("scripts/ms_actions")
-modimport("scripts/ms_containers")
-modimport("scripts/ms_cooking")
-modimport("scripts/ms_assets")
-modimport("scripts/ms_forging")
-
-modimport("strings/common")
-modimport("strings/generic")
+-- Must load before postinit (COLLISION.MS_CLOUDS / TUNING.MS_*)
+modimport("init/init_tuning")
+modimport("init/init_postinit")
+modimport("init/init_falloffs")
+modimport("init/init_containers")
+modimport("init/init_assets")
+-- modimport("init/init_strings")
+modimport("init/init_prefabs")
+modimport("init/init_recipes")
+modimport("init/init_actions")
+modimport("init/init_cooking")
+modimport("init/init_tornado_sorbet")
+modimport("init/init_forging")

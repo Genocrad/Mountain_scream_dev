@@ -1,0 +1,141 @@
+local assets =
+{
+	Asset("ANIM", "anim/mountain_plants.zip"),
+}
+
+local FLOWER_SANITY = 10
+
+local function OnPickedFlower(inst, picker)
+	if picker ~= nil and picker.components.sanity ~= nil then
+		picker.components.sanity:DoDelta(FLOWER_SANITY)
+	end
+end
+
+local function MakePlant(def)
+	local function fn()
+		local inst = CreateEntity()
+
+		inst.entity:AddTransform()
+		inst.entity:AddAnimState()
+		inst.entity:AddNetwork()
+
+		inst.AnimState:SetBank("mountain_plants")
+		inst.AnimState:SetBuild("mountain_plants")
+		inst.AnimState:PlayAnimation(def.anim)
+		inst.AnimState:SetRayTestOnBB(true)
+
+		inst:AddTag("plant")
+
+		if def.tags ~= nil then
+			for _, tag in ipairs(def.tags) do
+				inst:AddTag(tag)
+			end
+		end
+
+		inst.entity:SetPristine()
+
+		if not TheWorld.ismastersim then
+			return inst
+		end
+
+		inst.AnimState:SetFrame(math.random(inst.AnimState:GetCurrentAnimationNumFrames()) - 1)
+
+		inst:AddComponent("inspectable")
+
+		inst:AddComponent("pickable")
+		inst.components.pickable.picksound = def.picksound or "dontstarve/wilson/pickup_plants"
+		inst.components.pickable:SetUp(def.product, nil, def.num or 1)
+		inst.components.pickable.remove_when_picked = true
+		inst.components.pickable.quickpick = def.quickpick == true
+		inst.components.pickable.onpickedfn = def.onpickedfn
+
+		MakeSmallBurnable(inst)
+		MakeSmallPropagator(inst)
+		MakeHauntableIgnite(inst)
+
+		return inst
+	end
+
+	return Prefab(def.name, fn, assets, { def.product })
+end
+
+local PLANTS =
+{
+	{
+		name = "mountain_plants_bush_1",
+		anim = "bush_1",
+		product = "twigs",
+		num = 1,
+		picksound = "dontstarve/wilson/harvest_sticks",
+	},
+	{
+		name = "mountain_plants_bush_2",
+		anim = "bush_2",
+		product = "twigs",
+		num = 2,
+		picksound = "dontstarve/wilson/harvest_sticks",
+	},
+	{
+		name = "mountain_plants_bush_3",
+		anim = "bush_3",
+		product = "twigs",
+		num = 4,
+		picksound = "dontstarve/wilson/harvest_sticks",
+	},
+	{
+		name = "mountain_plants_tree",
+		anim = "tree",
+		product = "log",
+		num = 1,
+		picksound = "dontstarve/wilson/harvest_sticks",
+	},
+	{
+		name = "mountain_plants_grass",
+		anim = "grass",
+		product = "cutgrass",
+		num = 1,
+		picksound = "dontstarve/wilson/pickup_reeds",
+		quickpick = true,
+	},
+	{
+		name = "mountain_plants_branches",
+		anim = "branches",
+		product = "twigs",
+		num = 1,
+		picksound = "dontstarve/wilson/harvest_sticks",
+	},
+	{
+		name = "mountain_plants_flower_1",
+		anim = "flower_1",
+		product = "petals",
+		num = 1,
+		tags = { "flower", "cattoy" },
+		quickpick = true,
+		onpickedfn = OnPickedFlower,
+	},
+	{
+		name = "mountain_plants_flower_2",
+		anim = "flower_2",
+		product = "petals",
+		num = 1,
+		tags = { "flower", "cattoy" },
+		quickpick = true,
+		onpickedfn = OnPickedFlower,
+	},
+	{
+		name = "mountain_plants_flower_3",
+		anim = "flower_3",
+		product = "petals",
+		num = 1,
+		tags = { "flower", "cattoy" },
+		quickpick = true,
+		onpickedfn = OnPickedFlower,
+	},
+}
+
+local prefabs = {}
+for _, def in ipairs(PLANTS) do
+	table.insert(prefabs, MakePlant(def))
+end
+
+return unpack(prefabs)
