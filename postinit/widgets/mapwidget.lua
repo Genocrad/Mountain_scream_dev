@@ -36,6 +36,7 @@ function MapWidget:OnUpdate(dt)
    
     if not self.shown then 
       GLOBAL.TheCamera.controllable = true 
+      GLOBAL.TheWorld:PushEvent("showallplugs")
       if GLOBAL.TheCamera.saved_camera_rotation then
         GLOBAL.TheCamera:SetHeadingTarget(GLOBAL.TheCamera.saved_camera_rotation)
         GLOBAL.TheCamera.heading = GLOBAL.TheCamera.saved_camera_rotation
@@ -44,20 +45,31 @@ function MapWidget:OnUpdate(dt)
       return 
     end
     
+
+     
+    if GLOBAL.ThePlayer.map_level_shown ~= nil then
+      GLOBAL.TheWorld:PushEvent("hideallplugs")
+      if GLOBAL.ThePlayer.map_level_shown > TUNING.MS_CAVES_START then
+        GLOBAL.TheCamera.heading = 270
+        GLOBAL.TheCamera:SetHeadingTarget(270)
+      else
+      if GLOBAL.TheCamera.saved_camera_rotation then
+        GLOBAL.TheCamera:SetHeadingTarget(GLOBAL.TheCamera.saved_camera_rotation)
+        GLOBAL.TheCamera.heading = GLOBAL.TheCamera.saved_camera_rotation
+      end
+      end
+    end
+    
     local x, y = GLOBAL.TheWorld.net.components.dungeonmapoverwatch:GetPointForLevel(GLOBAL.ThePlayer.map_level_shown)
     local playerx, playery, playerz = GLOBAL.ThePlayer.Transform:GetWorldPosition()
     
      self.minimap:ResetOffset()
      
      
-     
+    self.minimap:Zoom(1.5 - self.minimap:GetZoom())
     GLOBAL.TheCamera.controllable = false
     
-    --GLOBAL.ThePlayer.HUD.controls:FocusMapOnWorldPosition(TheFrontEnd:GetOpenScreenOfType("MapScreen"), x*GLOBAL.ThePlayer.mult + playerx*GLOBAL.ThePlayer.player_mult, y*GLOBAL.ThePlayer.mult + playerz*GLOBAL.ThePlayer.player_mult)
-    
-    local scale = 6 / 9
-    self:Offset(scale * (playerx-x), scale * (playerz-y))
-    self.minimap:Zoom(1.5 - self.minimap:GetZoom())
+    GLOBAL.ThePlayer.HUD.controls:FocusMapOnWorldPosition(TheFrontEnd:GetActiveScreen(), x*0.66 + playerx*0.33, y*0.66 + playerz*0.33)
   else
     GLOBAL.TheCamera.controllable = true
     old_Update(self, dt)
@@ -70,10 +82,15 @@ local MapControlsDungeon = require "widgets/mapcontrols_dungeon"
 
 AddGlobalClassPostConstruct("screens/mapscreen", "MapScreen", function(self, owner)
     self.mapcontrolsdungeon = self.bottomright_root:AddChild(MapControlsDungeon())
+    GLOBAL.TheCamera.saved_camera_rotation = GLOBAL.TheCamera:GetHeadingTarget()
     if GLOBAL.ThePlayer.map_level_shown ~= nil then
-      GLOBAL.TheCamera.saved_camera_rotation = GLOBAL.TheCamera:GetHeadingTarget()
-      GLOBAL.TheCamera.heading = 270
-      GLOBAL.TheCamera:SetHeadingTarget(270)
+      if GLOBAL.ThePlayer.map_level_shown > TUNING.MS_CAVES_START then
+        GLOBAL.TheCamera.heading = 270
+        GLOBAL.TheCamera:SetHeadingTarget(270)
+      end
+      GLOBAL.TheWorld:PushEvent("hideallplugs")
+    else
+      GLOBAL.TheWorld:PushEvent("showallplugs")
     end
   end)
 
@@ -82,10 +99,10 @@ local old_OnBecomeInactive = MapScreen.OnBecomeInactive
 function MapScreen:OnBecomeInactive()
   old_OnBecomeInactive(self)
   self.mapcontrolsdungeon:Hide()
-  
-  GLOBAL.TheCamera:SetHeadingTarget(GLOBAL.TheCamera.saved_camera_rotation)
-  GLOBAL.TheCamera.heading = GLOBAL.TheCamera.saved_camera_rotation
-    
+  if GLOBAL.TheCamera.saved_camera_rotation then
+    GLOBAL.TheCamera:SetHeadingTarget(GLOBAL.TheCamera.saved_camera_rotation)
+    GLOBAL.TheCamera.heading = GLOBAL.TheCamera.saved_camera_rotation
+  end
   local x,y,z = GLOBAL.ThePlayer.Transform:GetWorldPosition()
   if GLOBAL.TheWorld.net.components.dungeonmapoverwatch and GLOBAL.TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(x,y,z) ~= nil and GLOBAL.TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(x,y,z) > GLOBAL.TUNING.MS_CAVES_START then
     GLOBAL.TheCamera.controllable = false
