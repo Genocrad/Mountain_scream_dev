@@ -40,7 +40,6 @@ local function CheckMountainLevel(inst)
   local x,y,z = ThePlayer.Transform:GetWorldPosition()
   if TheWorld.net.components.dungeonmapoverwatch then
     local level = TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(x,y,z)
-    
     if level then
       if TheWorld.wavemanager_on == false then
         TheWorld:PushEvent("wavemanager_on")
@@ -52,13 +51,11 @@ local function CheckMountainLevel(inst)
       TheWorld:PushEvent("wavemanager_off")
       IsUsingMSDoorDirty(inst)
     end
+    
     ThePlayer.map_level_shown = level
     ThePlayer.map_level_current = level
     
     ThePlayer.components.playervision:UpdateCCTable()
-    
-    
-      
   end
 end
 
