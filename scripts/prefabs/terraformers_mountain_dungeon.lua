@@ -51,7 +51,7 @@ local function MakeTerraformer(name, tiles, snow_randomseed, snow_rarity, size, 
     local inst = CreateEntity()
 
     inst.entity:AddTransform()
-
+    inst:AddTag("ms_terraformer")
     if not TheWorld.ismastersim then 
       return inst        
     end
@@ -85,15 +85,13 @@ local function MakeTerraformer(name, tiles, snow_randomseed, snow_rarity, size, 
             
         local posx, posy, posz = inst.Transform:GetWorldPosition()
         
-        if inst.prefab ~= "terraformer_mountain_dungeon_level_1" then
-          local light = SpawnPrefab("light_fake_overworld")
-          light.Transform:SetPosition(posx, 0, posz)  
-        end
-        
         inst.Transform:SetPosition(math.floor((centerx+posx+posx)/12)*4, posy, math.floor((centery+posz+posz)/12)*4)
 
         local posx, posy, posz = inst.Transform:GetWorldPosition()
         
+        -- Now check if we are near other terraformers. If do, it kills itself.
+        local nearest_terraformers = TheSim:FindEntities(posx, posy, posz, 40, {"ms_terraformer"})
+        if nearest_terraformers then for k,v in pairs(nearest_terraformers) do v:Remove() end end
         if inst.prefab ~= "terraformer_mountain_dungeon_level_1" then
           local light = SpawnPrefab("light_fake_overworld")
           light.Transform:SetPosition(posx, 0, posz)  
@@ -105,9 +103,16 @@ local function MakeTerraformer(name, tiles, snow_randomseed, snow_rarity, size, 
         if level ~= 1 then
           for i = -50, 50 do 
             for j = -50, 50 do
-              if TheWorld.Map:GetTile(center_x + i, center_y + j) == 1 then
+              if TheWorld.Map:GetTile(center_x + i, center_y + j) == 1 and math.sqrt(i*i+j*j) < 50 then
                 TheWorld.Map:SetTile(center_x + i, center_y + j, WORLD_TILES.CLOUDS_WHITE)  
               end
+            end
+          end
+          -- Not efficient, but more is better in this case. 
+          for i = -3, 3 do
+            for j = -3, 3 do 
+              local plug = SpawnPrefab("giant_plug_marker")
+              plug.Transform:SetPosition(posx+i*16.66*4, 0, posz+j*16.66*4)  
             end
           end
         end
