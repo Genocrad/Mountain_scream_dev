@@ -26,6 +26,7 @@ PrefabFiles = {
 	"ms_snow_turf",
 	"ms_cave_entrance",
 	"ms_arenateleporter",
+  "giant_plug_marker",
 
 	--------------------------------------------------------
 	-- XK: creatures / tools / environment

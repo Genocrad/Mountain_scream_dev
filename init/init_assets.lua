@@ -34,6 +34,8 @@ Assets = {
 	Asset("IMAGE", "images/minimap_various_teleporters.tex"),
 	Asset("IMAGE", "images/mountain_minimap.tex"),
 	Asset("ATLAS", "images/mountain_minimap.xml"),
+  Asset("ATLAS", "images/ms_giant_plug.xml"),
+  Asset("IMAGE", "images/ms_giant_plug.tex"),  
 
 	--------------------------------------------------------
 	-- Sound
@@ -44,7 +46,6 @@ Assets = {
 
 	--------------------------------------------------------
 	-- Anim / shaders
-	Asset("ANIM", "anim/player_roll_dodge.zip"),
 	Asset("ANIM", "anim/clouds_overlay.zip"),
 	Asset("ANIM", "anim/ms_hello_turf.zip"), -- Luigi: Why loading normally does not work? Huh?
 	Asset("ANIM", "anim/player_wx78_actions.zip"), -- tornado sorbet transform
@@ -141,4 +142,5 @@ end
 -- Minimap atlases
 AddMinimapAtlas("images/minimap_ms_cave_room.xml")
 AddMinimapAtlas("images/minimap_various_teleporters.xml")
+AddMinimapAtlas("images/ms_giant_plug.xml")
 AddMinimapAtlas("images/mountain_minimap.xml")
