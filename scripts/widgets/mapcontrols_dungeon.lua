@@ -8,7 +8,7 @@ local function OnLevelPressedUp()
   if ThePlayer.map_level_shown == nil then
     ThePlayer.map_level_shown = 2
   end
-    ThePlayer.map_level_shown = math.min(ThePlayer.map_level_shown+1, 10)
+    ThePlayer.map_level_shown = math.min(ThePlayer.map_level_shown+1, 12)
 end
 
 local function OnLevelPressedDown()
