@@ -6,6 +6,7 @@ function GoatCommon.CaptureState(inst)
 		health_percent = inst.components.health ~= nil and inst.components.health:GetPercent() or 1,
 		target = inst.components.combat ~= nil and inst.components.combat.target or nil,
 		spawnpoint = inst.components.knownlocations ~= nil and inst.components.knownlocations:GetLocation("spawnpoint") or nil,
+		herd = inst.components.herdmember ~= nil and inst.components.herdmember:GetHerd() or nil,
 	}
 end
 
@@ -24,6 +25,9 @@ function GoatCommon.ApplyState(inst, data)
 	end
 	if data.target ~= nil and data.target:IsValid() and inst.components.combat ~= nil then
 		inst.components.combat:SetTarget(data.target)
+	end
+	if data.herd ~= nil and data.herd:IsValid() and data.herd.components.herd ~= nil then
+		data.herd.components.herd:AddMember(inst)
 	end
 end
 
@@ -53,14 +57,33 @@ function GoatCommon.Transform(inst, newprefab, opts)
 	opts = opts or {}
 
 	local state = GoatCommon.CaptureState(inst)
+
+	-- Prevent herd OnEmpty→Remove while this member is mid-replace.
+	local herd = state.herd
+	local onempty
+	if herd ~= nil and herd:IsValid() and herd.components.herd ~= nil then
+		onempty = herd.components.herd.onempty
+		herd.components.herd.onempty = nil
+	end
+
 	GoatCommon.PlayTransformFX(inst)
 
 	local new = ReplacePrefab(inst, newprefab)
 	if new == nil then
+		if herd ~= nil and herd:IsValid() and herd.components.herd ~= nil then
+			herd.components.herd.onempty = onempty
+			if herd.components.herd.membercount == 0 and onempty ~= nil then
+				onempty(herd)
+			end
+		end
 		return nil
 	end
 
 	GoatCommon.ApplyState(new, state)
+
+	if herd ~= nil and herd:IsValid() and herd.components.herd ~= nil then
+		herd.components.herd.onempty = onempty
+	end
 
 	if new.OnTransformed ~= nil then
 		new:OnTransformed(opts)
@@ -74,6 +97,10 @@ function GoatCommon.Transform(inst, newprefab, opts)
 end
 
 function GoatCommon.KeepTargetFn(inst, target)
+	local herd = inst.components.herdmember ~= nil and inst.components.herdmember:GetHerd() or nil
+	if herd ~= nil then
+		return inst:IsNear(herd, TUNING.MOUNTAIN_GOAT.CHASE_DIST)
+	end
 	local spawnpoint = inst.components.knownlocations ~= nil and inst.components.knownlocations:GetLocation("spawnpoint") or nil
 	if spawnpoint == nil then
 		return true

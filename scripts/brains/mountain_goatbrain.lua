@@ -32,7 +32,8 @@ local function GetWanderDistFn(inst)
 end
 
 local function GetWanderHome(inst)
-	return inst.components.knownlocations:GetLocation("spawnpoint")
+	return inst.components.knownlocations:GetLocation("herd")
+		or inst.components.knownlocations:GetLocation("spawnpoint")
 end
 
 local MountainGoatBrain = Class(Brain, function(self, inst)

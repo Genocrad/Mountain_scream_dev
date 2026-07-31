@@ -11,6 +11,61 @@ TUNING.MS_CAVES_START = 10
 
 TUNING.MS_TERRAFORMER_SIZE = {50, 35, 25, 22, 20, 20, 20, 20, 20, 20}
 
+-- Runtime mountain-floor decoration (pseudo-Room distributeprefabs).
+-- mob_spawn_points stores ~1–5 candidates per tile; POINT_SAMPLE scales
+-- distributepercent down so effective density stays near vanilla rocky (~0.1/tile).
+TUNING.MS_CONTENT_POINT_SAMPLE = 1 / 3
+TUNING.MS_CONTENT_CLEAR_RADIUS = 1.25
+TUNING.MS_LEVEL_CONTENTS = {
+	-- Level 1–2: MS_MOUNTAIN_LOW / LOW_2 (green foothills)
+	[1] = {
+		distributepercent = 0.14,
+		distributeprefabs = {
+			rock1 = 0.5,
+			rocks = 0.1,
+			mountain_green_stone_1 = 1.0,
+			mountain_green_stone_2 = 1.0,
+			mountain_green_stone_3 = 1.0,
+			mountain_plants_grass = 0.25,
+			mountain_plants_bush_1 = 0.15,
+			mountain_plants_bush_2 = 0.10,
+			mountain_plants_bush_3 = 0.05,
+			mountain_plants_branches = 0.08,
+			mountain_plants_tree = 0.06,
+			mountain_plants_flower_1 = 0.04,
+			mountain_plants_flower_2 = 0.04,
+			mountain_plants_flower_3 = 0.04,
+			mountain_bush = 0.05,
+		},
+		herds = {
+			{ prefab = "mountain_goat", size = 8, count = 1 },
+		},
+	},
+	[2] = {
+		distributepercent = 0.12,
+		distributeprefabs = {
+			rock1 = 0.5,
+			rocks = 0.1,
+			mountain_green_stone_1 = 1.0,
+			mountain_green_stone_2 = 1.0,
+			mountain_green_stone_3 = 1.0,
+			mountain_plants_grass = 0.20,
+			mountain_plants_bush_1 = 0.12,
+			mountain_plants_bush_2 = 0.08,
+			mountain_plants_bush_3 = 0.04,
+			mountain_plants_branches = 0.06,
+			mountain_plants_tree = 0.05,
+			mountain_plants_flower_1 = 0.03,
+			mountain_plants_flower_2 = 0.03,
+			mountain_plants_flower_3 = 0.03,
+			mountain_bush = 0.04,
+		},
+		herds = {
+			{ prefab = "mountain_goat", size = 8, count = 1 },
+		},
+	},
+}
+
 TUNING.MS_SMELT_TIME = {
 	ms_copper_ingot = 50,
 	ms_aluminium = 200,
@@ -402,6 +457,14 @@ TUNING.MOUNTAIN_STALAGMITE = {
 
 -- mountain_goat 数值（对齐未充电电羊，攻击附带玩家击退）
 
+TUNING.MOUNTAIN_GOATHERD = {
+	MAX_SIZE = 8,
+	GATHER_RANGE = 40,
+	SPAWN_RADIUS = 4,
+	CENTER_CLEAR_RADIUS = 6,
+	CENTER_ATTEMPTS = 40,
+}
+
 TUNING.MOUNTAIN_GOAT = {
 	HEALTH = 700,
 	DAMAGE = 25,
@@ -409,7 +472,7 @@ TUNING.MOUNTAIN_GOAT = {
 	ATTACK_PERIOD = 2,
 	WALK_SPEED = 4,
 	RUN_SPEED = 8,
-	CHASE_DIST = 30,           -- 相对出生点的追击距离
+	CHASE_DIST = 30,           -- 相对 herd（无 herd 时用出生点）的追击距离
 	KNOCKBACK_RADIUS = 2,
 	KNOCKBACK_STRENGTH = 1,
 }
