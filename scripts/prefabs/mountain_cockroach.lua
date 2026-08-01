@@ -43,28 +43,6 @@ local function OnAttacked(inst, data)
 	end
 end
 
-local function DoReturn(inst)
-	if inst.components.homeseeker ~= nil and inst.components.homeseeker:HasHome() then
-		local home = inst.components.homeseeker.home
-		if home ~= nil and home:IsValid() and home.components.childspawner ~= nil then
-			home.components.childspawner:GoHome(inst)
-		end
-	end
-end
-
-local function OnEntitySleep(inst)
-	-- 非傍晚时卸载区块则直接收进巢穴
-	if not TheWorld.state.isdusk then
-		DoReturn(inst)
-	end
-end
-
-local function OnStopDusk(inst)
-	if inst:IsAsleep() then
-		DoReturn(inst)
-	end
-end
-
 local function fn()
 	local inst = CreateEntity()
 
@@ -138,8 +116,6 @@ local function fn()
 	inst:AddComponent("knownlocations")
 
 	inst:ListenForEvent("attacked", OnAttacked)
-	inst:WatchWorldState("stopdusk", OnStopDusk)
-	inst.OnEntitySleep = OnEntitySleep
 
 	MakeSmallBurnableCharacter(inst, "body")
 	MakeSmallFreezableCharacter(inst, "body")

@@ -124,11 +124,11 @@ local function GoHome(inst)
 end
 
 local function ShouldGoHome(inst)
-	return TheWorld.state.isnight
+	return TheWorld.state.iscavenight
 end
 
 local function CanTryBath(inst)
-	return not TheWorld.state.isnight
+	return not TheWorld.state.iscavenight
 		and not IsBathing(inst)
 		and not inst.components.combat:HasTarget()
 		and inst.components.timer ~= nil
@@ -181,7 +181,7 @@ function MountainKikiBrain:OnStart()
 
 		WhileNode(function() return IsBathing(self.inst) end, "Soaking",
 			PriorityNode({
-				IfNode(function() return TheWorld.state.isnight end, "Leave Pool At Night",
+				IfNode(function() return TheWorld.state.iscavenight end, "Leave Pool At Night",
 					ActionNode(function() ExitHotSpring(self.inst) end)),
 				IfNode(function()
 						return self.inst.components.timer ~= nil

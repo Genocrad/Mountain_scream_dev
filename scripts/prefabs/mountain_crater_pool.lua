@@ -113,7 +113,7 @@ end
 local MOUNTAIN_KIKI_TAGS = { "mountain_kiki" }
 
 local function IsKikiAggroPhase()
-	return TheWorld.state.isday or TheWorld.state.isdusk
+	return TheWorld.state.iscaveday or TheWorld.state.iscavedusk
 end
 
 local function AlertNearbyIdleKikis(inst, player)

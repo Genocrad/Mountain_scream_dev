@@ -64,6 +64,140 @@ TUNING.MS_LEVEL_CONTENTS = {
 			{ prefab = "mountain_goat", size = 8, count = 1 },
 		},
 	},
+	[3] = {
+		distributepercent = 0.12,
+		distributeprefabs = {
+			rock2 = 0.5,
+			rock_flintless = 0.5,
+			mountain_cold_rock_1 = 1.0,
+			mountain_cold_rock_2 = 1.0,
+			mountain_cold_rock_3 = 1.0,
+			mountain_gravel_pile = 1.0,
+			boneshard = 0.12,
+			houndbone = 0.12,
+			cutgrass = 0.08,
+			mountain_plants_grass = 0.08,
+			mountain_bush = 1.0,
+		},
+		-- Side cave rooms linked to this floor (SpawnCaveLayout level arg).
+		cave = {
+			distributepercent = 0.22,
+			distributeprefabs = {
+				mountain_stalagmite_1 = 1.0,
+				mountain_stalagmite_2 = 1.0,
+				mountain_stalagmite_3 = 1.0,
+				mountain_cockroach_nest_1 = 0.7,
+				mountain_cockroach_nest_2 = 0.7,
+				mountain_cockroach_nest_3 = 0.7,
+				mountain_stalactite_1 = 1.0,
+				mountain_stalactite_2 = 1.0,
+				mountain_stalactite_3 = 1.0,
+				mountain_gravel_pile = 1.0,
+				mushtree_small = 1.0,
+				rock2 = 1.0,
+			},
+		},
+	},
+	[4] = {
+		distributepercent = 0.12,
+		distributeprefabs = {
+			rock2 = 0.5,
+			rock_flintless = 0.5,
+			mountain_snowpile = 1.0,
+			mountain_cold_rock_1 = 1.0,
+			mountain_cold_rock_2 = 1.0,
+			mountain_cold_rock_3 = 1.0,
+			rock_ice = 1.0,
+			mountain_gravel_pile = 1.0,
+			boneshard = 0.12,
+			houndbone = 0.12,
+			cutgrass = 0.08,
+			mountain_plants_grass = 0.08,
+			mountain_bush = 1.0,
+			mountain_falcon_base = 0.08,
+		},
+	},
+	[5] = {
+		distributepercent = 0.1,
+		distributeprefabs = {
+			rock2 = 0.5,
+			rock_flintless = 0.5,
+			mountain_snowpile = 1.0,
+			mountain_cold_rock_1 = 1.0,
+			mountain_cold_rock_2 = 1.0,
+			mountain_cold_rock_3 = 1.0,
+			rock_ice = 1.0,
+			mountain_gravel_pile = 1.0,
+			boneshard = 0.12,
+			houndbone = 0.12,
+			cutgrass = 0.08,
+			mountain_plants_grass = 0.08,
+			mountain_bush = 1.0,
+		},
+		cave = {
+			distributepercent = 0.22,
+			distributeprefabs = {
+				mountain_stalagmite_1 = 1.0,
+				mountain_stalagmite_2 = 1.0,
+				mountain_stalagmite_3 = 1.0,
+				mountain_cockroach_nest_1 = 0.7,
+				mountain_cockroach_nest_2 = 0.7,
+				mountain_cockroach_nest_3 = 0.7,
+				mountain_stalactite_1 = 1.0,
+				mountain_stalactite_2 = 1.0,
+				mountain_stalactite_3 = 1.0,
+				mountain_gravel_pile = 1.0,
+				mushtree_small = 1.0,
+				rock2 = 1.0,
+			},
+		},
+	},
+	[6] = {
+		distributepercent = 0.1,
+		distributeprefabs = {
+			mountain_snowpile = 1.0,
+			rock_ice = 1.0,
+			mountain_bush = 1.0,
+			mandrake_planted = 0.04,
+			mountain_snowpeak_stone_1 = 1.0,
+			mountain_snowpeak_stone_2 = 1.0,
+			mountain_snowpeak_stone_3 = 1.0,
+			cavein_boulder = 0.04,
+		},
+		communities = {
+			{
+				count = 1,
+				radius = 10,
+				members = {
+					{ prefab = "mountain_kiki_house", min = 3, max = 4 },
+					{ prefab = "mountain_crater_pool", min = 3, max = 4 },
+				},
+			},
+		},
+	},
+	[7] = {
+		distributepercent = 0.1,
+		distributeprefabs = {
+			mountain_snowpile = 1.0,
+			rock_ice = 1.0,
+			mountain_bush = 1.0,
+			mandrake_planted = 0.04,
+			mountain_snowpeak_stone_1 = 1.0,
+			mountain_snowpeak_stone_2 = 1.0,
+			mountain_snowpeak_stone_3 = 1.0,
+			cavein_boulder = 0.04,
+		},
+		communities = {
+			{
+				count = 1,
+				radius = 10,
+				members = {
+					{ prefab = "mountain_kiki_house", min = 3, max = 4 },
+					{ prefab = "mountain_crater_pool", min = 3, max = 4 },
+				},
+			},
+		},
+	},
 }
 
 TUNING.MS_SMELT_TIME = {
@@ -142,6 +276,14 @@ TUNING.MOUNTAIN_KIKI_HOUSE = {
 	MAX_CHILDREN = 2,        -- 每个巢穴中的 mountain_kiki 数量
 	SPAWN_PERIOD = 4,        -- 白天放出 mountain_kiki 的间隔（秒）
 	REGEN_PERIOD = 60,       -- mountain_kiki 死亡后重新生成的间隔（秒）
+}
+
+-- Runtime kiki community placement (houses + crater pools) on mountain floors.
+TUNING.MOUNTAIN_KIKI_COMMUNITY = {
+	SPAWN_RADIUS = 10,
+	CENTER_CLEAR_RADIUS = 8,
+	CENTER_ATTEMPTS = 40,
+	MEMBER_CLEAR_RADIUS = 1.75,
 }
 
 TUNING.MOUNTAIN_CRATER_POOL = {
@@ -437,7 +579,7 @@ TUNING.MOUNTAIN_COCKROACH_NEST = {
 	MAX_CHILDREN_1 = 6,             -- 大巢
 	MAX_CHILDREN_2 = 4,             -- 中巢
 	MAX_CHILDREN_3 = 2,             -- 小巢
-	SPAWN_PERIOD = 8,               -- 傍晚逐只放出间隔（秒）
+	SPAWN_PERIOD = 8,               -- 持续放出间隔（秒；洞穴巢无昼夜门禁）
 	REGEN_PERIOD = 60,              -- 死亡后重新生成间隔（秒）
 }
 

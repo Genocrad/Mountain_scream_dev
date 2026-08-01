@@ -36,11 +36,6 @@ local function GoHomeAction(inst)
 	end
 end
 
-local function ShouldGoHome(inst)
-	-- 傍晚外出，夜晚/白天回巢
-	return not TheWorld.state.isdusk
-end
-
 local function GetWanderPoint(inst)
 	local homepos = GetHomePos(inst)
 	if homepos ~= nil then
@@ -95,8 +90,6 @@ function MountainCockroachBrain:OnStart()
 				DoAction(self.inst, EatFoodAction),
 
 				EventNode(self.inst, "gohome",
-					DoAction(self.inst, GoHomeAction, "go home", true)),
-				WhileNode(function() return ShouldGoHome(self.inst) end, "GoHome",
 					DoAction(self.inst, GoHomeAction, "go home", true)),
 
 				WhileNode(function() return GetHome(self.inst) ~= nil end, "HasHome",
