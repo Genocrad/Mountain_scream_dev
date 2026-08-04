@@ -49,7 +49,6 @@ Assets = {
 	Asset("ANIM", "anim/clouds_overlay.zip"),
 	Asset("ANIM", "anim/ms_hello_turf.zip"), -- Luigi: Why loading normally does not work? Huh?
 	Asset("ANIM", "anim/player_wx78_actions.zip"), -- tornado sorbet transform
-	Asset("SHADER", "shaders/shadername.ksh"),
 	Asset("SHADER", "shaders/cave_vertical_shader.ksh"),
 	Asset("SHADER", "shaders/mountain_vertical_shader.ksh"),
 	Asset("SHADER", "shaders/clickable_vertical_shader.ksh"),
@@ -58,7 +57,14 @@ Assets = {
 --------------------------------------------------------
 -- Ingot inventory icons (temperature / facing variants)
 local INGOTS = {
-	"ms_copper_ingot",
+  "ms_copper_ingot",
+  "ms_copper_detail",
+  "ms_alu_ingot",
+  "ms_alu_detail",
+  "ms_gold_ingot",
+  "ms_gold_detail",
+  "ms_bronze_ingot",
+  "ms_bronze_detail",
 }
 
 local INGOT_SUFFIXES = {
@@ -78,7 +84,9 @@ local INGOT_SUFFIXES = {
 	"_right_warm",
 	"_right_hot",
 	"_right_melt",
+    "_formless",
 }
+
 
 local INGOTS_ATLAS = "images/inventoryimages/inventoryimages_ingots.xml"
 for _, ingot in ipairs(INGOTS) do
@@ -87,7 +95,9 @@ for _, ingot in ipairs(INGOTS) do
 	end
 end
 RegisterInventoryItemAtlas(INGOTS_ATLAS, "ms_copper_ore.tex")
-
+RegisterInventoryItemAtlas(INGOTS_ATLAS, "ms_alu_ore.tex")
+RegisterInventoryItemAtlas(INGOTS_ATLAS, "ms_slag.tex")
+RegisterInventoryItemAtlas(INGOTS_ATLAS, "ms_coal.tex")
 --------------------------------------------------------
 -- Turf inventory icons
 local TURF_ATLAS = "images/inventoryimages/inventoryimages_ms_turf.xml"
