@@ -29,7 +29,8 @@ function Stewer:StopSmeltingemperatureLow()
 end
 
 function Stewer:RestartSmelting()
-  local cooktime = TUNING.MS_SMELT_TIME[self.product]
+  local cooktime = TUNING.MS_SMELT_TIME[self.product] * TUNING.BASE_COOK_TIME
+  print(cooktime)
   self.task = self.inst:DoTaskInTime(cooktime, dostew, self)
 end
 
