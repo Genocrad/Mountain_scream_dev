@@ -11,6 +11,195 @@ TUNING.MS_CAVES_START = 10
 
 TUNING.MS_TERRAFORMER_SIZE = {50, 35, 25, 22, 20, 20, 20, 20, 20, 20}
 
+-- Runtime mountain-floor decoration (pseudo-Room distributeprefabs).
+-- mob_spawn_points stores ~1–5 candidates per tile; POINT_SAMPLE scales
+-- distributepercent down so effective density stays near vanilla rocky (~0.1/tile).
+TUNING.MS_CONTENT_POINT_SAMPLE = 1 / 3
+TUNING.MS_CONTENT_CLEAR_RADIUS = 1.25
+TUNING.MS_LEVEL_CONTENTS = {
+	-- Level 1–2: MS_MOUNTAIN_LOW / LOW_2 (green foothills)
+	[1] = {
+		distributepercent = 0.14,
+		distributeprefabs = {
+			rock1 = 0.5,
+			rocks = 0.1,
+			mountain_green_stone_1 = 1.0,
+			mountain_green_stone_2 = 1.0,
+			mountain_green_stone_3 = 1.0,
+			mountain_plants_grass = 0.25,
+			mountain_plants_bush_1 = 0.15,
+			mountain_plants_bush_2 = 0.10,
+			mountain_plants_bush_3 = 0.05,
+			mountain_plants_branches = 0.08,
+			mountain_plants_tree = 0.06,
+			mountain_plants_flower_1 = 0.04,
+			mountain_plants_flower_2 = 0.04,
+			mountain_plants_flower_3 = 0.04,
+			mountain_bush = 0.05,
+		},
+		herds = {
+			{ prefab = "mountain_goat", size = 8, count = 1 },
+		},
+	},
+	[2] = {
+		distributepercent = 0.12,
+		distributeprefabs = {
+			rock1 = 0.5,
+			rocks = 0.1,
+			mountain_green_stone_1 = 1.0,
+			mountain_green_stone_2 = 1.0,
+			mountain_green_stone_3 = 1.0,
+			mountain_plants_grass = 0.20,
+			mountain_plants_bush_1 = 0.12,
+			mountain_plants_bush_2 = 0.08,
+			mountain_plants_bush_3 = 0.04,
+			mountain_plants_branches = 0.06,
+			mountain_plants_tree = 0.05,
+			mountain_plants_flower_1 = 0.03,
+			mountain_plants_flower_2 = 0.03,
+			mountain_plants_flower_3 = 0.03,
+			mountain_bush = 0.04,
+		},
+		herds = {
+			{ prefab = "mountain_goat", size = 8, count = 1 },
+		},
+	},
+	[3] = {
+		distributepercent = 0.12,
+		distributeprefabs = {
+			rock2 = 0.5,
+			rock_flintless = 0.5,
+			mountain_cold_rock_1 = 1.0,
+			mountain_cold_rock_2 = 1.0,
+			mountain_cold_rock_3 = 1.0,
+			mountain_gravel_pile = 1.0,
+			boneshard = 0.12,
+			houndbone = 0.12,
+			cutgrass = 0.08,
+			mountain_plants_grass = 0.08,
+			mountain_bush = 1.0,
+		},
+		-- Side cave rooms linked to this floor (SpawnCaveLayout level arg).
+		cave = {
+			distributepercent = 0.22,
+			distributeprefabs = {
+				mountain_stalagmite_1 = 1.0,
+				mountain_stalagmite_2 = 1.0,
+				mountain_stalagmite_3 = 1.0,
+				mountain_cockroach_nest_1 = 0.7,
+				mountain_cockroach_nest_2 = 0.7,
+				mountain_cockroach_nest_3 = 0.7,
+				mountain_stalactite_1 = 1.0,
+				mountain_stalactite_2 = 1.0,
+				mountain_stalactite_3 = 1.0,
+				mountain_gravel_pile = 1.0,
+				mushtree_small = 1.0,
+				rock2 = 1.0,
+			},
+		},
+	},
+	[4] = {
+		distributepercent = 0.12,
+		distributeprefabs = {
+			rock2 = 0.5,
+			rock_flintless = 0.5,
+			mountain_snowpile = 1.0,
+			mountain_cold_rock_1 = 1.0,
+			mountain_cold_rock_2 = 1.0,
+			mountain_cold_rock_3 = 1.0,
+			rock_ice = 1.0,
+			mountain_gravel_pile = 1.0,
+			boneshard = 0.12,
+			houndbone = 0.12,
+			cutgrass = 0.08,
+			mountain_plants_grass = 0.08,
+			mountain_bush = 1.0,
+			mountain_falcon_base = 0.08,
+		},
+	},
+	[5] = {
+		distributepercent = 0.1,
+		distributeprefabs = {
+			rock2 = 0.5,
+			rock_flintless = 0.5,
+			mountain_snowpile = 1.0,
+			mountain_cold_rock_1 = 1.0,
+			mountain_cold_rock_2 = 1.0,
+			mountain_cold_rock_3 = 1.0,
+			rock_ice = 1.0,
+			mountain_gravel_pile = 1.0,
+			boneshard = 0.12,
+			houndbone = 0.12,
+			cutgrass = 0.08,
+			mountain_plants_grass = 0.08,
+			mountain_bush = 1.0,
+		},
+		cave = {
+			distributepercent = 0.22,
+			distributeprefabs = {
+				mountain_stalagmite_1 = 1.0,
+				mountain_stalagmite_2 = 1.0,
+				mountain_stalagmite_3 = 1.0,
+				mountain_cockroach_nest_1 = 0.7,
+				mountain_cockroach_nest_2 = 0.7,
+				mountain_cockroach_nest_3 = 0.7,
+				mountain_stalactite_1 = 1.0,
+				mountain_stalactite_2 = 1.0,
+				mountain_stalactite_3 = 1.0,
+				mountain_gravel_pile = 1.0,
+				mushtree_small = 1.0,
+				rock2 = 1.0,
+			},
+		},
+	},
+	[6] = {
+		distributepercent = 0.1,
+		distributeprefabs = {
+			mountain_snowpile = 1.0,
+			rock_ice = 1.0,
+			mountain_bush = 1.0,
+			mandrake_planted = 0.04,
+			mountain_snowpeak_stone_1 = 1.0,
+			mountain_snowpeak_stone_2 = 1.0,
+			mountain_snowpeak_stone_3 = 1.0,
+			cavein_boulder = 0.04,
+		},
+		communities = {
+			{
+				count = 1,
+				radius = 10,
+				members = {
+					{ prefab = "mountain_kiki_house", min = 3, max = 4 },
+					{ prefab = "mountain_crater_pool", min = 3, max = 4 },
+				},
+			},
+		},
+	},
+	[7] = {
+		distributepercent = 0.1,
+		distributeprefabs = {
+			mountain_snowpile = 1.0,
+			rock_ice = 1.0,
+			mountain_bush = 1.0,
+			mandrake_planted = 0.04,
+			mountain_snowpeak_stone_1 = 1.0,
+			mountain_snowpeak_stone_2 = 1.0,
+			mountain_snowpeak_stone_3 = 1.0,
+			cavein_boulder = 0.04,
+		},
+		communities = {
+			{
+				count = 1,
+				radius = 10,
+				members = {
+					{ prefab = "mountain_kiki_house", min = 3, max = 4 },
+					{ prefab = "mountain_crater_pool", min = 3, max = 4 },
+				},
+			},
+		},
+	},
+}
+
 TUNING.MS_SMELT_TIME = {
 	ms_copper_ingot = 50,
 	ms_aluminium = 200,
@@ -87,6 +276,14 @@ TUNING.MOUNTAIN_KIKI_HOUSE = {
 	MAX_CHILDREN = 2,        -- 每个巢穴中的 mountain_kiki 数量
 	SPAWN_PERIOD = 4,        -- 白天放出 mountain_kiki 的间隔（秒）
 	REGEN_PERIOD = 60,       -- mountain_kiki 死亡后重新生成的间隔（秒）
+}
+
+-- Runtime kiki community placement (houses + crater pools) on mountain floors.
+TUNING.MOUNTAIN_KIKI_COMMUNITY = {
+	SPAWN_RADIUS = 10,
+	CENTER_CLEAR_RADIUS = 8,
+	CENTER_ATTEMPTS = 40,
+	MEMBER_CLEAR_RADIUS = 1.75,
 }
 
 TUNING.MOUNTAIN_CRATER_POOL = {
@@ -382,7 +579,7 @@ TUNING.MOUNTAIN_COCKROACH_NEST = {
 	MAX_CHILDREN_1 = 6,             -- 大巢
 	MAX_CHILDREN_2 = 4,             -- 中巢
 	MAX_CHILDREN_3 = 2,             -- 小巢
-	SPAWN_PERIOD = 8,               -- 傍晚逐只放出间隔（秒）
+	SPAWN_PERIOD = 8,               -- 持续放出间隔（秒；洞穴巢无昼夜门禁）
 	REGEN_PERIOD = 60,              -- 死亡后重新生成间隔（秒）
 }
 
@@ -402,6 +599,14 @@ TUNING.MOUNTAIN_STALAGMITE = {
 
 -- mountain_goat 数值（对齐未充电电羊，攻击附带玩家击退）
 
+TUNING.MOUNTAIN_GOATHERD = {
+	MAX_SIZE = 8,
+	GATHER_RANGE = 40,
+	SPAWN_RADIUS = 4,
+	CENTER_CLEAR_RADIUS = 6,
+	CENTER_ATTEMPTS = 40,
+}
+
 TUNING.MOUNTAIN_GOAT = {
 	HEALTH = 700,
 	DAMAGE = 25,
@@ -409,7 +614,7 @@ TUNING.MOUNTAIN_GOAT = {
 	ATTACK_PERIOD = 2,
 	WALK_SPEED = 4,
 	RUN_SPEED = 8,
-	CHASE_DIST = 30,           -- 相对出生点的追击距离
+	CHASE_DIST = 30,           -- 相对 herd（无 herd 时用出生点）的追击距离
 	KNOCKBACK_RADIUS = 2,
 	KNOCKBACK_STRENGTH = 1,
 }

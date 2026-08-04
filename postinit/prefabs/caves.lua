@@ -18,6 +18,11 @@ local function onterraformingfinished(inst)
   inst.components.dungeonwallspawner:SpawnArenaTeleporter()
   inst.components.dungeonwallspawner:SpawnWallsAroundPoint(8, "_snow", 25, WORLD_TILES.MS_PERMAFROST_TECHNICAL)
 
+  -- After walls: decorate configured floors (level 1–2 green foothills for now).
+  if inst.components.dungeoncontentspawner ~= nil then
+    inst.components.dungeoncontentspawner:SpawnConfiguredLevels()
+  end
+
   inst:RemoveEventCallback("terraforming_finished", inst.onterraformingfinished)
 end
 
@@ -62,10 +67,11 @@ AddPrefabPostInit("cave", function(inst)
     return inst
   end
   inst:AddComponent("dungeonwallspawner")
-  
+  inst:AddComponent("dungeoncontentspawner")
+
   inst.onterraformingfinished = onterraformingfinished
   inst:ListenForEvent("terraforming_finished", inst.onterraformingfinished)
-  
+
 
 end)
 

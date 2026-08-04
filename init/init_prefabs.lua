@@ -47,6 +47,7 @@ PrefabFiles = {
 	"mountain_windhorn",
 	"mountain_tornado",
 	"mountain_goat",
+	"mountain_goatherd",
 	"mountain_icegoat",
 	"mountain_cockroach",
 	"mountain_cockroach_nest",

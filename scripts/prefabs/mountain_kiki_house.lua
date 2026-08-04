@@ -51,16 +51,17 @@ local function StopSpawning(inst)
 	end
 end
 
-local function OnIsDay(inst, isday)
-	if isday then
+-- Mountain floors live on the cave shard; use cave clock, not surface isday/isnight.
+local function OnIsCaveDay(inst, iscaveday)
+	if iscaveday then
 		StartSpawning(inst)
 	else
 		StopSpawning(inst)
 	end
 end
 
-local function OnIsNight(inst, isnight)
-	if isnight then
+local function OnIsCaveNight(inst, iscavenight)
+	if iscavenight then
 		ReturnChildren(inst)
 	end
 end
@@ -101,11 +102,11 @@ end
 
 local function OnLoad(inst, data)
 	RefreshWorkLevel(inst, inst.components.workable.workleft)
-	if TheWorld.state.isday then
+	if TheWorld.state.iscaveday then
 		StartSpawning(inst)
 	else
 		StopSpawning(inst)
-		if TheWorld.state.isnight then
+		if TheWorld.state.iscavenight then
 			ReturnChildren(inst)
 		end
 	end
@@ -158,9 +159,9 @@ local function fn()
 	childspawner.gohomevalidatefn = gohomevalidatefn
 	childspawner:StartRegen()
 
-	inst:WatchWorldState("isday", OnIsDay)
-	inst:WatchWorldState("isnight", OnIsNight)
-	if TheWorld.state.isday then
+	inst:WatchWorldState("iscaveday", OnIsCaveDay)
+	inst:WatchWorldState("iscavenight", OnIsCaveNight)
+	if TheWorld.state.iscaveday then
 		StartSpawning(inst)
 	else
 		StopSpawning(inst)

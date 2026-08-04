@@ -13,6 +13,7 @@ local prefabs =
 	"meat",
 	"mountain_icecream",
 	"mountain_goat",
+	"mountain_goatherd",
 	"splash_snow_fx",
 }
 
@@ -176,6 +177,9 @@ local function fn()
 	inst:AddTag("mountain_icegoat")
 	inst:AddTag("animal")
 
+	--herdmember (from herdmember component) added to pristine state for optimization
+	inst:AddTag("herdmember")
+
 	inst.entity:SetPristine()
 
 	if not TheWorld.ismastersim then
@@ -203,6 +207,8 @@ local function fn()
 	inst:AddComponent("inspectable")
 
 	inst:AddComponent("knownlocations")
+	inst:AddComponent("herdmember")
+	inst.components.herdmember:SetHerdPrefab("mountain_goatherd")
 	inst:AddComponent("timer")
 
 	inst:ListenForEvent("attacked", OnAttacked)

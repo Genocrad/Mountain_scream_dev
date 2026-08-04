@@ -65,56 +65,16 @@ local function GetAnimForWork(inst, workleft)
 	return stages[1]
 end
 
-local function ReturnChildren(inst)
-	if inst.components.childspawner == nil then
-		return
-	end
-	for child in pairs(inst.components.childspawner.childrenoutside) do
-		if child:IsValid() then
-			if child.components.homeseeker ~= nil then
-				child.components.homeseeker:GoHome(true)
-			end
-			child:PushEvent("gohome")
-		end
-	end
-end
-
+-- Like spiderhole / dustmothden: cave dens keep spawning with no day/dusk gate.
 local function StartSpawning(inst)
 	if inst.components.childspawner ~= nil then
 		inst.components.childspawner:StartSpawning()
 	end
 end
 
-local function StopSpawning(inst)
-	if inst.components.childspawner ~= nil then
-		inst.components.childspawner:StopSpawning()
-	end
-end
-
-local function OnIsDusk(inst, isdusk)
-	if isdusk then
-		-- 傍晚只开始逐只放出，不一次清空巢内
-		StartSpawning(inst)
-	else
-		StopSpawning(inst)
-	end
-end
-
-local function OnIsNight(inst, isnight)
-	if isnight then
-		ReturnChildren(inst)
-	end
-end
-
-local function OnIsDay(inst, isday)
-	if isday then
-		StopSpawning(inst)
-		ReturnChildren(inst)
-	end
-end
-
 local function OnSpawned(inst, child)
-	if not child:IsOnValidGround() then
+	local x, y, z = child.Transform:GetWorldPosition()
+	if not TheWorld.Map:IsPassableAtPoint(x, y, z) then
 		child:Remove()
 		return
 	end
@@ -174,22 +134,11 @@ local function OnWork(inst, worker, workleft)
 	end
 end
 
-local function SyncSpawnState(inst)
-	if TheWorld.state.isdusk then
-		StartSpawning(inst)
-	else
-		StopSpawning(inst)
-		if TheWorld.state.isnight or TheWorld.state.isday then
-			ReturnChildren(inst)
-		end
-	end
-end
-
 local function OnLoad(inst, data)
 	if inst.components.workable ~= nil then
 		inst.AnimState:PlayAnimation(GetAnimForWork(inst, inst.components.workable.workleft))
 	end
-	SyncSpawnState(inst)
+	StartSpawning(inst)
 end
 
 ------------------------------------------------------------------------------------------------------------------------
@@ -255,11 +204,7 @@ local function MakeNest(anim_stages, loottable, workleft, max_children, minimap_
 		-- 岩石占位较大，拉开生成半径减少 FindWalkableOffset 失败导致放不全
 		childspawner.spawnradius = { min = 1, max = 2 }
 		childspawner:StartRegen()
-
-		inst:WatchWorldState("isdusk", OnIsDusk)
-		inst:WatchWorldState("isnight", OnIsNight)
-		inst:WatchWorldState("isday", OnIsDay)
-		SyncSpawnState(inst)
+		childspawner:StartSpawning()
 
 		MakeHauntableWork(inst)
 

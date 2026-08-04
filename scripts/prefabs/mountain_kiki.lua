@@ -256,7 +256,7 @@ end
 local RETARGET_MUST_TAGS = { "_combat" }
 local RETARGET_CANT_TAGS = { "playerghost", "INLIMBO" }
 local function IsKikiAggroPhase()
-	return TheWorld.state.isday or TheWorld.state.isdusk
+	return TheWorld.state.iscaveday or TheWorld.state.iscavedusk
 end
 
 local function retargetfn(inst)
