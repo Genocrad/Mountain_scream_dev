@@ -199,22 +199,37 @@ TUNING.MS_LEVEL_CONTENTS = {
 		},
 	},
 }
-
 TUNING.MS_SMELT_TIME = {
-	ms_copper_ingot = 50,
-	ms_aluminium = 200,
-	ms_iron = 200,
-	ms_bronze = 200,
-	ms_ingot = 20,
+    ms_iron = 1,
+	ms_gold_ingot = 1,
+    ms_copper_ingot = 1,
+	ms_alu_ingot = 1,
+	ms_bronze_ingot = 1,
+    ms_gold_ingot_formless = 1,
+    ms_copper_ingot_formless = 1,
+	ms_alu_ingot_formless = 1,
+	ms_bronze_ingot_formless = 1,
+	ms_slag = 1,
 }
 
 TUNING.MS_SMELT_TEMP = {
-	ms_copper_ingot = 1000, -- 1048? in reality, but 1000 is a nice number.
-	ms_aluminium = 600,
 	ms_iron = 600,
-	ms_bronze = 600,
+    ms_copper_ingot = 1000, -- Luigi: 1048? in reality, but 1000 is a nice number.
+	ms_alu_ingot = 1000, -- Unless I want to make ms_coal superfuel with higher temperature, i cant make this value too high.
+    ms_gold_ingot = 600,
+	ms_bronze_ingot = 800,
+    ms_copper_ingot_formless  = 1000, 
+	ms_alu_ingot_formless  = 1000,
+    ms_gold_ingot_formless  = 600,
+	ms_bronze_ingot_formless  = 800,
+    ms_copper_detail  = 1000, 
+	ms_alu_detail  = 1000,
+    ms_gold_detail  = 600,
+	ms_bronze_detail  = 800,
 	ms_ingot = 600,
+    ms_slag = 1,
 }
+
 
 TUNING.MS_ANVIL_MINIMAL_HITS = 3
 
