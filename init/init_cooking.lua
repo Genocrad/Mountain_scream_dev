@@ -1,18 +1,63 @@
 ------------------------------------------------------------------------------------------------------------------------
 -- A: furnace smelting
 
--- TO DO: Maybe own type?
-AddIngredientValues({"ms_copper_ore"}, { inedible = 1 })
+-- Monster
+AddIngredientValues({"ms_copper_ore"}, { inedible = 1})
+AddIngredientValues({"ms_alu_ore"}, { inedible = 1})
+AddIngredientValues({"goldnugget"}, { inedible = 1})
 
 AddCookerRecipe("ms_furnace", {
-	name = "ms_copper_ingot",
+	name = "ms_copper_ingot_formless",
 	weight = 1,
 	priority = 2,
-	cooktime = 10,
+	cooktime = TUNING.MS_SMELT_TIME["ms_copper_ingot_formless"],
 	test = function(cooker, names, tags)
-		return names.ms_copper_ore
+		return names.ms_copper_ore and names.ms_copper_ore > 3
 	end,
 	no_cookbook = true,
+})
+
+AddCookerRecipe("ms_furnace", {
+	name = "ms_alu_ingot_formless",
+	weight = 1,
+	priority = 2,
+	cooktime = TUNING.MS_SMELT_TIME["ms_alu_ingot_formless"],
+	test = function(cooker, names, tags)
+		return names.ms_alu_ore and names.ms_alu_ore > 3
+	end,
+	no_cookbook = true,
+})
+
+AddCookerRecipe("ms_furnace", {
+	name = "ms_gold_ingot_formless",
+	weight = 1,
+	priority = 2,
+	cooktime = TUNING.MS_SMELT_TIME["ms_gold_ingot_formless"],
+	test = function(cooker, names, tags)
+		return names.goldnugget and names.goldnugget > 3
+	end,
+	no_cookbook = true,
+})
+
+AddCookerRecipe("ms_furnace", {
+	name = "ms_bronze_ingot_formless",
+	weight = 1,
+	priority = 2,
+	cooktime = TUNING.MS_SMELT_TIME["ms_bronze_ingot_formless"],
+	test = function(cooker, names, tags)
+		return names.ms_copper_ore and names.ms_copper_ore > 1 and names.ms_alu_ore and names.ms_alu_ore > 1
+	end,
+	no_cookbook = true,
+})
+
+-- Luigi: We need "fail" recipe, otherwise we will get a crash after sticking twigs into the furnace.
+AddCookerRecipe("ms_furnace", {
+	name = "ms_slag",
+	weight = 1,
+	priority = -20,
+	cooktime = .25,
+	no_cookbook = true,
+  test = function(cooker, names, tags) return true end,
 })
 
 ------------------------------------------------------------------------------------------------------------------------
