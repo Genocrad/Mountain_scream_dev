@@ -70,11 +70,12 @@ end
 local function ShowProduct(inst)
   inst:AddTag("burnt")
   local product = SpawnPrefab(inst.components.stewer.product)
-  product.components.temperature:SetTemperature(inst.components.temperature:GetCurrent())
+  if product.components.temperature then
+    product.components.temperature:SetTemperature(inst.components.temperature:GetCurrent())
+  end
   inst.components.furnituredecortaker:AcceptDecor(product)
-  
   inst.components.stewer.product = nil
-  inst:DoTaskInTime(0, function() inst.components.stewer.done = nil end)
+
 end
 
 local function donecookfn(inst)
@@ -101,7 +102,6 @@ local function continuedonefn(inst)
 end
 
 local function continuecookfn(inst)
-    print("continue")
     inst.AnimState:PlayAnimation("cooking_loop", true)
     inst.Light:Enable(true)
     inst.SoundEmitter:KillSound("snd")
@@ -122,7 +122,7 @@ local function descriptionfn(inst)
   return "It is heated up to " .. string.format("%.1f", inst.components.temperature:GetCurrent())
 end
 
--- Hierarchy is as such here: furnace (persists) -> campfire(persits) -> firefx and bellow (do not persit)
+-- Hierarchy is as such here: furnace (persists) -> campfire(persits) -> firefx and bellow (do not persist)
 
 local function onbuilt(inst)
     inst.AnimState:PlayAnimation("place")
@@ -163,7 +163,6 @@ end
 
 local function OnDecorGiven(inst, item, giver)
     if not item then return end
-
     inst.SoundEmitter:PlaySound("wintersfeast2019/winters_feast/table/food")
     inst:AddTag("burnt") -- A hack to disable stewer functional without doing a shit ton of work
     if item.Physics then item.Physics:SetActive(false) end

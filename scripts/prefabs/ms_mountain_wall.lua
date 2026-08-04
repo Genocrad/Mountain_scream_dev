@@ -49,7 +49,7 @@ local assets = {
         
       inst.AnimState:PlayAnimation("idle_right_corner")
       inst.AnimState:SetOrientation(ANIM_ORIENTATION.OnGround)
-      inst.AnimState:SetDefaultEffectHandle(resolvefilepath("shaders/shadername.ksh"))	
+      inst.AnimState:SetDefaultEffectHandle(resolvefilepath("shaders/mountain_vertical_shader.ksh"))	
       
       inst.AnimState:SetDepthTestEnabled(true)
       inst.AnimState:SetDepthWriteEnabled(true)
@@ -78,7 +78,7 @@ local assets = {
         
       inst.AnimState:PlayAnimation("idle_left_corner")
       inst.AnimState:SetOrientation(ANIM_ORIENTATION.OnGround)
-      inst.AnimState:SetDefaultEffectHandle(resolvefilepath("shaders/shadername.ksh"))	
+      inst.AnimState:SetDefaultEffectHandle(resolvefilepath("shaders/mountain_vertical_shader.ksh"))	
       
       inst.AnimState:SetDepthTestEnabled(true)
       inst.AnimState:SetDepthWriteEnabled(true)
@@ -107,7 +107,7 @@ local assets = {
         
       inst.AnimState:PlayAnimation("idle_left_slope")
       inst.AnimState:SetOrientation(ANIM_ORIENTATION.OnGround)
-      inst.AnimState:SetDefaultEffectHandle(resolvefilepath("shaders/shadername.ksh"))	
+      inst.AnimState:SetDefaultEffectHandle(resolvefilepath("shaders/mountain_vertical_shader.ksh"))	
       
       inst.AnimState:SetDepthTestEnabled(true)
       inst.AnimState:SetDepthWriteEnabled(true)
@@ -139,9 +139,10 @@ local assets = {
       inst.Transform:SetScale(1.01,4,1.01)
       inst.AnimState:SetBuild("ms_mountain_wall")
       inst.AnimState:SetBank("ms_mountain_wall")
+      inst.AnimState:SetSymbolAddColour("filler", 1,1, 1, 1)
       
       inst.AnimState:SetOrientation(ANIM_ORIENTATION.OnGround)
-      inst.AnimState:SetDefaultEffectHandle(resolvefilepath("shaders/shadername.ksh"))	
+      inst.AnimState:SetDefaultEffectHandle(resolvefilepath("shaders/mountain_vertical_shader.ksh"))	
       
       inst.AnimState:SetDepthTestEnabled(true)
       inst.AnimState:SetDepthWriteEnabled(true)

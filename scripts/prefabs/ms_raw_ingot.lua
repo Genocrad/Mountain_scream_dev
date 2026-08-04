@@ -23,34 +23,17 @@ local assets =
 }
 
 local function RefreshImage(inst, form)
+  
+  if form == nil then form = "_formless" end
   local cur_temp = inst.components.temperature:GetCurrent()
-  local temp = ""
-  if form == nil then 
-    form = "" 
-    -- only basic ingot has warm animations. 
-    inst.Light:Enable(false)
-    if cur_temp >= TUNING.MS_SMELT_TEMP[inst.prefab] * 2/3 then
-      temp = "_hot"
-      inst.Light:Enable(true)
-      inst.Light:SetRadius(0.2)
-    end
-    if cur_temp >= TUNING.MS_SMELT_TEMP[inst.prefab] * 1/3 and  cur_temp <= TUNING.MS_SMELT_TEMP[inst.prefab] * 2/3 then
-      temp = "_warm"
-      inst.Light:Enable(true)
-      inst.Light:SetRadius(0.1)
-    end
-  else
-    -- let ingot destruction be handled by temperature delta instead.
-    temp = "_hot"
-  end
-  local imagename = "ms_" .. inst.ingot_group .. "_ingot" .. form .. temp
-    
-  if inst.components.inventoryitem.imagename ~= imagename then
-		inst.components.inventoryitem:ChangeImageName(imagename)
 
-    inst.AnimState:PlayAnimation( "ms_" .. inst.ingot_group .. "_ingot" .. form .. temp ) 
+  local imagename = "ms_" .. inst.ingot_group .. "_ingot" .. form .. "_hot"
+	if inst.components.inventoryitem.imagename ~= imagename then
+		inst.components.inventoryitem:ChangeImageName(imagename)
+    inst.AnimState:PlayAnimation( "ms_" .. inst.ingot_group .. "_ingot" .. form .. "_hot" ) 
 	end
 end
+
 
 local function destroy_and_spawn(inst)
   local mx, my, mz = inst.Transform:GetWorldPosition()
@@ -65,30 +48,22 @@ end
 
 local function TemperatureChange(inst, data)
   local cur_temp = inst.components.temperature:GetCurrent()
-  local imagename =  inst.components.inventoryitem.imagename or "ms_" .. inst.ingot_group .. "_ingot"
-
-  local form = string.match(imagename, "forward") and "_forward" or (string.match(imagename, "left") and "_left" or (string.match(imagename, "right") and "_right" or nil))
-  local temp = string.match(imagename, "melt") and "melt" or (string.match(imagename, "hot") and "hot" or (string.match(imagename, "warm") and "warm" or nil))
-  if form == nil then
-    if temp == "hot" and cur_temp <= TUNING.MS_SMELT_TEMP[inst.prefab] / 3 * 2 then
-      inst:RefreshImage(form)
-    end
-    if temp == "warm" and (cur_temp <= TUNING.MS_SMELT_TEMP[inst.prefab] * 1/3 or cur_temp >= TUNING.MS_SMELT_TEMP[inst.prefab] * 2/3) then
-      inst:RefreshImage(form)
-    end
-    if temp == nil and cur_temp >= TUNING.MS_SMELT_TEMP[inst.prefab] * 1/3 then
-      inst:RefreshImage(form)
-    end
-  else
-    if cur_temp <= TUNING.MS_SMELT_TEMP[inst.prefab] / 2 then
-      destroy_and_spawn(inst)
-    end
+  if cur_temp <= TUNING.MS_SMELT_TEMP[inst.prefab]/2 then
+     destroy_and_spawn(inst)
   end
 end
 
 local function OnForged(inst, direction)
   if direction == "_down" then
-    return
+    if inst.hits_down > 2 then
+      if math.random() > 0.5 then
+        local mx, my, mz = inst.Transform:GetWorldPosition()
+        local ingot = SpawnPrefab("ms_" .. inst.ingot_group .. "_ingot")
+        ingot.Transform:SetPosition(mx, my, mz)
+        inst:Remove()
+      end
+    end
+    inst.hits_down = inst.hits_down + 1
   else 
     local imagename =  inst.components.inventoryitem.imagename or inst.prefab
     local form
@@ -121,7 +96,7 @@ end
 
 local function OnSave(inst)
  local data = {}
-  if inst.hits_down then
+  if inst.hits then
     data.hits = inst.hits
   end
   return data
@@ -135,7 +110,7 @@ local function OnLoad(inst, data)
 end
 
 --
-local function MakeIngot(name, recipe)
+local function MakeRaw(name, recipe)
   local function fn()
       local inst = CreateEntity()
 
@@ -150,27 +125,25 @@ local function MakeIngot(name, recipe)
 
       inst.AnimState:SetBank("ms_ingot")
       inst.AnimState:SetBuild("ms_ingot")
-      inst.AnimState:PlayAnimation("ms_" .. name .. "_ingot")
-      inst.AnimState:SetFinalOffset(10)
+      inst.AnimState:PlayAnimation("ms_" .. name .. "_ingot_formless_hot")
+      inst.AnimState:SetFinalOffset(2)
       inst.AnimState:SetManualBB(0,-20, 200, 100)
-      
+    --furnituredecor (from furnituredecor component) added to pristine state for optimization
       inst:AddTag("furnituredecor")
 
+    --vase (from vase component) added to pristine state for optimization
       inst:AddTag("ms_ingot")
 
       inst:AddTag("ms_ignorenormalinsulation")
-    
-    
     
       inst.Light:SetFalloff(0.9)
       inst.Light:SetIntensity(.5)
       inst.Light:SetRadius(0.2)
       inst.Light:SetColour(209/255, 180/255, 30/255)
-      inst.Light:Enable(false)
+      inst.Light:Enable(true)
 
-      
-      
       MakeInventoryFloatable(inst, "small", 0.2)
+      
       
       inst:ListenForEvent("imagechange", clientimagechange)
       
@@ -181,22 +154,15 @@ local function MakeIngot(name, recipe)
 
       --
       local furnituredecor = inst:AddComponent("furnituredecor")
-      -- Fix for "trying to put stack of ingots on the furnace causes one ingot to disappear without trace
-      furnituredecor.onputonfurniture = function(inst) 
-        if inst:IsInLimbo() then
-          inst:ReturnToScene() 
-        end
-        inst:RemoveComponent("stackable") 
-      end
-      furnituredecor.ontakeofffurniture = function(inst)  local stackable = inst:AddComponent("stackable") stackable.maxsize = TUNING.STACK_SIZE_LARGEITEM end
+
       --
       local inspectable = inst:AddComponent("inspectable")
 
       --
       local inventoryitem = inst:AddComponent("inventoryitem")
+
       
-      local stackable = inst:AddComponent("stackable")
-      stackable.maxsize = TUNING.STACK_SIZE_LARGEITEM
+      
       
       -- Luigi: No heater component, players would overheat just from being close to them.
       
@@ -221,12 +187,11 @@ local function MakeIngot(name, recipe)
 
       inst.hits_down = 0
       inst.hits = 0 
-      
       inst.ingot_group = name
       inst.recipe_table = recipe
       return inst
   end
-  return Prefab("ms_" .. name .. "_ingot", fn, assets)
+  return Prefab("ms_" .. name .. "_ingot_formless", fn, assets)
 end
 
-return MakeIngot("alu", {"ms_alu_ore", "ms_alu_ore", "ms_alu_ore"}), MakeIngot("copper", {"ms_copper_ore", "ms_copper_ore", "ms_copper_ore"}), MakeIngot("bronze", {"ms_alu_ore", "ms_copper_ore", "ms_alu_ore"}), MakeIngot("gold", {"goldnugget", "goldnugget", "goldnugget"})
+return MakeRaw("alu", {"ms_alu_ore", "ms_alu_ore", "ms_alu_ore"}), MakeRaw("copper", {"ms_copper_ore", "ms_copper_ore", "ms_copper_ore"}), MakeRaw("bronze", {"ms_alu_ore", "ms_copper_ore", "ms_alu_ore"}), MakeRaw("gold", {"goldnugget", "goldnugget", "goldnugget"})
