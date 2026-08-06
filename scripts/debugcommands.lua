@@ -80,6 +80,14 @@ function d_spawn_stalactites()
 	end
 end
 
+function d_spawn_wall_stone()
+	local pos = ConsoleWorldPosition()
+	local inst = SpawnPrefab("ms_wall_stone")
+	if inst ~= nil then
+		inst.Transform:SetPosition(pos.x, 3, pos.z)
+	end
+end
+
 function d_spawn_stalagmites()
 	local rocks = {
 		"mountain_stalagmite_1",

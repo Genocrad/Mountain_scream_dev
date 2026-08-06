@@ -40,7 +40,7 @@ AddPrefabPostInit("cave", function(inst)
         COLLISION.LAND_OCEAN_LIMITS,
         TileGroups.MS_NON_CLOUDS, true,
         TileGroups.MS_TECHNICAL, true,
-        0, 256
+        TUNING.MS_TECHNICAL_COLLISION_INSET or -2, 256
     )
  if not TheNet:IsDedicated() then
   inst.entity:AddWaveComponent()

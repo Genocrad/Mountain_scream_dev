@@ -63,9 +63,17 @@ function DungeonMapOverwatch:GetMobSpawnPoints(level)
   return self.mob_spawn_points[level]
 end
 
+function DungeonMapOverwatch:GetWallSpawnPoints(level)
+  return self.wall_spawn_points[level]
+end
+
 function DungeonMapOverwatch:AddSpawnPointsForWall(level,x,y,dx,dy)
   for i = 1, math.random(1,3) do
-    table.insert(self.wall_spawn_points[level], {x = dx ~= 0 and x + dx or x + math.random()*4 - 2, y = 1.5 + math.random() * 8, z = dy ~= 0 and y + dy or y + math.random()*4 - 2})
+    table.insert(self.wall_spawn_points[level], {
+      x = dx ~= 0 and x + dx or x + math.random()*4 - 2,
+      y = 1.5 + math.random() * 8,
+      z = dy ~= 0 and y + dy or y + math.random()*4 - 2,
+    })
   end
   if dx~=0 and dy~= 0 then
     for i = 1, math.random(1,3) do

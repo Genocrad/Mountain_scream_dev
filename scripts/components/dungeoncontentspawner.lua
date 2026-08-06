@@ -357,13 +357,51 @@ function DungeonContentSpawner:SpawnLevelCaveDecor(level)
 	return spawned
 end
 
+function DungeonContentSpawner:SpawnLevelWallDecor(level)
+	local contents = TUNING.MS_LEVEL_CONTENTS[level]
+	local wall = contents ~= nil and contents.wall or nil
+	if wall == nil or wall.distributeprefabs == nil then
+		return 0
+	end
+
+	local overwatch = TheWorld.net ~= nil and TheWorld.net.components.dungeonmapoverwatch or nil
+	if overwatch == nil then
+		return 0
+	end
+
+	local points = overwatch:GetWallSpawnPoints(level)
+	if points == nil or #points == 0 then
+		return 0
+	end
+
+	local chance = wall.distributepercent or 0
+	local spawned = 0
+
+	for _, point in ipairs(points) do
+		local x, y, z = point.x, point.y, point.z
+		if x ~= nil and y ~= nil and z ~= nil and math.random() < chance then
+			local prefab = PickPrefab(wall.distributeprefabs)
+			if prefab ~= nil then
+				local ent = SpawnPrefab(prefab)
+				if ent ~= nil then
+					ent.Transform:SetPosition(x, y, z)
+					spawned = spawned + 1
+				end
+			end
+		end
+	end
+
+	return spawned
+end
+
 function DungeonContentSpawner:SpawnLevel(level)
 	-- Herds / communities first so centers are not blocked by decor clutter.
 	local herds = self:SpawnLevelHerds(level)
 	local communities = self:SpawnLevelCommunities(level)
 	local decor = self:SpawnLevelDecor(level)
 	local cave = self:SpawnLevelCaveDecor(level)
-	return decor + herds + communities + cave
+	local wall = self:SpawnLevelWallDecor(level)
+	return decor + herds + communities + cave + wall
 end
 
 

@@ -27,7 +27,7 @@ AddStategraphActionHandler("wilson", ActionHandler(ACTIONS.MS_USE_DOOR, "ms_door
 AddStategraphActionHandler("wilson_client", ActionHandler(ACTIONS.MS_USE_DOOR, "ms_door_use_pre"))
 
 ------------------------------------------------------------------------------------------------------------------------
--- 铝镐对石钟乳：专用「开采」→ 直线飞向 (x, THROW_HIT_HEIGHT, z)
+-- 铝镐对高处可采矿（石钟乳 / 墙矿）：专用「开采」→ 直线飞向目标高度
 
 local MS_MINE_STALACTITE = Action({ priority = 10, distance = 15, mount_valid = true })
 MS_MINE_STALACTITE.id = "MS_MINE_STALACTITE"
@@ -35,8 +35,8 @@ MS_MINE_STALACTITE.str = "Mine"
 MS_MINE_STALACTITE.fn = function(act)
 	if act.invobject ~= nil
 			and act.target ~= nil
-			and act.invobject.ThrowAtStalactite ~= nil then
-		return act.invobject:ThrowAtStalactite(act.doer, act.target)
+			and act.invobject.ThrowAtElevatedMineable ~= nil then
+		return act.invobject:ThrowAtElevatedMineable(act.doer, act.target)
 	end
 	return false
 end
@@ -46,11 +46,15 @@ AddAction(MS_MINE_STALACTITE)
 local is_chinese = locale == "zh" or locale == "zht" or locale == "zhr"
 STRINGS.ACTIONS.MS_MINE_STALACTITE = is_chinese and "开采" or "Mine"
 
+local function IsElevatedMineable(target)
+	return target ~= nil
+		and (target:HasTag("mountain_stalactite") or target:HasTag("ms_wall_stone"))
+end
+
 AddComponentAction("EQUIPPED", "aoetargeting", function(inst, doer, target, actions, right)
 	if not right
 			and inst:HasTag("ms_aluminum_pickaxe")
-			and target ~= nil
-			and target:HasTag("mountain_stalactite") then
+			and IsElevatedMineable(target) then
 		table.insert(actions, ACTIONS.MS_MINE_STALACTITE)
 	end
 end)

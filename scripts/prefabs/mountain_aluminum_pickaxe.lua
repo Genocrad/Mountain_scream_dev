@@ -73,7 +73,7 @@ end
 local function MineAt(doer, x, y, z)
 	local efficiency = TUNING.MOUNTAIN_ALUMINUM_PICKAXE.MINE_EFFICIENCY
 	local radius = TUNING.MOUNTAIN_ALUMINUM_PICKAXE.MINE_RADIUS
-	local ents = TheSim:FindEntities(x, y, z, radius, nil, { "INLIMBO", "NOCLICK", "FX", "player", "companion", "mountain_stalactite" })
+	local ents = TheSim:FindEntities(x, y, z, radius, nil, { "INLIMBO", "NOCLICK", "FX", "player", "companion", "mountain_stalactite", "ms_wall_stone" })
 	for _, v in ipairs(ents) do
 		if v.components.workable ~= nil
 				and v.components.workable:CanBeWorked()
@@ -84,7 +84,7 @@ local function MineAt(doer, x, y, z)
 	end
 end
 
-local function MineStalactite(doer, target)
+local function MineElevated(doer, target)
 	if target == nil or not target:IsValid() or target.components.workable == nil then
 		return
 	end
@@ -132,9 +132,15 @@ local function DropItem(proj, thrower, target)
 	end
 end
 
-local function OnHitStalactite(proj, thrower, target)
-	if target ~= nil and target:IsValid() and target:HasTag("mountain_stalactite") then
-		MineStalactite(thrower, target)
+local function IsElevatedMineable(target)
+	return target ~= nil
+		and target:IsValid()
+		and (target:HasTag("mountain_stalactite") or target:HasTag("ms_wall_stone"))
+end
+
+local function OnHitElevatedMineable(proj, thrower, target)
+	if IsElevatedMineable(target) then
+		MineElevated(thrower, target)
 	end
 	-- 从命中高度落下，而不是直接放到地面
 	ReturnItemToWorld(proj, thrower, false, true)
@@ -143,7 +149,7 @@ local function OnHitStalactite(proj, thrower, target)
 	end
 end
 
-local function OnMissStalactite(proj, thrower)
+local function OnMissElevatedMineable(proj, thrower)
 	ReturnItemToWorld(proj, thrower, false, true)
 	if proj:IsValid() then
 		proj:Remove()
@@ -173,8 +179,8 @@ local function SpellFn(inst, doer, pos)
 	return true
 end
 
-local function ThrowAtStalactite(inst, doer, target)
-	if doer == nil or target == nil or not target:IsValid() or not target:HasTag("mountain_stalactite") then
+local function ThrowAtElevatedMineable(inst, doer, target)
+	if doer == nil or not IsElevatedMineable(target) then
 		return false
 	end
 
@@ -191,14 +197,18 @@ local function ThrowAtStalactite(inst, doer, target)
 	end
 	inst:RemoveFromScene()
 
-	local tx, _, tz = target.Transform:GetWorldPosition()
-	local dest = Vector3(tx, TUNING.MOUNTAIN_STALACTITE.THROW_HIT_HEIGHT, tz)
+	local tx, ty, tz = target.Transform:GetWorldPosition()
+	local hit_y = ty
+	if target:HasTag("mountain_stalactite") then
+		hit_y = TUNING.MOUNTAIN_STALACTITE.THROW_HIT_HEIGHT or 15
+	end
+	local dest = Vector3(tx, hit_y, tz)
 
 	proj.item = inst
 	proj.components.aimedprojectile.weapon = inst
 	proj.components.aimedprojectile.damage = 0
-	proj.components.aimedprojectile:SetOnHitFn(OnHitStalactite)
-	proj.components.aimedprojectile:SetOnMissFn(OnMissStalactite)
+	proj.components.aimedprojectile:SetOnHitFn(OnHitElevatedMineable)
+	proj.components.aimedprojectile:SetOnMissFn(OnMissElevatedMineable)
 	proj.components.aimedprojectile:SetHitWorkAction(nil)
 	proj.components.aimedprojectile:Throw(doer, dest, { fly_3d = true, target = target })
 
@@ -271,7 +281,9 @@ local function pickaxe_fn()
 	inst:AddComponent("aoespell")
 	inst.components.aoespell:SetSpellFn(SpellFn)
 
-	inst.ThrowAtStalactite = ThrowAtStalactite
+	inst.ThrowAtElevatedMineable = ThrowAtElevatedMineable
+	-- 兼容旧调用名
+	inst.ThrowAtStalactite = ThrowAtElevatedMineable
 
 	MakeHauntableLaunch(inst)
 
