@@ -1,5 +1,5 @@
 local assets = {
-    Asset("ANIM", "anim/cave_exit_rope.zip"),
+    Asset("ANIM", "anim/ms_climbing.zip"),
 }
 
 local function StartTravelSound(inst, doer)
@@ -35,20 +35,11 @@ local function SetExitTarget(inst, targetinst)
     inst:ListenForEvent("onremove", inst._exittarget_onremove, targetinst)
 end
 
-local function ScheduleForDelete(inst)
-    if inst:IsAsleep() then
-        inst:Remove()
-        return
-    end
-
-    inst.persists = false
-    inst.AnimState:PlayAnimation("up")
-    inst:ListenForEvent("animover", inst.Remove)
-end
 
 local function OnSave(inst, data)
 	if inst.components.teleporter.targetTeleporter then
 		data.target_x, data.target_y, data.target_z =  inst.components.teleporter.targetTeleporter.Transform:GetWorldPosition()
+    data.teleport_offset =  inst.components.teleporter.teleport_offset
 	end
 end
 
@@ -59,23 +50,33 @@ local function OnLoad(inst, data)
     exit:SetExitTarget(inst)
     inst:SetExitTarget(exit)
 	end
+  if data ~= nil and data.teleport_offset then
+    inst.components.teleporter.teleport_offset = data.teleport_offset
+  end
 end
 
 
 local function fn()
     local inst = CreateEntity()
 
-   
-    
     inst.entity:AddTransform()
     inst.entity:AddAnimState()
     inst.entity:AddSoundEmitter()
     inst.entity:AddNetwork()
 
-    inst.AnimState:SetBank("exitrope")
-    inst.AnimState:SetBuild("cave_exit_rope")
-    inst.AnimState:PlayAnimation("idle_loop", true)
-
+    MakeObstaclePhysics(inst, 3)
+    
+    inst.AnimState:SetBank("ms_climbing")
+    inst.AnimState:SetBuild("ms_climbing")
+    inst.AnimState:PlayAnimation("idle")
+    inst.AnimState:SetOrientation(ANIM_ORIENTATION.OnGround)
+    inst.AnimState:SetDefaultEffectHandle(resolvefilepath("shaders/clickable_vertical_shader.ksh"))	
+    inst.AnimState:SetDepthTestEnabled(true)
+    inst.AnimState:SetDepthWriteEnabled(true)
+    inst.Transform:SetScale(1.002,2,1.002)
+    inst.AnimState:SetManualBB(0,0,600,1000)
+    inst.AnimState:SetSymbolAddColour("climbing", 0, 0, 1, 1)
+    
     inst:AddTag("climbable")
 
     inst.entity:SetPristine()
@@ -95,13 +96,14 @@ local function fn()
     teleporter:SetEnabled(false)
     inst.StartTravelSound = StartTravelSound
     inst:ListenForEvent("starttravelsound", inst.StartTravelSound) -- triggered by player stategraph
-
+    
+    inst:AddComponent("savedrotation") 
+    
     inst.SetExitTarget = SetExitTarget
+    
     inst._exittarget_onremove = function()
         inst:SetExitTarget(nil)
     end
-
-    inst.ScheduleForDelete = ScheduleForDelete
     
     inst.OnSave = OnSave
     inst.OnLoad = OnLoad

@@ -85,7 +85,10 @@ local function fn()
 	end
 
 	inst:AddComponent("inspectable")
-
+  
+  -- For the teleporter
+  inst:AddComponent("tradable")
+      
 	inst:AddComponent("inventoryitem")
 	inst.components.inventoryitem.atlasname = "images/inventoryimages/mountain_items.xml"
 	inst.components.inventoryitem.imagename = "mountain_transformation_cube"

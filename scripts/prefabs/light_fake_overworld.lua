@@ -42,7 +42,7 @@ local light_params =
 
     fullmoon =
     {
-        radius = 9,
+        radius = 50,
         intensity = .85,
         falloff = 0.8,
         colour = { 84 / 255, 122 / 255, 156 / 255},

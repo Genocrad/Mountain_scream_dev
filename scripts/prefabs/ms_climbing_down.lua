@@ -1,6 +1,6 @@
 local assets = {
-    Asset("ANIM", "anim/vault_lobby_exit.zip"),
-    Asset("ANIM", "anim/vault_ladder.zip"),
+    Asset("ANIM", "anim/ms_climbing_down.zip"),
+
 }
 local prefabs = {
     "ceiling_rope",
@@ -54,25 +54,12 @@ local function fn()
   inst:AddTag("groundhole")
   inst:AddTag("blocker")
 
-  inst.entity:AddPhysics()
-  inst.Physics:SetMass(0)
-  inst.Physics:SetCollisionGroup(COLLISION.OBSTACLES)
-  inst.Physics:SetCollisionMask(
-    COLLISION.ITEMS,
-    COLLISION.CHARACTERS,
-    COLLISION.GIANTS
-  )
-  inst.Physics:SetCylinder(1.8, 6)
-
-  inst.AnimState:SetBank("vault_lobby_exit")
-  inst.AnimState:SetBuild("vault_lobby_exit")
+  inst.AnimState:SetBank("ms_climbing_down")
+  inst.AnimState:SetBuild("ms_climbing_down")
   inst.AnimState:PlayAnimation("idle")
   inst.AnimState:SetOrientation(ANIM_ORIENTATION.OnGround)
   inst.AnimState:SetLayer(LAYER_WORLD_BACKGROUND)
   inst.AnimState:SetSortOrder(2)
-  --NOTE: Shadows are on WORLD_BACKGROUND sort order 1
-  --      Hole goes above to hide shadows
-  --      Surface goes below to reveal shadows
 
   inst.MiniMapEntity:SetIcon("vault_lobby_exit.png")
 
@@ -88,8 +75,6 @@ local function fn()
 
   inst:AddComponent("inspectable")
 
-  local lootdropper = inst:AddComponent("lootdropper")
-  lootdropper:SetLoot({"rope"})
 
   local teleporter = inst:AddComponent("teleporter")
   teleporter.onActivate = OnActivate

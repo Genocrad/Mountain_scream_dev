@@ -69,7 +69,7 @@ local function fn_helper()
 
   inst:AddComponent("workable")
   inst.components.workable:SetWorkAction(ACTIONS.HAMMER)
-  inst.components.workable:SetWorkLeft(2000)
+  inst.components.workable:SetWorkLeft(20000000)
   
   if inst.master and inst.master.ingot then
     inst.ingot = inst.master.ingot
@@ -190,7 +190,7 @@ local function fn()
 
   inst:AddComponent("workable")
   inst.components.workable:SetWorkAction(ACTIONS.HAMMER)
-  inst.components.workable:SetWorkLeft(2000)
+  inst.components.workable:SetWorkLeft(2000000)
   inst.components.workable:SetOnWorkCallback(onhit)
 
   inst:AddComponent("furnituredecortaker")

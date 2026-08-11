@@ -98,6 +98,15 @@ local function MineStalactite(doer, target)
 	end
 end
 
+local function IsInvalidTile(tile)
+  return tile == WORLD_TILES.VOID_TECHNICAL or
+  tile == WORLD_TILES.MS_MOUNTAIN_LOW_TECHNICAL or
+  tile == WORLD_TILES.MS_MOUNTAIN_LOW_2_TECHNICAL or
+  tile == WORLD_TILES.MS_MOUNTAIN_HIGH_TECHNICAL or
+  tile == WORLD_TILES.MS_PERMAFROST_TECHNICAL or 
+  (not tile == 1 and not TileGroupManager:IsLandTile(tile))
+end
+
 local function ReturnItemToWorld(proj, thrower, do_mine_at, keep_height)
 	local item = proj.item
 	proj.item = nil
@@ -112,6 +121,11 @@ local function ReturnItemToWorld(proj, thrower, do_mine_at, keep_height)
 	end
 	item.Transform:SetPosition(x, y, z)
 	item:ReturnToScene()
+  -- So it does not fall into the void.
+  if IsInvalidTile(TheWorld.Map:GetTileAtPoint(x, 0, z)) then
+    c_announce(item)
+    LaunchAt(item, item, thrower, 10, 3, 3, 0)
+  end
 	if item.components.inventoryitem ~= nil then
 		item.components.inventoryitem:OnDropped(true)
 	end
