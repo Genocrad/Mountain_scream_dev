@@ -23,6 +23,8 @@ TileManager.RegisterTileRange(TileRanges.MS_CLOUDS, 40000, 40257)
 TileGroups.MS_CLOUDS = TileGroupManager:AddTileGroup()
 TileGroups.MS_NON_CLOUDS = TileGroupManager:AddTileGroup()
 TileGroups.MS_TECHNICAL = TileGroupManager:AddTileGroup()
+TileGroups.MS_ICE_BRIDGE = TileGroupManager:AddTileGroup()
+
 TileManager.AddTile(
     "CLOUDS_DARK",
     TileRanges.MS_CLOUDS,
@@ -327,6 +329,28 @@ TileManager.AddTile(
     }
 )
 
+-- Same as ROPE_BRIDGE, but we do not want it collapsing.
+TileManager.AddTile(
+    "MS_BRIDGE",
+    TileRanges.LAND,
+    {ground_name = "MS Bridge"},
+    {
+        name="blocky",
+        noise_texture="ice_bridge_turf",
+        runsound="dontstarve/movement/run_cavesbridge",
+        walksound="dontstarve/movement/walk_cavesbridge",
+        snowsound="dontstarve/movement/run_ice",
+        mudsound="dontstarve/movement/run_mud",
+        nogroundoverlays = true,
+        cannotbedug = true,
+        istemptile = true,
+    },
+    {
+        name="map_edge",
+        noise_texture="ice_bridge_noise",
+    }
+)
+
 
 TileGroupManager:AddValidTile(TileGroups.MS_CLOUDS, WORLD_TILES.CLOUDS_WHITE)
 TileGroupManager:AddValidTile(TileGroups.MS_CLOUDS, WORLD_TILES.CLOUDS_DARK)
@@ -337,6 +361,8 @@ TileGroupManager:AddValidTile(TileGroups.MS_NON_CLOUDS, WORLD_TILES.MS_MOUNTAIN_
 TileGroupManager:AddValidTile(TileGroups.MS_NON_CLOUDS, WORLD_TILES.MS_MOUNTAIN_HIGH)
 TileGroupManager:AddValidTile(TileGroups.MS_NON_CLOUDS, WORLD_TILES.MS_SNOW)
 TileGroupManager:AddValidTile(TileGroups.MS_NON_CLOUDS, WORLD_TILES.MS_PERMAFROST)
+
+TileGroupManager:AddValidTile(TileGroups.MS_ICE_BRIDGE, WORLD_TILES.MS_BRIDGE)
 
 TileGroupManager:AddValidTile(TileGroups.MS_TECHNICAL, WORLD_TILES.VOID_TECHNICAL)
 TileGroupManager:AddValidTile(TileGroups.MS_TECHNICAL, WORLD_TILES.MS_MOUNTAIN_LOW_TECHNICAL)
