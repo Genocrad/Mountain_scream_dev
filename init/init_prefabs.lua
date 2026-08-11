@@ -12,11 +12,11 @@ PrefabFiles = {
 	"tar_projectile",
 	"ms_anvil",
 	"ms_ingot",
-    "ms_slag",
-    "ms_raw_ingot",
+  "ms_slag",
+  "ms_raw_ingot",
 	"ms_furnace",
-    "ms_ore",
-    "ms_details",
+  "ms_ore",
+  "ms_details",
 	"ms_furnace_campfire",
 	"ms_furnace_campfirefire",
 	"ms_furnace_bellow",
@@ -30,6 +30,7 @@ PrefabFiles = {
 	"ms_snow_turf",
 	"ms_cave_entrance",
 	"ms_arenateleporter",
+  "ms_shortcut",
   "giant_plug_marker",
 
 	--------------------------------------------------------
@@ -88,4 +89,6 @@ PrefabFiles = {
 	"mountain_top",
 	"mountain_frozen_meatballs",
 	"mountain_wooden_box",
+  "ms_wall_bush",
+  "ms_wall_stone",
 }

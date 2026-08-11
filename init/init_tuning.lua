@@ -1,5 +1,6 @@
 --------------------------------------------------------
 -- A: dungeon / forging / collision
+TOOLACTIONS.TOSS = true
 COLLISION.MS_CLOUDS = 32768
 FALLOFF_IDS.CLOUDS_FALLOFF = 5
 
@@ -199,6 +200,72 @@ TUNING.MS_LEVEL_CONTENTS = {
 		},
 	},
 }
+TUNING.MS_LEVEL_WALL_CONTENTS = {
+  [1] = {
+    distributepercent = 0.2,
+		distributeprefabs = {
+			ms_wall_stone = 0.1,
+			ms_wall_bush = 1.0,
+		},  
+  },
+  [2] = {
+    distributepercent = 0.2,
+		distributeprefabs = {
+			ms_wall_stone = 0.2,
+			ms_wall_bush = 1.0,
+		},  
+  },
+  [3] = {
+    distributepercent = 0.2,
+		distributeprefabs = {
+			ms_wall_stone = 0.4,
+			ms_wall_bush = 1.0,
+		},  
+  },
+  [4] = {
+    distributepercent = 0.2,
+		distributeprefabs = {
+			ms_wall_stone = 1.0,
+			ms_wall_bush = 1.0,
+		},  
+  },
+  [5] = {
+    distributepercent = 0.2,
+		distributeprefabs = {
+			ms_wall_stone = 1.0,
+			ms_wall_bush = 1.0,
+		},  
+  },
+  [6] = {
+    distributepercent = 0.2,
+		distributeprefabs = {
+			ms_wall_stone = 1.0,
+			ms_wall_bush = 0,
+		},  
+  },
+  [7] = {
+    distributepercent = 0.2,
+		distributeprefabs = {
+			ms_wall_stone = 1.0,
+			ms_wall_bush = 0,
+		},  
+  },
+  [10] = {
+    distributepercent = 0.2,
+		distributeprefabs = {
+			ms_wall_stone = 1.0,
+			ms_wall_bush = 0,
+		},  
+  },
+  [11] = {
+    distributepercent = 0.2,
+		distributeprefabs = {
+			ms_wall_stone = 1.0,
+			ms_wall_bush = 0,
+		},  
+  },
+}
+
 TUNING.MS_SMELT_TIME = {
     ms_iron = 1,
 	ms_gold_ingot = 1,
