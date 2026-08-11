@@ -18,6 +18,9 @@ local function onterraformingfinished(inst)
   inst.components.dungeonwallspawner:SpawnArenaTeleporter()
   inst.components.dungeonwallspawner:SpawnWallsAroundPoint(8, "_snow", 25, WORLD_TILES.MS_PERMAFROST_TECHNICAL)
 
+  -- Push edge data to clients / local renderer after all levels are scanned.
+  inst.components.dungeonwallspawner:SyncAllWalls(true)
+
   -- After walls: decorate configured floors (level 1–2 green foothills for now).
   if inst.components.dungeoncontentspawner ~= nil then
     inst.components.dungeoncontentspawner:SpawnConfiguredLevels()
@@ -63,6 +66,12 @@ AddPrefabPostInit("cave", function(inst)
       inst.wavemanager_on = true
     end
   end)
+
+  -- Client-side streaming wall visuals (listen server + pure clients).
+  if not TheNet:IsDedicated() then
+    inst:AddComponent("mountainwallrenderer")
+  end
+
   if not TheWorld.ismastersim then
     return inst
   end

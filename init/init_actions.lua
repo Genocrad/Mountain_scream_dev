@@ -48,7 +48,7 @@ STRINGS.ACTIONS.MS_MINE_STALACTITE = is_chinese and "开采" or "Mine"
 
 local function IsElevatedMineable(target)
 	return target ~= nil
-		and (target:HasTag("mountain_stalactite") or target:HasTag("ms_wall_stone"))
+		and target:HasTag("mountain_stalactite")
 end
 
 AddComponentAction("EQUIPPED", "aoetargeting", function(inst, doer, target, actions, right)

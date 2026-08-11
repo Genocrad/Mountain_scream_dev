@@ -6,7 +6,6 @@ PrefabFiles = {
 	"gas_mountain_sediment",
 	"gas_mountain_wall",
 	"ms_mountain_wall",
-	"ms_wall_stone",
 	"ms_cave_wall",
 	"cave_floor_7x5",
 	"tar_pit",

@@ -33,3 +33,8 @@ modimport("init/init_actions")
 modimport("init/init_cooking")
 modimport("init/init_tornado_sorbet")
 modimport("init/init_forging")
+modimport("init/init_rpc")
+
+if GLOBAL.rawget(GLOBAL, "MountainWalls") == nil then
+	GLOBAL.rawset(GLOBAL, "MountainWalls", {})
+end

@@ -11,9 +11,8 @@ TUNING.MS_CAVES_START = 10
 
 TUNING.MS_TERRAFORMER_SIZE = {50, 35, 25, 22, 20, 20, 20, 20, 20, 20}
 
--- 墙贴图画在 technical 格中心，碰撞默认在格边（约差半格=2）。
--- 不挪贴图；用 AddTileCollisionSet 的 radius 内收碰撞。
--- 注意：正值会把碰撞推入可走侧（更违和），应对 technical 侧用负值。
+-- 墙体贴图对齐地皮边缘；AddTileCollisionSet 的 radius 控制碰撞相对格边的偏移。
+-- 负值把碰撞推向 technical 一侧。若整体已贴边缘，可按手感微调此值。
 TUNING.MS_TECHNICAL_COLLISION_INSET = -2
 
 -- Runtime mountain-floor decoration (pseudo-Room distributeprefabs).
@@ -21,14 +20,6 @@ TUNING.MS_TECHNICAL_COLLISION_INSET = -2
 -- distributepercent down so effective density stays near vanilla rocky (~0.1/tile).
 TUNING.MS_CONTENT_POINT_SAMPLE = 1 / 3
 TUNING.MS_CONTENT_CLEAR_RADIUS = 1.25
-
--- Shared wall-face decoration (consumed from wall_spawn_points).
-local MS_WALL_CONTENTS = {
-	distributepercent = 0.25,
-	distributeprefabs = {
-		ms_wall_stone = 1.0,
-	},
-}
 
 TUNING.MS_LEVEL_CONTENTS = {
 	-- Level 1–2: MS_MOUNTAIN_LOW / LOW_2 (green foothills)
@@ -77,7 +68,6 @@ TUNING.MS_LEVEL_CONTENTS = {
 		herds = {
 			{ prefab = "mountain_goat", size = 8, count = 1 },
 		},
-		wall = MS_WALL_CONTENTS,
 	},
 	[3] = {
 		distributepercent = 0.12,
@@ -112,7 +102,6 @@ TUNING.MS_LEVEL_CONTENTS = {
 				rock2 = 1.0,
 			},
 		},
-		wall = MS_WALL_CONTENTS,
 	},
 	[4] = {
 		distributepercent = 0.12,
@@ -132,7 +121,6 @@ TUNING.MS_LEVEL_CONTENTS = {
 			mountain_bush = 1.0,
 			mountain_falcon_base = 0.08,
 		},
-		wall = MS_WALL_CONTENTS,
 	},
 	[5] = {
 		distributepercent = 0.1,
@@ -168,7 +156,6 @@ TUNING.MS_LEVEL_CONTENTS = {
 				rock2 = 1.0,
 			},
 		},
-		wall = MS_WALL_CONTENTS,
 	},
 	[6] = {
 		distributepercent = 0.1,
@@ -192,7 +179,6 @@ TUNING.MS_LEVEL_CONTENTS = {
 				},
 			},
 		},
-		wall = MS_WALL_CONTENTS,
 	},
 	[7] = {
 		distributepercent = 0.1,
@@ -216,10 +202,6 @@ TUNING.MS_LEVEL_CONTENTS = {
 				},
 			},
 		},
-		wall = MS_WALL_CONTENTS,
-	},
-	[8] = {
-		wall = MS_WALL_CONTENTS,
 	},
 }
 TUNING.MS_SMELT_TIME = {
@@ -619,11 +601,6 @@ TUNING.MOUNTAIN_COCKROACH_NEST = {
 	MAX_CHILDREN_3 = 2,             -- 小巢
 	SPAWN_PERIOD = 8,               -- 持续放出间隔（秒；洞穴巢无昼夜门禁）
 	REGEN_PERIOD = 60,              -- 死亡后重新生成间隔（秒）
-}
-
--- ms_wall_stone（山体墙面矿石；仅铝镐投掷可挖）
-TUNING.MS_WALL_STONE = {
-	WORK = TUNING.ROCKS_MINE_MED, -- 4
 }
 
 -- mountain_stalactite / mountain_stalagmite（纯岩石，不刷蟑螂；镐次与巢穴一致）

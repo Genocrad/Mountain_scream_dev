@@ -6,14 +6,12 @@ local DungeonMapOverwatch = Class(function(self, inst)
     self.terraformers_points = {}
     self.exits = {}
     self.mob_spawn_points = {}
-    self.wall_spawn_points = {}
     self.mob_spawn_points_near_walls = {} 
     
     for i = 1, 20 do 
       self.terraformers_points[i] = {}
       self.exits[i] = nil
       self.mob_spawn_points[i] = {}
-      self.wall_spawn_points[i] = {} -- Not for walls, but on the walls
       self.mob_spawn_points_near_walls[i] = {} -- if we ever want to have something that spawns only near the walls, like fallen boulders or something.
     end
     
@@ -63,18 +61,7 @@ function DungeonMapOverwatch:GetMobSpawnPoints(level)
   return self.mob_spawn_points[level]
 end
 
-function DungeonMapOverwatch:GetWallSpawnPoints(level)
-  return self.wall_spawn_points[level]
-end
-
 function DungeonMapOverwatch:AddSpawnPointsForWall(level,x,y,dx,dy)
-  for i = 1, math.random(1,3) do
-    table.insert(self.wall_spawn_points[level], {
-      x = dx ~= 0 and x + dx or x + math.random()*4 - 2,
-      y = 1.5 + math.random() * 8,
-      z = dy ~= 0 and y + dy or y + math.random()*4 - 2,
-    })
-  end
   if dx~=0 and dy~= 0 then
     for i = 1, math.random(1,3) do
       local x_or_y = math.random()>0.5 and 1 or 0 

@@ -73,7 +73,7 @@ end
 local function MineAt(doer, x, y, z)
 	local efficiency = TUNING.MOUNTAIN_ALUMINUM_PICKAXE.MINE_EFFICIENCY
 	local radius = TUNING.MOUNTAIN_ALUMINUM_PICKAXE.MINE_RADIUS
-	local ents = TheSim:FindEntities(x, y, z, radius, nil, { "INLIMBO", "NOCLICK", "FX", "player", "companion", "mountain_stalactite", "ms_wall_stone" })
+	local ents = TheSim:FindEntities(x, y, z, radius, nil, { "INLIMBO", "NOCLICK", "FX", "player", "companion", "mountain_stalactite" })
 	for _, v in ipairs(ents) do
 		if v.components.workable ~= nil
 				and v.components.workable:CanBeWorked()
@@ -135,7 +135,7 @@ end
 local function IsElevatedMineable(target)
 	return target ~= nil
 		and target:IsValid()
-		and (target:HasTag("mountain_stalactite") or target:HasTag("ms_wall_stone"))
+		and target:HasTag("mountain_stalactite")
 end
 
 local function OnHitElevatedMineable(proj, thrower, target)
