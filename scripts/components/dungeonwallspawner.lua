@@ -5,6 +5,7 @@ local DungeonWallSpawner = Class(function(self, inst)
     self.walls = {}
     self.cave_doors = {}
     self.exits = {}
+    self.entrances = {}
   end)
 
 local function IsMsTile(tile)
@@ -18,18 +19,23 @@ local function IsMsTile(tile)
 end
 
 local function IsMsTechnicalTile(tile)
+  
   return tile == WORLD_TILES.VOID_TECHNICAL or
   tile == WORLD_TILES.MS_MOUNTAIN_LOW_TECHNICAL or
   tile == WORLD_TILES.MS_MOUNTAIN_LOW_2_TECHNICAL or
   tile == WORLD_TILES.MS_MOUNTAIN_HIGH_TECHNICAL or
-  tile == WORLD_TILES.MS_PERMAFROST_TECHNICAL
+  tile == WORLD_TILES.MS_PERMAFROST_TECHNICAL or 
+  tile == WORLD_TILES.MS_BRIDGE or 
+  (not tile == 1 and not TileGroupManager:IsLandTile(tile))
 end
 
 
 function DungeonWallSpawner:SpawnMainEntrance()
   local center_x, center_y = TheWorld.net.components.dungeonmapoverwatch:GetPointForLevel(2)
+  local attempts = 200
   local success
-  while success ~= true do
+  while success ~= true and attempts> 0 do
+    attempts = attempts -1
     local x = center_x+math.random(-50, 50)*4
     local z = center_y+math.random(-50, 50)*4
     if IsMsTile(TheWorld.Map:GetTileAtPoint(x, 0, z)) then
@@ -38,6 +44,27 @@ function DungeonWallSpawner:SpawnMainEntrance()
       success = true
     end
   end
+  --Luigi: If we cant find a position on a first level, it means that worldgen is fucked up and we have island, extra small level or something like that.
+  --Regenerate the world, for sake of our own sanity.
+  if attempts < 1 then
+    c_regenerateshard()
+  end
+  attempts = 200
+  success = nil
+  while success ~= true and attempts>0 do
+    attempts = attempts - 1
+    local x = center_x+math.random(-50, 50)*4
+    local z = center_y+math.random(-50, 50)*4
+    if IsMsTile(TheWorld.Map:GetTileAtPoint(x, 0, z)) then
+      self.shortcut = SpawnPrefab("ms_shortcut")
+      self.shortcut.Transform:SetPosition(x,0,z)
+      success = true
+    end
+  end
+  if attempts < 1 then
+    c_regenerateshard()
+  end
+  self:SanityCheck(self.shortcut, self.exits[2])
 end
 
 function DungeonWallSpawner:SpawnArenaTeleporter()
@@ -61,13 +88,22 @@ function DungeonWallSpawner:SpawnArenaTeleporter()
         end
       end
           
+      for i = -2, 2 do 
+        for j = -2, 2 do
+          TheWorld.Map:SetTile(tile_x + i, tile_z + j, WORLD_TILES.MS_PERMAFROST) 
+        end
+      end
       for i = -1, 1 do 
         for j = -1, 1 do
           TheWorld.Map:SetTile(tile_x + i, tile_z + j, WORLD_TILES.VOID_TECHNICAL) 
           TheWorld.Map:SetTile(tile_x + i + TUNING.MS_TERRAFORMER_OFFSET_X[8], tile_z + j + TUNING.MS_TERRAFORMER_OFFSET_Y[8], WORLD_TILES.MS_PERMAFROST)
         end
       end
+      
+      -- Luigi: For some god forsaken reason, we need 2 lights for full brightness?
       local light = SpawnPrefab("light_fake_overworld")
+      light.Transform:SetPosition(x + TUNING.MS_TERRAFORMER_OFFSET_X[8] * 4, 0, z + TUNING.MS_TERRAFORMER_OFFSET_Y[8] * 4) 
+      light = SpawnPrefab("light_fake_overworld")
       light.Transform:SetPosition(x + TUNING.MS_TERRAFORMER_OFFSET_X[8] * 4, 0, z + TUNING.MS_TERRAFORMER_OFFSET_Y[8] * 4) 
       for i = -3, 3 do
         for j = -3, 3 do 
@@ -97,6 +133,8 @@ function DungeonWallSpawner:SpawnArenaTeleporter()
   end
   local light = SpawnPrefab("light_fake_overworld")
   light.Transform:SetPosition(center_x + TUNING.MS_TERRAFORMER_OFFSET_X[8] * 4 + TUNING.MS_TERRAFORMER_OFFSET_X[9] * 4, 0, center_y + TUNING.MS_TERRAFORMER_OFFSET_Y[8] * 4 + TUNING.MS_TERRAFORMER_OFFSET_Y[9] * 4)   
+  light = SpawnPrefab("light_fake_overworld")
+  light.Transform:SetPosition(center_x + TUNING.MS_TERRAFORMER_OFFSET_X[8] * 4 + TUNING.MS_TERRAFORMER_OFFSET_X[9] * 4, 0, center_y + TUNING.MS_TERRAFORMER_OFFSET_Y[8] * 4 + TUNING.MS_TERRAFORMER_OFFSET_Y[9] * 4)   
   for i = -3, 3 do
     for j = -3, 3 do 
       local plug = SpawnPrefab("giant_plug_marker")
@@ -106,94 +144,143 @@ function DungeonWallSpawner:SpawnArenaTeleporter()
   success = nil
   -- Spawn the teleporter to and from arena. 
   attempts = 100
-  while success ~= true and attempts <= 0 do
-
+  while success ~= true and attempts >= 0 do
     local x = center_x+math.random(-200, 200)
     local y
     local z = center_y+math.random(-200, 200)
-    print("TRYING TO GENERATE TELEPORTER",x,z, TheWorld.Map:GetTileAtPoint(x, 0, z)) 
-    if attempts <= 0 then x,y,z = self.exits[8].Transform:GetWorldPosition() end
+    attempts = attempts - 1
+    if attempts <= 0 then x,y,z = self.exits[8].Transform:GetWorldPosition() x = x + math.random(-32, 32) y = y + math.random(-32, 32) end
     if (TileGroupManager:IsLandTile(TheWorld.Map:GetTileAtPoint(x, 0, z)) and not IsMsTechnicalTile(TheWorld.Map:GetTileAtPoint(x, 0, z))) or attempts <= 0 then
       local teleporter = SpawnPrefab("ms_arenateleporter")
       local exit = SpawnPrefab("ms_arenateleporter_exit")
-      exit.Transform:SetPosition(center_x + 4 + TUNING.MS_TERRAFORMER_OFFSET_X[8] * 4 + TUNING.MS_TERRAFORMER_OFFSET_X[9] * 4 ,0, center_y + TUNING.MS_TERRAFORMER_OFFSET_Y[8] * 4 + TUNING.MS_TERRAFORMER_OFFSET_Y[9]*4)
-      TheWorld.Map:SetTile(TheWorld.Map:GetTileXYAtPoint(x+1,0,z), WORLD_TILES.MS_PERMAFROST)
+      exit.Transform:SetPosition(center_x + TUNING.MS_TERRAFORMER_OFFSET_X[8] * 4 + TUNING.MS_TERRAFORMER_OFFSET_X[9] * 4 ,0, center_y + TUNING.MS_TERRAFORMER_OFFSET_Y[8] * 4 + TUNING.MS_TERRAFORMER_OFFSET_Y[9]*4)
+      local tilex, tilez = TheWorld.Map:GetTileXYAtPoint(x,0,z)
+      TheWorld.Map:SetTile(tile_x, tilez, WORLD_TILES.MS_PERMAFROST)
       teleporter.Transform:SetPosition(x,0,z)
       exit:SetExitTarget(teleporter)
       teleporter:SetExitTarget(exit)
       success = true
+      self:SanityCheck(teleporter, self.exits[8])
+    end
+  end
+  success = nil
+  attempts = 100
+  while success ~= true and attempts >= 0 do
+    local x = center_x+math.random(-200, 200)
+    local y
+    local z = center_y+math.random(-200, 200)
+    attempts = attempts - 1
+
+    if attempts <= 0 then x,y,z = self.exits[8].Transform:GetWorldPosition() x = x + math.random(-32, 32) y = y + math.random(-32, 32) end
+    if (TileGroupManager:IsLandTile(TheWorld.Map:GetTileAtPoint(x, 0, z)) and not IsMsTechnicalTile(TheWorld.Map:GetTileAtPoint(x, 0, z))) or attempts <= 0 then
+    
+      local teleporter = SpawnPrefab("ms_shortcut_exit")
+      local tilex, tilez = TheWorld.Map:GetTileXYAtPoint(x,0,z)
+      TheWorld.Map:SetTile(tile_x, tilez, WORLD_TILES.MS_PERMAFROST)
+      teleporter.Transform:SetPosition(x,0,z)
+      self.shortcut:SetExitTarget(teleporter)
+      teleporter:SetExitTarget(self.shortcut)
+      success = true
+      self:SanityCheck(teleporter, self.exits[8])
     end
   end
 end
 
-function DungeonWallSpawner:SpawnWallsAroundPoint(level, wall, size, technical_tile)
+local function spawn_5x5_area(self, level, x,y, wall, normal_tile, technical_tile)
+  local tilex, tiley = TheWorld.Map:GetTileXYAtPoint(x,0,y)
+  for i = -2, 2 do 
+    for j = -2, 2 do
+      TheWorld.Map:SetTile(tilex + i, tiley + j, normal_tile) 
+    end
+  end
+  for i = -1, 1 do 
+    for j = -1, 1 do
+      TheWorld.Map:SetTile(tilex + i, tiley + j, technical_tile) 
+    end
+  end
+  local function spawnwall(dx, dy, angle)
+    local new_wall = SpawnPrefab("ms_mountain_wall" .. wall)
+    new_wall.Transform:SetPosition(x+dx , 0, y+dy)
+    new_wall.Transform:SetRotation(angle)
+  end
+  spawnwall(4.82, 0, 90)
+  spawnwall(-4.82, 0, 90)
+  spawnwall(0, 4.82, 0)
+  spawnwall(0, -4.82, 0)
+  spawnwall(3.414, 3.414, 45)
+  spawnwall(3.414, -3.414, 135)
+  spawnwall(-3.414, 3.414, 135)
+  spawnwall(-3.414, -3.414, 45)
+  local random_x, random_y = math.random(-30, 30), math.random(-30, 30)
+  for i = -1, 1 do 
+    for j = -1, 1 do
+      TheWorld.Map:SetTile(tilex + i + TUNING.MS_TERRAFORMER_OFFSET_X[level] + random_x, tiley + j + TUNING.MS_TERRAFORMER_OFFSET_Y[level] + random_y, normal_tile) 
+    end
+  end
+  self.exits[level+1] = SpawnPrefab("ms_climbing_down")
+  self.exits[level+1].suckmyass  = true
+  self.exits[level+1].Transform:SetPosition(x + TUNING.MS_TERRAFORMER_OFFSET_X[level] * 4 + random_x * 4, 0, y + TUNING.MS_TERRAFORMER_OFFSET_Y[level] * 4 + random_y * 4)
+  self.entrances[level]:SetExitTarget(self.exits[level+1])
+  self.exits[level+1]:SetExitTarget(self.entrances[level])
+end
+
+function DungeonWallSpawner:SpawnWallsAroundPoint(level, wall, size, normal_tile, technical_tile)
   local center_x, center_y = TheWorld.net.components.dungeonmapoverwatch:GetPointForLevel(level)
-  print("POINT IS", TheWorld.net.components.dungeonmapoverwatch:GetPointForLevel(level))
   center_x = center_x
   center_y = center_y
 
 
   -- First, we check for holes, cavities and other stuff that messes our wall placement.
-  for x = -size, size do 
-    for y = -size, size do
-
-      if IsMsTechnicalTile(TheWorld.Map:GetTileAtPoint(center_x+x*4, 0, center_y+y*4)) then
+  for x = -size , size  do 
+    for y = -size , size  do
+      local tile_x, tile_y = TheWorld.Map:GetTileXYAtPoint(center_x+x*4, 0, center_y+y*4)
+      if IsMsTechnicalTile(TheWorld.Map:GetTile(tile_x, tile_y)) then
         local l,r,d,u,ld,lu,rd,ru = nil, nil, nil, nil, nil, nil, nil, nil
         -- Check neaby tiles
-        if not IsMsTechnicalTile(TheWorld.Map:GetTileAtPoint(center_x+x*4 + 4, 0, center_y+y*4)) then 
+        if not IsMsTechnicalTile(TheWorld.Map:GetTile(tile_x+1, tile_y)) then 
           r = 1
         end
-        if not IsMsTechnicalTile(TheWorld.Map:GetTileAtPoint(center_x+x*4 - 4, 0, center_y+y*4)) then 
+        if not IsMsTechnicalTile(TheWorld.Map:GetTile(tile_x-1, tile_y)) then 
           l = 1
         end
-        if not IsMsTechnicalTile(TheWorld.Map:GetTileAtPoint(center_x+x*4, 0, center_y+y*4 + 4)) then 
+        if not IsMsTechnicalTile(TheWorld.Map:GetTile(tile_x, tile_y+1)) then 
           d = 1
         end
-        if not IsMsTechnicalTile(TheWorld.Map:GetTileAtPoint(center_x+x*4, 0, center_y+y*4 - 4)) then
+        if not IsMsTechnicalTile(TheWorld.Map:GetTile(tile_x, tile_y-1)) then
           u = 1
         end
-        if not IsMsTechnicalTile(TheWorld.Map:GetTileAtPoint(center_x+x*4 + 4, 0, center_y+y*4 + 4)) then 
+        if not IsMsTechnicalTile(TheWorld.Map:GetTile(tile_x+1, tile_y+1)) then 
           ru = 1
         end
-        if not IsMsTechnicalTile(TheWorld.Map:GetTileAtPoint(center_x+x*4 + 4, 0, center_y+y*4 - 4)) then 
+        if not IsMsTechnicalTile(TheWorld.Map:GetTile(tile_x+1, tile_y-1)) then 
           rd = 1
         end
-        if not IsMsTechnicalTile(TheWorld.Map:GetTileAtPoint(center_x+x*4 - 4, 0, center_y+y*4+4)) then 
+        if not IsMsTechnicalTile(TheWorld.Map:GetTile(tile_x-1, tile_y+1)) then 
           lu = 1
         end
-        if not IsMsTechnicalTile(TheWorld.Map:GetTileAtPoint(center_x+x*4 - 4, 0, center_y+y*4-4)) then 
+        if not IsMsTechnicalTile(TheWorld.Map:GetTile(tile_x-1, tile_y-1))  then 
           ld = 1
         end
-        local tile_x, tile_y = TheWorld.Map:GetTileXYAtPoint(center_x+x*4, 0, center_y+y*4)
-
-        if r or l or d or u or rd or ld or lu or ru then
-          TheWorld.Map:SetTile(tile_x, tile_y, technical_tile)
-        end
+       
+        
+        
         if l and d and r and u then
+          TheWorld.Map:SetTile(tile_x, tile_y, normal_tile)
+        elseif  (r and l and u and (ld or rd)) then
+          TheWorld.Map:SetTile(tile_x, tile_y, normal_tile)
+        elseif (r and l and d and (lu or ru)) then 
+          TheWorld.Map:SetTile(tile_x, tile_y, normal_tile)
+        elseif (u and l and d and (ru or rd)) then
+          TheWorld.Map:SetTile(tile_x, tile_y, normal_tile)
+        elseif (r and u and d and (lu or ld)) then
+          TheWorld.Map:SetTile(tile_x, tile_y, normal_tile)
+        elseif (u and d and not r and not l) then
+          TheWorld.Map:SetTile(tile_x, tile_y, normal_tile)
+        elseif (r and l and not u and not d) then
+          TheWorld.Map:SetTile(tile_x, tile_y, normal_tile)
+        elseif r or l or d or u or rd or ld or lu or ru then
           TheWorld.Map:SetTile(tile_x, tile_y, technical_tile)
         end
-        -- for 1 tile intrusions that do not fit with out wall generating algorythm
-        if  (r and l and u and (ld or rd)) then
-          TheWorld.Map:SetTile(tile_x, tile_y, technical_tile)
-        end
-        if (r and l and d and (lu or ru)) then 
-          TheWorld.Map:SetTile(tile_x, tile_y, technical_tile)
-        end
-        if (u and l and d and (ru or rd)) then
-          TheWorld.Map:SetTile(tile_x, tile_y, technical_tile)
-        end
-        if (r and u and d and (lu or ld)) then
-          TheWorld.Map:SetTile(tile_x, tile_y, technical_tile)
-        end
-        if (u and d and not r and not l) then
-          TheWorld.Map:SetTile(tile_x, tile_y, technical_tile)
-        end
-        if (r and l and not u and not d) then
-          TheWorld.Map:SetTile(tile_x, tile_y, technical_tile)
-
-
-        end
-
       end  
     end
   end
@@ -201,7 +288,7 @@ function DungeonWallSpawner:SpawnWallsAroundPoint(level, wall, size, technical_t
   -- Some variables for exits and entrance spawns
   local spawned 
   local spawned_cave_entrance 
-  local last_entrance_x, last_entrance_y, last_exit_x, last_exit_y = center_x,center_y,center_x+TUNING.MS_TERRAFORMER_OFFSET_X[level]*4,center_y+TUNING.MS_TERRAFORMER_OFFSET_Y[level]*4 
+  local last_entrance_x, last_entrance_y, last_exit_x, last_exit_y, last_r, last_l, last_d, last_u = center_x,center_y,center_x+TUNING.MS_TERRAFORMER_OFFSET_X[level]*4,center_y+TUNING.MS_TERRAFORMER_OFFSET_Y[level]*4, 0,0,0,0
 
   for x = -size, size do 
     for y = -size, size do
@@ -233,7 +320,6 @@ function DungeonWallSpawner:SpawnWallsAroundPoint(level, wall, size, technical_t
         if not IsMsTechnicalTile(TheWorld.Map:GetTileAtPoint(center_x+x*4 - 4, 0, center_y+y*4-4)) then 
           ld = 1
         end
-        print("INFO DUMP", center_x+x*4, 0, center_y+y*4, r,l,d,u,ld,lu,rd,ru)
 
 
         if (ru == 1 or rd == 1 or lu == 1 or ld == 1) and l == 0 and r == 0 and u == 0 and d == 0 then
@@ -282,57 +368,53 @@ function DungeonWallSpawner:SpawnWallsAroundPoint(level, wall, size, technical_t
             new_wall.Transform:SetPosition(center_x+x*4, 0, center_y+y*4 - 4)
           end
         elseif u+r+l+d > 1 then 
-          local new_wall_r = SpawnPrefab("ms_mountain_corner_wall_right" .. wall)
-          new_wall_r.Transform:SetPosition(center_x+x*4 , 0, center_y+y*4)
-          local new_wall_l = SpawnPrefab("ms_mountain_corner_wall_left" .. wall)
-          new_wall_l.Transform:SetPosition(center_x+x*4 , 0, center_y+y*4)
-          new_wall_l.Transform:SetRotation(90)
-          print("corner", center_x+x*4 , 0, center_y+y*4, r,l,d,u) 
+          local function spawnwallcorner(angle1, angle2)
+            local new_wall_r = SpawnPrefab("ms_mountain_corner_wall_right" .. wall)
+            new_wall_r.Transform:SetPosition(center_x+x*4 , 0, center_y+y*4)
+            new_wall_r.Transform:SetRotation(angle1)          
+            local new_wall_l = SpawnPrefab("ms_mountain_corner_wall_left" .. wall)
+            new_wall_l.Transform:SetPosition(center_x+x*4 , 0, center_y+y*4)
+            new_wall_l.Transform:SetRotation(angle2)
+          end
           TheWorld.net.components.dungeonmapoverwatch:AddSpawnPointsForWall(level, center_x+x*4, center_y+y*4, r-l, d-u)
           if l == 1 and d == 1 then
-
-
-            new_wall_r.Transform:SetRotation(90)
-            new_wall_l.Transform:SetRotation(180)
+            spawnwallcorner(90, 180)
           end
           if l == 1 and u == 1 then
-
-            new_wall_r.Transform:SetRotation(0)
-            new_wall_l.Transform:SetRotation(90)
+            spawnwallcorner(0, 90)
           end
           if r == 1 and d == 1 then
-
-
-            new_wall_r.Transform:SetRotation(180)
-            new_wall_l.Transform:SetRotation(270)
+            spawnwallcorner(180, 270)
           end
           if r == 1 and u == 1 then
-
-
-            new_wall_r.Transform:SetRotation(270)
-            new_wall_l.Transform:SetRotation(0)
+            spawnwallcorner(270, 0)
           end
         else
           -- Check if we should spawn an entrance to the next level. More distance = more chance.
           if (l == 1 or r == 1 or d == 1 or u == 1)  then
-            TheWorld.net.components.dungeonmapoverwatch:AddSpawnPointsForWall(level, center_x+x*4, center_y+y*4, r-l, d-u)
+            TheWorld.net.components.dungeonmapoverwatch:AddSpawnPointsForWall(level, center_x+x*4, center_y+y*4, r-l, d-u, true)
             if not spawned then
-              last_entrance_x, last_entrance_y, last_exit_x, last_exit_y = center_x+x*4 - l * 4 + r * 4, center_y+y*4 - u * 4 + d * 4, center_x+x*4 + TUNING.MS_TERRAFORMER_OFFSET_X[level]*4, center_y+y*4+ TUNING.MS_TERRAFORMER_OFFSET_Y[level] * 4
+              last_entrance_x, last_entrance_y, last_exit_x, last_exit_y, last_r, last_l, last_d, last_u = center_x+x*4 + (r * 4 - l *4) * 0.05, center_y+y*4 + (d*4 - u *4) * 0.05,
+                                                                                                           center_x+x*4 + l - r + TUNING.MS_TERRAFORMER_OFFSET_X[level]*4,
+                                                                                                           center_y+y*4 + u - d +  TUNING.MS_TERRAFORMER_OFFSET_Y[level]*4,
+                                                                                                           r, l, d, u
               if math.random() < self.exits[level]:GetDistanceSqToPoint(center_x+x*4, 0, center_y+y*4)/(TUNING.MS_TERRAFORMER_SIZE[level] * TUNING.MS_TERRAFORMER_SIZE[level] * 16 * 10) then
-                local entrance = SpawnPrefab("ms_climbing")
-                entrance.Transform:SetPosition(center_x+x*4 - l * 4 + r * 4, 0, center_y+y*4 - u * 4 + d * 4)
+                self.entrances[level] = SpawnPrefab("ms_climbing")
+                self.entrances[level].Transform:SetPosition(center_x+x*4 + (r * 4 - l *4) * 0.05, 0, center_y+y*4 + (d*4 - u *4) * 0.05)
+                self.entrances[level].components.teleporter.teleport_offset = {x = (r * 4 - l *4), y = 0, z = (d*4 - u *4) }
+                self.entrances[level].Transform:SetRotation((r==1 or l==1) and 90 or 0)
                 self.exits[level+1] = SpawnPrefab("ms_climbing_down")
                 self.exits[level+1].Transform:SetPosition(center_x+x*4 + l - r + TUNING.MS_TERRAFORMER_OFFSET_X[level]*4, 0, center_y+y*4 + u - d +  TUNING.MS_TERRAFORMER_OFFSET_Y[level]*4)
-                entrance:SetExitTarget(self.exits[level+1])
-                self.exits[level+1]:SetExitTarget(entrance)
+                self.entrances[level]:SetExitTarget(self.exits[level+1])
+                self.exits[level+1]:SetExitTarget(self.entrances[level])
                 spawned = true
               end
             end
             if not spawned_cave_entrance then
               if math.random() < self.exits[level]:GetDistanceSqToPoint(center_x+x*4- l * 4 + r * 4, 0, center_y+y*4+ (-u * 4 + d * 4)*(r-1)*(l-1))/(TUNING.MS_TERRAFORMER_SIZE[level] * TUNING.MS_TERRAFORMER_SIZE[level] * 16 * 10) and self.cave_doors[level] then
                 local entrance = SpawnPrefab("ms_cave_entrance_vertical")
-                entrance.Transform:SetPosition(center_x+x*4, 0, center_y+y*4)
-                entrance.Transform:SetRotation(r>0 and 90 or (l>0 and 270 or (u and 180 or 0))) 
+                entrance.Transform:SetPosition(center_x+x*4 + (r * 4 - l *4) * 0.05, 0, center_y+y*4 + (d*4 - u *4) * 0.05)
+                entrance.Transform:SetRotation(r==1 and 90 or (l==1 and 270 or (u==1 and 180 or 0))) 
                 entrance:SetExitTarget(self.cave_doors[level])
                 entrance.components.teleporter.teleport_offset = {x = r * 4 - l *4, y= 0, z = d*4 - u *4}
                 self.cave_doors[level]:SetExitTarget(entrance)
@@ -345,28 +427,24 @@ function DungeonWallSpawner:SpawnWallsAroundPoint(level, wall, size, technical_t
             new_wall.Transform:SetPosition(center_x+x*4 , 0, center_y+y*4)
             new_wall.Transform:SetRotation(90)
             new_wall.debuginfo = {center_x+x*4 , 0, center_y+y*4, "+x"}
-            print(center_x+x*4+4 , 0, center_y+y*4, "+x")
           end
           if l == 1 then 
             local new_wall = SpawnPrefab("ms_mountain_wall" .. wall)
             new_wall.Transform:SetPosition(center_x+x*4 , 0, center_y+y*4)
             new_wall.Transform:SetRotation(90)
             new_wall.debuginfo = {center_x+x*4 , 0, center_y+y*4, "-x"}
-            print(center_x+x*4 - 4 , 0, center_y+y*4, "-x")
           end
           if d == 1 then 
             local new_wall = SpawnPrefab("ms_mountain_wall" .. wall)
             new_wall.Transform:SetPosition(center_x+x*4, 0, center_y+y*4)
             new_wall.Transform:SetRotation(0)
             new_wall.debuginfo = {center_x+x*4, 0, center_y+y*4, "+y"}
-            print(center_x+x*4, 0, center_y+y*4+4, "+y")
           end
           if u == 1 then
             local new_wall = SpawnPrefab("ms_mountain_wall" .. wall)
             new_wall.Transform:SetPosition(center_x+x*4, 0, center_y+y*4)
             new_wall.Transform:SetRotation(0)
             new_wall.debuginfo = {center_x+x*4, 0, center_y+y*4, "-y"}
-            print(center_x+x*4, 0, center_y+y*4-4, "-y")
           end
 
         end  
@@ -375,13 +453,28 @@ function DungeonWallSpawner:SpawnWallsAroundPoint(level, wall, size, technical_t
   end
 
   if not spawned then
-    local entrance = SpawnPrefab("ms_climbing")
-    entrance.Transform:SetPosition(last_entrance_x, 0, last_entrance_y)
-    self.exits[level+1] = SpawnPrefab("ms_climbing_down")
-    self.exits[level+1].Transform:SetPosition(last_exit_x, 0, last_exit_y)
-    entrance:SetExitTarget(self.exits[level+1])
-    self.exits[level+1]:SetExitTarget(entrance)
+    -- No walls spawned on this level. Create some for visuals.
+   
+    if last_d + last_u + last_r + last_l == 0 then
+       print("EXTREME SPAWN 0 ",  level, last_entrance_x, last_entrance_y, last_exit_x, last_exit_y, last_r, last_l, last_d, last_u)
+      self.entrances[level] = SpawnPrefab("ms_climbing")
+      self.entrances[level].Transform:SetPosition(last_entrance_x, 0, last_entrance_y+1.5)
+      self.entrances[level].components.teleporter.teleport_offset = {x = 0, y = 0, z = -3 }
+      spawn_5x5_area(self, level, last_entrance_x, last_entrance_y-4, wall, normal_tile, technical_tile)
+    else
+       print("EXTREME SPAWN", "level", level, "ex", last_entrance_x, "ey", last_entrance_y, "ox", last_exit_x, "oy", last_exit_y, "r", last_r, "l" ,last_l, "d", last_d, "u", last_u)
+      self.entrances[level] = SpawnPrefab("ms_climbing")
+      self.entrances[level].Transform:SetPosition(last_entrance_x, 0, last_entrance_y)
+      self.entrances[level].Transform:SetPosition(last_entrance_x, 0, last_entrance_y )
+      self.entrances[level].components.teleporter.teleport_offset = {x = (last_r * 4 - last_l *4), y = 0, z = (last_d*4 - last_u *4) }
+      self.entrances[level].Transform:SetRotation((last_r == 1 or last_l == 1) and 90 or 0)
+      self.exits[level+1] = SpawnPrefab("ms_climbing_down")
+      self.exits[level+1].Transform:SetPosition(last_exit_x, 0, last_exit_y)
+      self.entrances[level]:SetExitTarget(self.exits[level+1])
+      self.exits[level+1]:SetExitTarget(self.entrances[level])
+    end
   end
+  self:SanityCheck(self.entrances[level], self.exits[level])
 end
 
 local type_to_points = {
@@ -417,6 +510,40 @@ local function addmobpointsforcaves(level,x,y,r,l,d,u,floor_type)
       i = i -1
     end
   end
+  for i = 1, 10 do
+    local wall = math.random(1,#type_to_points[floor_type]-1)
+    if type_to_points[floor_type][wall][1] - type_to_points[floor_type][wall+1][1] ~= 0 then
+      print("x", floor_type, wall, x, y, type_to_points[floor_type][wall][1], type_to_points[floor_type][wall+1][1],  type_to_points[floor_type][wall][2], type_to_points[floor_type][wall+1][2])
+      local min_x, max_x = math.min(type_to_points[floor_type][wall][1], type_to_points[floor_type][wall+1][1]), math.max(type_to_points[floor_type][wall][1], type_to_points[floor_type][wall+1][1])
+      local min_y, max_y = math.min(type_to_points[floor_type][wall][2], type_to_points[floor_type][wall+1][2]), math.max(type_to_points[floor_type][wall][2], type_to_points[floor_type][wall+1][2])
+      local point_x = math.random(min_x, max_x)
+      local point_y = (point_x * (max_y - min_y))/(max_x - min_x)
+      
+      if point_y > 1000 or point_y ~= point_y then
+        point_y = 0
+      end
+      local angle = math.deg(math.atan(point_y/point_x)) + 90
+      if point_y == 0 then point_y = min_y end
+      if point_x == 0 then point_x = min_x end
+      print(point_x, point_y, angle)
+      TheWorld.net.components.dungeonmapoverwatch:AddPointForWall(level, x + point_x, y + point_y, angle)
+    else
+      print("y", floor_type, wall, x, y, type_to_points[floor_type][wall][1], type_to_points[floor_type][wall+1][1],  type_to_points[floor_type][wall][2], type_to_points[floor_type][wall+1][2])
+      local min_x, max_x = math.min(type_to_points[floor_type][wall][1], type_to_points[floor_type][wall+1][1]), math.max(type_to_points[floor_type][wall][1], type_to_points[floor_type][wall+1][1])
+      local min_y, max_y = math.min(type_to_points[floor_type][wall][2], type_to_points[floor_type][wall+1][2]), math.max(type_to_points[floor_type][wall][2], type_to_points[floor_type][wall+1][2])
+      local point_y = math.random(min_y, max_y)
+      local point_x = (point_y * (max_x - min_x))/(max_y - min_y)
+      
+      if point_x > 1000 or point_x ~= point_y then
+        point_x = 0
+      end
+      local angle = math.deg(math.atan(point_y/point_x)) + 90
+            if point_y == 0 then point_y = min_y end
+      if point_x == 0 then point_x = min_x end
+      print(point_x, point_y, angle)
+      TheWorld.net.components.dungeonmapoverwatch:AddPointForWall(level, x + point_x, y + point_y, angle)
+    end
+  end
 end
 
 local function checkcoordsexits(x,y, cords)
@@ -442,7 +569,6 @@ local function spawndoors(x,y, x1, y1, angle)
   door:SetExitTarget(door1)
   door1:SetExitTarget(door)
 end
-
 
 function DungeonWallSpawner:SpawnCaveLayout(start_x, start_y, amount, level, loottable)
   local ready = false
@@ -509,4 +635,50 @@ function DungeonWallSpawner:SpawnCaveLayout(start_x, start_y, amount, level, loo
   end
 end
 
+function DungeonWallSpawner:SanityCheck(entrance, exit)
+  if not entrance or not exit then
+    return
+  end
+  local x,y,z = entrance.Transform:GetWorldPosition()
+  local x1,y1,z1 = exit.Transform:GetWorldPosition()
+  local sanity_x, sanity_y = {}, {}
+  local insane_gen
+  -- Luigi: We only check for WORLD_TILES.VOID aka 1 and clouds, as we assume that if there are technical tiles inbetween entrance
+  -- and the exit, it probably means that they are on the same island and no intrusion is needed.
+  for i = x, x1, math.abs(x1-x)/(x1-x) * 4 do
+    sanity_x[i] = 0
+    for j = z, z1, math.abs(z1-z)/(z1-z) * 4 do 
+      local tile = TheWorld.Map:GetTileAtPoint(i, 0, j)
+      if tile ~= 1 and tile ~= WORLD_TILES.CLOUDS_WHITE and tile ~= WORLD_TILES.CLOUDS_DARK then
+        sanity_x[i] = sanity_x[i] + 1
+      end
+    end
+  end
+  for j = z, z1, math.abs(z1-z)/(z1-z) * 4 do 
+    sanity_y[j] = 0
+    for i = x, x1, math.abs(x1-x)/(x1-x) * 4 do
+      local tile = TheWorld.Map:GetTileAtPoint(i, 0, j)
+      if tile ~= 1 and tile ~= WORLD_TILES.CLOUDS_WHITE and tile ~= WORLD_TILES.CLOUDS_DARK then
+        sanity_y[j] = sanity_y[j] + 1
+      end
+    end
+  end
+  for k, v in pairs(sanity_x) do
+    if v == 0 then insane_gen = true end
+  end
+  for k, v in pairs(sanity_y) do
+    if v == 0 then insane_gen = true end
+  end
+  if insane_gen then
+    local deltax, deltay = (x - x1)/math.max(math.abs(x-x1), math.abs(z-z1)), (z - z1)/math.max(math.abs(x-x1), math.abs(z-z1))
+    for i = 0, math.max(math.abs(x-x1), math.abs(z-z1)) do
+      local tile = TheWorld.Map:GetTileAtPoint(x - deltax * i, 0, z - deltay * i)
+      if tile == 1 or tile == WORLD_TILES.CLOUDS_WHITE or tile == WORLD_TILES.CLOUDS_DARK then
+        local tile_x, tile_y = TheWorld.Map:GetTileXYAtPoint(x - deltax * i, 0, z - deltay * i)
+        print("WORLD_TILES.MS_BRIDGE", tile, x - deltax * i, 0, z - deltay * i)
+        TheWorld.Map:SetTile(tile_x, tile_y, WORLD_TILES.MS_BRIDGE)
+      end
+    end
+  end
+end
 return DungeonWallSpawner

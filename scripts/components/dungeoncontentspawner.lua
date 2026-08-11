@@ -354,7 +354,30 @@ function DungeonContentSpawner:SpawnLevelCaveDecor(level)
 		end
 	end
 
-	return spawned
+  local caves = self:SpawnOnWallEntities(level)
+	return spawned + caves
+end
+
+function DungeonContentSpawner:SpawnOnWallEntities(level)
+  local contents = TUNING.MS_LEVEL_WALL_CONTENTS[level]
+  local chance = contents.distributepercent
+  local map = TheWorld.Map
+  local points = TheWorld.net ~= nil and TheWorld.net.components.dungeonmapoverwatch and TheWorld.net.components.dungeonmapoverwatch:GetOnWallSpawnPoints(level)
+  if not points or not contents then
+    return 0
+  end
+  local spawned = 0
+  for _, point in ipairs(points) do
+    local x, y, z, angle = point.x, point.y, point.z, point.angle
+    if math.random()< chance then
+      local prefab = PickPrefab(contents.distributeprefabs)
+      local ent = SpawnPrefab(prefab)
+      ent.Transform:SetPosition(x, y, z)
+      ent.Transform:SetRotation(angle)
+      spawned = spawned + 1
+    end
+  end
+  return spawned
 end
 
 function DungeonContentSpawner:SpawnLevel(level)
@@ -363,7 +386,8 @@ function DungeonContentSpawner:SpawnLevel(level)
 	local communities = self:SpawnLevelCommunities(level)
 	local decor = self:SpawnLevelDecor(level)
 	local cave = self:SpawnLevelCaveDecor(level)
-	return decor + herds + communities + cave
+  local walls = self:SpawnOnWallEntities(level)
+	return decor + herds + communities + cave + walls
 end
 
 
