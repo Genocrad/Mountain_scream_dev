@@ -1,4 +1,8 @@
 --GLOBAL.SEED = 1618090222--1616755459
+-- Capture mod-env APIs before setfenv; after GLOBAL.setfenv, bare AddRoom/AddTask
+-- resolve to vanilla globals and assert on re-enable ("already exists").
+local AddRoom = AddRoom
+local AddTask = AddTask
 local AddTaskPreInit = AddTaskPreInit
 local AddTaskSetPreInit = AddTaskSetPreInit
 local AddRoomPreInit = AddRoomPreInit

@@ -44,7 +44,7 @@ local function CheckMountainLevel(inst)
       if TheWorld.wavemanager_on == false then
         TheWorld:PushEvent("wavemanager_on")
       end
-      if level < 8 and TheCamera.target ~= TheFocalPoint then
+      if level < 10 and TheCamera.target ~= TheFocalPoint then
         IsUsingMSDoorDirty(inst)
       end
     elseif level== nil and TheWorld.wavemanager_on == true then
@@ -77,7 +77,7 @@ AddPlayerPostInit(function(inst)
       inst:ListenForEvent("isusingmsdoordirty", IsUsingMSDoorDirty)
       -- Not changearea, as it needs a node, and our artificial islands do not have it...
       inst:DoTaskInTime(0, CheckMountainLevel) 
-      inst:DoPeriodicTask(1, function(inst) CheckMountainLevel(inst) end)
+      inst:DoPeriodicTask(0.3, function(inst) CheckMountainLevel(inst) end)
       end
     end)
   end
