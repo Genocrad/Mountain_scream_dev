@@ -344,6 +344,21 @@ TUNING.MOUNTAIN_FALCON_BASE = {
 	SPAWN_PERIOD = TUNING.SEG_TIME,
 }
 
+-- mountain_falcon 山域追杀（Territory Pursuit）
+TUNING.MOUNTAIN_FALCON = {
+	MAX_CHASE_TIME = 60,           -- ChaseAndAttack 行为树追击时长
+	MAX_CHASE_DIST = 200,          -- 同层追击距离（跨层靠飞跃，不靠寻路）
+	DEAGGRO_TIMEOUT = 60,          -- 接战后最长追杀时间，到点强制回巢
+	LOST_TARGET_TIME = 8,          -- 丢失有效目标后多久回巢
+	CROSS_FLOOR_COOLDOWN = 2,      -- 跨层飞跃冷却
+	CROSS_FLOOR_LAND_RADIUS = 4,   -- 落点相对目标的搜索半径
+	CROSS_FLOOR_LAND_ATTEMPTS = 8,
+	HOUSE_MAX_DIST = 40,           -- 非追杀时拴巢
+	HOUSE_RETURN_DIST = 50,
+	MAX_WANDER_DIST = 8,
+	SEE_FOOD_DIST = 30,
+}
+
 TUNING.MOUNTAIN_WINDHORN = {
 	USES = 5,
 	TORNADO_COUNT = 6,

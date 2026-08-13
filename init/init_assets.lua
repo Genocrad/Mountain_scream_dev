@@ -30,8 +30,6 @@ Assets = {
 	-- Minimap
 	Asset("ATLAS", "images/minimap_ms_cave_room.xml"),
 	Asset("IMAGE", "images/minimap_ms_cave_room.tex"),
-	Asset("ATLAS", "images/minimap_various_teleporters.xml"),
-	Asset("IMAGE", "images/minimap_various_teleporters.tex"),
 	Asset("IMAGE", "images/mountain_minimap.tex"),
 	Asset("ATLAS", "images/mountain_minimap.xml"),
   Asset("ATLAS", "images/ms_giant_plug.xml"),
@@ -152,6 +150,5 @@ end
 --------------------------------------------------------
 -- Minimap atlases
 AddMinimapAtlas("images/minimap_ms_cave_room.xml")
-AddMinimapAtlas("images/minimap_various_teleporters.xml")
 AddMinimapAtlas("images/ms_giant_plug.xml")
 AddMinimapAtlas("images/mountain_minimap.xml")

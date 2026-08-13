@@ -11,6 +11,11 @@ local events =
 	EventHandler("fly_back", function(inst, data)
 		inst.sg:GoToState("flyback")
 	end),
+	EventHandler("ms_falcon_return_home", function(inst)
+		if not inst.sg:HasStateTag("flight") and not inst.sg:HasStateTag("dead") then
+			inst.sg:GoToState("return_home_fly")
+		end
+	end),
 	CommonHandlers.OnLocomote(false, true),
 	CommonHandlers.OnFreeze(),
 	CommonHandlers.OnElectrocute(),
@@ -129,6 +134,109 @@ local states =
 			TimeEvent(14 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve/creatures/bat/flap") end),
 			TimeEvent(24 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve/creatures/bat/flap") end),
 			TimeEvent(34 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve/creatures/bat/flap") end),
+			TimeEvent(41 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve/creatures/bat/flap") end),
+		},
+	},
+
+	-- 跨层追杀：飞起 → 瞬移到目标层落点上方 → 降落
+	State{
+		name = "pursue_crossfloor",
+		tags = { "flight", "busy", "noelectrocute" },
+		onenter = function(inst)
+			inst.Physics:Stop()
+			inst.DynamicShadow:Enable(false)
+			inst.components.health:SetInvincible(true)
+
+			inst.AnimState:PlayAnimation("fly_away_pre")
+			inst.AnimState:PushAnimation("fly_away_loop", true)
+
+			inst.Physics:SetMotorVel(0, 10 + math.random() * 2, 0)
+			inst.sg.statemem.teleport_at = GetTime() + 0.85
+		end,
+
+		onupdate = function(inst)
+			inst.Physics:SetMotorVel(0, 10 + math.random() * 2, 0)
+
+			if inst.sg.statemem.did_teleport then
+				return
+			end
+			if GetTime() < inst.sg.statemem.teleport_at then
+				return
+			end
+
+			inst.sg.statemem.did_teleport = true
+			local dest = inst._cross_floor_dest
+			inst._cross_floor_dest = nil
+
+			if dest ~= nil then
+				inst.Physics:Stop()
+				inst.Transform:SetPosition(dest.x, 15, dest.z)
+				inst.sg:GoToState("flyback")
+			else
+				inst.sg:GoToState("return_home_fly")
+			end
+		end,
+
+		timeline =
+		{
+			TimeEvent(6 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve/creatures/bat/flap") end),
+			TimeEvent(13 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve/creatures/bat/flap") end),
+			TimeEvent(23 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve/creatures/bat/flap") end),
+			TimeEvent(33 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve/creatures/bat/flap") end),
+			TimeEvent(41 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve/creatures/bat/flap") end),
+		},
+	},
+
+	-- 脱战回巢：飞起后收入 childspawner（异层也可直接回家）
+	State{
+		name = "return_home_fly",
+		tags = { "flight", "busy", "noelectrocute" },
+		onenter = function(inst)
+			inst._returning_home = true
+			if inst.components.combat ~= nil then
+				inst.components.combat:DropTarget()
+			end
+
+			inst.Physics:Stop()
+			inst.DynamicShadow:Enable(false)
+			inst.components.health:SetInvincible(true)
+
+			inst.AnimState:PlayAnimation("fly_away_pre")
+			inst.AnimState:PushAnimation("fly_away_loop", true)
+
+			inst.Physics:SetMotorVel(0, 10 + math.random() * 2, 0)
+			inst.sg.statemem.finish_at = GetTime() + 0.85
+		end,
+
+		onupdate = function(inst)
+			inst.Physics:SetMotorVel(0, 10 + math.random() * 2, 0)
+
+			if inst.sg.statemem.did_finish then
+				return
+			end
+			if GetTime() < inst.sg.statemem.finish_at then
+				return
+			end
+
+			inst.sg.statemem.did_finish = true
+			inst.Physics:Stop()
+
+			if inst.FinishReturnHome ~= nil then
+				inst:FinishReturnHome()
+			else
+				inst.DynamicShadow:Enable(true)
+				inst.components.health:SetInvincible(false)
+				inst._returning_home = false
+				inst.sg:GoToState("idle")
+			end
+		end,
+
+		timeline =
+		{
+			TimeEvent(6 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve/creatures/bat/flap") end),
+			TimeEvent(13 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve/creatures/bat/flap") end),
+			TimeEvent(23 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve/creatures/bat/flap") end),
+			TimeEvent(33 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve/creatures/bat/flap") end),
 			TimeEvent(41 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve/creatures/bat/flap") end),
 		},
 	},
