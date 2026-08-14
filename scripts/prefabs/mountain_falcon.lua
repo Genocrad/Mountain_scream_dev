@@ -52,6 +52,34 @@ local function ClearPursuitTimers(inst)
 	inst._cross_floor_dest = nil
 end
 
+-- 追杀 / 回巢飞行期间禁止 EntitySleep，否则玩家换层后隼会因距离过远睡着并被 DoReturn 收巢。
+local function SetPursuitCanSleep(inst, can_sleep)
+	if inst._pursuit_can_sleep == can_sleep then
+		return
+	end
+	inst._pursuit_can_sleep = can_sleep
+	inst.entity:SetCanSleep(can_sleep)
+end
+
+local function IsActivelyPursuing(inst)
+	if inst._returning_home or inst._deaggro_pending then
+		return true
+	end
+	local target = inst.components.combat ~= nil and inst.components.combat.target or nil
+	if target ~= nil then
+		return true
+	end
+	-- 丢失目标宽限期内仍保持清醒，以便跨层追杀或回巢
+	if inst._pursuit_start ~= nil or inst._pursuit_lost_since ~= nil then
+		return true
+	end
+	return false
+end
+
+local function SyncPursuitSleep(inst)
+	SetPursuitCanSleep(inst, not IsActivelyPursuing(inst))
+end
+
 local function DoReturn(inst)
 	if inst.components.homeseeker ~= nil and inst.components.homeseeker:HasHome() then
 		local home = inst.components.homeseeker.home
@@ -69,6 +97,7 @@ local function FinishReturnHome(inst)
 	if inst.components.combat ~= nil then
 		inst.components.combat:DropTarget()
 	end
+	SetPursuitCanSleep(inst, true)
 	if not DoReturn(inst) then
 		-- 无巢：降落到当前位置
 		local x, y, z = inst.Transform:GetWorldPosition()
@@ -93,6 +122,8 @@ local function RequestReturnHome(inst)
 	if inst.components.combat ~= nil then
 		inst.components.combat:DropTarget()
 	end
+	-- 回巢飞行中保持清醒，避免中途 EntitySleep
+	SetPursuitCanSleep(inst, false)
 
 	if inst.sg ~= nil and not inst.sg:HasStateTag("dead") then
 		inst.sg:GoToState("return_home_fly")
@@ -104,6 +135,7 @@ local function ScheduleReturnHome(inst)
 		return
 	end
 	inst._deaggro_pending = true
+	SetPursuitCanSleep(inst, false)
 	inst:DoTaskInTime(0, function(i)
 		if not i:IsValid() then
 			return
@@ -186,6 +218,8 @@ local function IsValidPursuitTarget(inst, target)
 end
 
 local function UpdatePursuit(inst)
+	SyncPursuitSleep(inst)
+
 	if inst._returning_home
 		or inst._deaggro_pending
 		or (inst.components.health ~= nil and inst.components.health:IsDead())
@@ -285,6 +319,8 @@ local function OnNewCombatTarget(inst, data)
 	if data ~= nil and data.target ~= nil and not inst._returning_home then
 		inst._pursuit_start = GetTime()
 		inst._pursuit_lost_since = nil
+		-- 接战即禁止 sleep，避免玩家立刻换层导致 EntitySleep 抢先回巢
+		SetPursuitCanSleep(inst, false)
 	end
 end
 
@@ -292,17 +328,24 @@ local function OnDroppedTarget(inst)
 	if not inst._returning_home and inst._pursuit_start ~= nil and inst._pursuit_lost_since == nil then
 		inst._pursuit_lost_since = GetTime()
 	end
+	SyncPursuitSleep(inst)
 end
 
 local function OnEntitySleep(inst)
-	-- 睡着时收队回巢，避免卡在别层
+	-- 追杀中不应 sleep；若仍触发（边界），禁止回巢并尝试保持清醒
+	if IsActivelyPursuing(inst) then
+		SetPursuitCanSleep(inst, false)
+		return
+	end
+	-- 非追杀：睡着时收队回巢，避免闲置卡在别层
 	ClearPursuitTimers(inst)
 	inst._returning_home = false
+	SetPursuitCanSleep(inst, true)
 	DoReturn(inst)
 end
 
 local function OnStopDay(inst)
-	if inst:IsAsleep() then
+	if inst:IsAsleep() and not IsActivelyPursuing(inst) then
 		DoReturn(inst)
 	end
 end
@@ -314,6 +357,7 @@ local function OnPreLoad(inst, data)
 	end
 	ClearPursuitTimers(inst)
 	inst._returning_home = false
+	SetPursuitCanSleep(inst, true)
 end
 
 local function fn()
