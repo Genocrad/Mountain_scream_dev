@@ -129,6 +129,7 @@ function DungeonWallSpawner:SpawnArenaTeleporter()
   for i = -7, 7 do 
     for j = -arena_width[i+8], arena_width[i+8] do
       TheWorld.Map:SetTile(tile_x + i + TUNING.MS_TERRAFORMER_OFFSET_X[8] + TUNING.MS_TERRAFORMER_OFFSET_X[9], tile_z + j + TUNING.MS_TERRAFORMER_OFFSET_Y[8] + TUNING.MS_TERRAFORMER_OFFSET_Y[9], WORLD_TILES.MS_PERMAFROST) 
+      TheWorld.net.components.dungeonmapoverwatch:AddSpawnPointsForTile(9, tile_x + i + TUNING.MS_TERRAFORMER_OFFSET_X[8] + TUNING.MS_TERRAFORMER_OFFSET_X[9], tile_z + j + TUNING.MS_TERRAFORMER_OFFSET_Y[8] + TUNING.MS_TERRAFORMER_OFFSET_Y[9])
     end
   end
   local light = SpawnPrefab("light_fake_overworld")
@@ -141,6 +142,10 @@ function DungeonWallSpawner:SpawnArenaTeleporter()
       plug.Transform:SetPosition(center_x + TUNING.MS_TERRAFORMER_OFFSET_X[8] * 4 + TUNING.MS_TERRAFORMER_OFFSET_X[9] * 4 + i*16.66*4, 0, center_y + TUNING.MS_TERRAFORMER_OFFSET_Y[8] * 4 + TUNING.MS_TERRAFORMER_OFFSET_Y[9] * 4 + j*16.66*4)  
     end
   end
+  local golem, ring, platform = SpawnPrefab("mountain_golem_pillar"), SpawnPrefab("mountain_golem_platform"), SpawnPrefab("mountain_golem_ring")
+  golem.Transform:SetPosition(center_x + TUNING.MS_TERRAFORMER_OFFSET_X[8] * 4 + TUNING.MS_TERRAFORMER_OFFSET_X[9] * 4 ,0, center_y + TUNING.MS_TERRAFORMER_OFFSET_Y[8] * 4 + TUNING.MS_TERRAFORMER_OFFSET_Y[9]*4)
+  ring.Transform:SetPosition(center_x + TUNING.MS_TERRAFORMER_OFFSET_X[8] * 4 + TUNING.MS_TERRAFORMER_OFFSET_X[9] * 4 ,0, center_y + TUNING.MS_TERRAFORMER_OFFSET_Y[8] * 4 + TUNING.MS_TERRAFORMER_OFFSET_Y[9]*4)
+  platform.Transform:SetPosition(center_x + TUNING.MS_TERRAFORMER_OFFSET_X[8] * 4 + TUNING.MS_TERRAFORMER_OFFSET_X[9] * 4 ,0, center_y + TUNING.MS_TERRAFORMER_OFFSET_Y[8] * 4 + TUNING.MS_TERRAFORMER_OFFSET_Y[9]*4)
   success = nil
   -- Spawn the teleporter to and from arena. 
   attempts = 100
@@ -153,7 +158,7 @@ function DungeonWallSpawner:SpawnArenaTeleporter()
     if (TileGroupManager:IsLandTile(TheWorld.Map:GetTileAtPoint(x, 0, z)) and not IsMsTechnicalTile(TheWorld.Map:GetTileAtPoint(x, 0, z))) or attempts <= 0 then
       local teleporter = SpawnPrefab("ms_arenateleporter")
       local exit = SpawnPrefab("ms_arenateleporter_exit")
-      exit.Transform:SetPosition(center_x + TUNING.MS_TERRAFORMER_OFFSET_X[8] * 4 + TUNING.MS_TERRAFORMER_OFFSET_X[9] * 4 ,0, center_y + TUNING.MS_TERRAFORMER_OFFSET_Y[8] * 4 + TUNING.MS_TERRAFORMER_OFFSET_Y[9]*4)
+      exit.Transform:SetPosition(center_x + TUNING.MS_TERRAFORMER_OFFSET_X[8] * 4 + TUNING.MS_TERRAFORMER_OFFSET_X[9] * 4 ,0, center_y + TUNING.MS_TERRAFORMER_OFFSET_Y[8] * 4 + TUNING.MS_TERRAFORMER_OFFSET_Y[9]*4 - 12)
       local tilex, tilez = TheWorld.Map:GetTileXYAtPoint(x,0,z)
       TheWorld.Map:SetTile(tile_x, tilez, WORLD_TILES.MS_PERMAFROST)
       teleporter.Transform:SetPosition(x,0,z)
@@ -218,7 +223,6 @@ local function spawn_5x5_area(self, level, x,y, wall, normal_tile, technical_til
     end
   end
   self.exits[level+1] = SpawnPrefab("ms_climbing_down")
-  self.exits[level+1].suckmyass  = true
   self.exits[level+1].Transform:SetPosition(x + TUNING.MS_TERRAFORMER_OFFSET_X[level] * 4 + random_x * 4, 0, y + TUNING.MS_TERRAFORMER_OFFSET_Y[level] * 4 + random_y * 4)
   self.entrances[level]:SetExitTarget(self.exits[level+1])
   self.exits[level+1]:SetExitTarget(self.entrances[level])
@@ -458,7 +462,7 @@ function DungeonWallSpawner:SpawnWallsAroundPoint(level, wall, size, normal_tile
     if last_d + last_u + last_r + last_l == 0 then
        print("EXTREME SPAWN 0 ",  level, last_entrance_x, last_entrance_y, last_exit_x, last_exit_y, last_r, last_l, last_d, last_u)
       self.entrances[level] = SpawnPrefab("ms_climbing")
-      self.entrances[level].Transform:SetPosition(last_entrance_x, 0, last_entrance_y+1.5)
+      self.entrances[level].Transform:SetPosition(last_entrance_x, 0, last_entrance_y+1.1)
       self.entrances[level].components.teleporter.teleport_offset = {x = 0, y = 0, z = -3 }
       spawn_5x5_area(self, level, last_entrance_x, last_entrance_y-4, wall, normal_tile, technical_tile)
     else
@@ -478,9 +482,9 @@ function DungeonWallSpawner:SpawnWallsAroundPoint(level, wall, size, normal_tile
 end
 
 local type_to_points = {
-  ["tri"] = {{13,-9}, {0,0}, {-13,-9}, {-13,-20}, {13,-20}, {13,-9}},
-  ["round"] = {{-13,-8}, {-7,0}, {7,0}, {13,-8}, {13,-20}, {-13,-20}, {-13,-8}},
-  ["rect"] = {{-13,0}, {13,0}, {13,-20}, {-13,-20}, {-13,0}},
+  ["tri"] = {{13,-20}, {13,-9}, {0,0}, {-13,-9}, {-13,-20}, {13,-20}},
+  ["round"] = {{-13,-20}, {-13,-8}, {-7,0}, {7,0}, {13,-8}, {13,-20}, {-13,-20}},
+  ["rect"] = { {-13,-20}, {-13,0}, {13,0}, {13,-20}, {-13,-20}},
 }
 
 local layour_door_coords = {
@@ -511,20 +515,45 @@ local function addmobpointsforcaves(level,x,y,r,l,d,u,floor_type)
     end
   end
   for i = 1, 10 do
-    local wall = math.random(1,#type_to_points[floor_type]-1)
+    local wall = math.random(1,#type_to_points[floor_type]-2)
     if type_to_points[floor_type][wall][1] - type_to_points[floor_type][wall+1][1] ~= 0 then
       print("x", floor_type, wall, x, y, type_to_points[floor_type][wall][1], type_to_points[floor_type][wall+1][1],  type_to_points[floor_type][wall][2], type_to_points[floor_type][wall+1][2])
       local min_x, max_x = math.min(type_to_points[floor_type][wall][1], type_to_points[floor_type][wall+1][1]), math.max(type_to_points[floor_type][wall][1], type_to_points[floor_type][wall+1][1])
       local min_y, max_y = math.min(type_to_points[floor_type][wall][2], type_to_points[floor_type][wall+1][2]), math.max(type_to_points[floor_type][wall][2], type_to_points[floor_type][wall+1][2])
       local point_x = math.random(min_x, max_x)
-      local point_y = (point_x * (max_y - min_y))/(max_x - min_x)
+      local point_y = -(point_x * (max_y - min_y))/(max_x - min_x)
+      local angle = 90
       
-      if point_y > 1000 or point_y ~= point_y then
-        point_y = 0
+      if min_y == max_y then
+        point_y = min_y
+      elseif min_y == type_to_points[floor_type][wall][2] then
+        angle = 135
+      else
+        angle = 45
       end
-      local angle = math.deg(math.atan(point_y/point_x)) + 90
+       TheWorld.net.components.dungeonmapoverwatch:AddPointForWall(level, x + point_x, y + math.max(point_y-1, -20), angle)
+    else -- Now handle the case where wall is o. the z axis
+      local min_x, max_x = math.min(type_to_points[floor_type][wall][1], type_to_points[floor_type][wall+1][1]), math.max(type_to_points[floor_type][wall][1], type_to_points[floor_type][wall+1][1])
+      local min_y, max_y = math.min(type_to_points[floor_type][wall][2], type_to_points[floor_type][wall+1][2]), math.max(type_to_points[floor_type][wall][2], type_to_points[floor_type][wall+1][2])
+      local point_y = math.random(min_y, max_y)
+
+      local angle = 0
+      if min_x > 0 then
+        angle = 180
+      end
+      print("y", min_x, angle)
+      TheWorld.net.components.dungeonmapoverwatch:AddPointForWall(level, x + min_x, y + math.max(point_y-1, -20), angle)
+    end
+      -- XK, i have no idea why this would not work at all, so sadly i have to do a sipler dumber idea.
+      --[[ if point_y > 1000 or point_y ~= point_y then
+        point_y = 0.1
+      end
+      local angle = math.deg(math.atan2(point_x,(-22 - point_y)))
       if point_y == 0 then point_y = min_y end
       if point_x == 0 then point_x = min_x end
+      local angle = math.deg(math.acos(point_x/math.sqrt(point_x * point_x + (-42 - point_y) * (-42 - point_y))))
+      if angle<0 then angle = 360 - angle end
+      if angle>360 then angle = angle - 360 end
       print(point_x, point_y, angle)
       TheWorld.net.components.dungeonmapoverwatch:AddPointForWall(level, x + point_x, y + point_y, angle)
     else
@@ -534,15 +563,21 @@ local function addmobpointsforcaves(level,x,y,r,l,d,u,floor_type)
       local point_y = math.random(min_y, max_y)
       local point_x = (point_y * (max_x - min_x))/(max_y - min_y)
       
-      if point_x > 1000 or point_x ~= point_y then
-        point_x = 0
+      if point_x > 1000 or point_x ~= point_x then
+        point_x = 0.1
       end
-      local angle = math.deg(math.atan(point_y/point_x)) + 90
-            if point_y == 0 then point_y = min_y end
+      
+      
+      if point_y == 0 then point_y = min_y end
       if point_x == 0 then point_x = min_x end
+      print(math.sqrt(point_x * point_x + (-22 - point_y) * (-22 - point_y))/point_x, math.sqrt(point_x * point_x + (-12 - point_y) * (-12 - point_y)),point_x, (math.abs(point_x)/point_x))
+      local angle = math.deg(math.acos((point_y*point_y)/point_x * point_x + (-12 - point_y) * (-12 - point_y))) * (math.abs(point_x)/point_x)
+      if angle<0 then angle = 360 - angle end
+      if angle>360 then angle = angle - 360 end
+      
       print(point_x, point_y, angle)
       TheWorld.net.components.dungeonmapoverwatch:AddPointForWall(level, x + point_x, y + point_y, angle)
-    end
+      ]]
   end
 end
 
@@ -647,7 +682,8 @@ function DungeonWallSpawner:SanityCheck(entrance, exit)
   -- and the exit, it probably means that they are on the same island and no intrusion is needed.
   for i = x, x1, math.abs(x1-x)/(x1-x) * 4 do
     sanity_x[i] = 0
-    for j = z, z1, math.abs(z1-z)/(z1-z) * 4 do 
+    local deltaz = math.abs(z1-z)/(z1-z) * 4
+    for j = z - deltaz * 5, z1 + deltaz * 5, deltaz do 
       local tile = TheWorld.Map:GetTileAtPoint(i, 0, j)
       if tile ~= 1 and tile ~= WORLD_TILES.CLOUDS_WHITE and tile ~= WORLD_TILES.CLOUDS_DARK then
         sanity_x[i] = sanity_x[i] + 1
@@ -656,7 +692,8 @@ function DungeonWallSpawner:SanityCheck(entrance, exit)
   end
   for j = z, z1, math.abs(z1-z)/(z1-z) * 4 do 
     sanity_y[j] = 0
-    for i = x, x1, math.abs(x1-x)/(x1-x) * 4 do
+    local deltax = math.abs(x1-x)/(x1-x) * 4
+    for i = x - deltax * 5, x1 + deltax * 5, deltax do
       local tile = TheWorld.Map:GetTileAtPoint(i, 0, j)
       if tile ~= 1 and tile ~= WORLD_TILES.CLOUDS_WHITE and tile ~= WORLD_TILES.CLOUDS_DARK then
         sanity_y[j] = sanity_y[j] + 1
