@@ -16,11 +16,11 @@ PrefabFiles = {
   "ms_raw_ingot",
 	"ms_furnace",
   "ms_ore",
+  "ms_coal",
   "ms_details",
 	"ms_furnace_campfire",
 	"ms_furnace_campfirefire",
 	"ms_furnace_bellow",
-	"ms_ore",
 	"ms_fx",
 	"ms_climbing",
 	"ms_climbing_down",
@@ -91,4 +91,5 @@ PrefabFiles = {
 	"mountain_wooden_box",
   "ms_wall_bush",
   "ms_wall_stone",
+  "ms_ore_rocks",
 }
