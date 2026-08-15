@@ -543,3 +543,22 @@ AddRecipe2("mountain_snowball_ice",
 	},
 	{ "REFINE", "COOKING" }
 )
+
+-- Tool recipies
+AddRecipe2("mountain_copper_pickaxe", { Ingredient("twigs", 2), Ingredient("ms_copper_detail", 1) }, TECH.SCIENCE_TWO, nil, {"TOOLS"})
+AddRecipe2("mountain_aluminum_pickaxe", { Ingredient("twigs", 2), Ingredient("ms_alu_detail", 1) }, TECH.SCIENCE_TWO, nil, {"TOOLS"})
+AddRecipe2("mountain_super_gildedpickaxe", { Ingredient("goldenpickaxe", 1), Ingredient("ms_gold_detail", 1) }, TECH.SCIENCE_TWO, nil, {"TOOLS"})
+AddRecipe2("mountain_copper_axe", { Ingredient("twigs", 2), Ingredient("ms_copper_detail", 1) }, TECH.SCIENCE_TWO, nil, {"TOOLS"})
+AddRecipe2("mountain_aluminum_axe", { Ingredient("twigs", 2), Ingredient("ms_alu_detail", 1) }, TECH.SCIENCE_TWO, nil, {"TOOLS"})
+AddRecipe2("mountain_super_gildedaxe", { Ingredient("goldenaxe", 1), Ingredient("ms_gold_detail", 1) }, TECH.SCIENCE_TWO, nil, {"TOOLS"})
+AddRecipe2("mountain_super_gildedshovel", { Ingredient("goldenshovel", 1), Ingredient("ms_gold_detail", 1) }, TECH.SCIENCE_TWO, nil, {"TOOLS"})
+-- Weapons
+AddRecipe2("mountain_copper_bat",  { Ingredient("ms_copper_detail", 2) }, TECH.SCIENCE_TWO, { image = "mountain_copper_bat_1.tex"}, nil, {"WEAPONS"})
+AddRecipe2("mountain_aluminum_dagger", { Ingredient("twigs", 2), Ingredient("ms_alu_detail", 1) }, TECH.SCIENCE_TWO, nil, {"WEAPONS"})
+AddRecipe2("mountain_yoth_lance", { Ingredient("twigs", 4), Ingredient("ms_bronze_detail", 2) }, TECH.SCIENCE_TWO, nil, {"WEAPONS"})
+AddRecipe2("mountain_wathgrithr_shield", { Ingredient("ms_bronze_detail", 2), Ingredient("pigskin", 1)}, TECH.SCIENCE_TWO, nil, {"WEAPONS", "ARMOUR"})
+AddRecipe2("mountain_windhorn", { Ingredient("ms_bronze_detail", 1), Ingredient("mountain_goapaca_horn", 1), Ingredient("goose_feather", 3)}, TECH.SCIENCE_TWO,  nil, {"WEAPONS", "MAGIC"})
+
+-- Armour
+AddRecipe2("mountain_helmet_copper", { Ingredient("ms_bronze_detail", 2) }, TECH.SCIENCE_TWO, nil, {"ARMOUR"})
+AddRecipe2("mountain_armor_copper", { Ingredient("ms_bronze_detail", 2) }, TECH.SCIENCE_TWO, nil, {"ARMOUR"})
