@@ -52,7 +52,9 @@ function MapWidget:OnUpdate(dt)
       if GLOBAL.ThePlayer.map_level_shown > TUNING.MS_CAVES_START then
         GLOBAL.TheCamera.heading = 270
         GLOBAL.TheCamera:SetHeadingTarget(270)
+        self.mapscreen.cloudsoverlay:Disable()
       else
+        self.mapscreen.cloudsoverlay:Enable()
       if GLOBAL.TheCamera.saved_camera_rotation then
         GLOBAL.TheCamera:SetHeadingTarget(GLOBAL.TheCamera.saved_camera_rotation)
         GLOBAL.TheCamera.heading = GLOBAL.TheCamera.saved_camera_rotation
@@ -79,9 +81,12 @@ end
 
 
 local MapControlsDungeon = require "widgets/mapcontrols_dungeon"
+local MinimapCloudOverlay = require "widgets/minimap_cloud_overlay"
 
 AddGlobalClassPostConstruct("screens/mapscreen", "MapScreen", function(self, owner)
     self.mapcontrolsdungeon = self.bottomright_root:AddChild(MapControlsDungeon())
+    self.cloudsoverlay = self.minimap:AddChild(MinimapCloudOverlay())
+    self.cloudsoverlay:Disable()
     GLOBAL.TheCamera.saved_camera_rotation = GLOBAL.TheCamera:GetHeadingTarget()
     if GLOBAL.ThePlayer.map_level_shown ~= nil then
       if GLOBAL.ThePlayer.map_level_shown > TUNING.MS_CAVES_START then
@@ -99,6 +104,7 @@ local old_OnBecomeInactive = MapScreen.OnBecomeInactive
 function MapScreen:OnBecomeInactive()
   old_OnBecomeInactive(self)
   self.mapcontrolsdungeon:Hide()
+  self.cloudsoverlay:Disable()
   if GLOBAL.TheCamera.saved_camera_rotation then
     GLOBAL.TheCamera:SetHeadingTarget(GLOBAL.TheCamera.saved_camera_rotation)
     GLOBAL.TheCamera.heading = GLOBAL.TheCamera.saved_camera_rotation
