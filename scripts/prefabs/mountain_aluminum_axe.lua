@@ -83,38 +83,83 @@ local function ChopTreesAt(doer, x, y, z)
 	end
 end
 
--- 把斧头放回世界；不负责移除弹体（避免 onremove 递归）
-local function ReturnAxeToWorld(proj, thrower)
-	local axe = proj.axe
-	proj.axe = nil
+local function ChopMSBush(doer, target)
+	if target == nil or not target:IsValid() or target.components.workable == nil then
+		return
+	end
+  
+	target.components.workable:SetWorkable(true)
+	target.components.workable:WorkedBy(doer, 1)
 
-	if axe == nil or not axe:IsValid() then
+	if target:IsValid() and target.components.workable ~= nil then
+		target.components.workable:SetWorkable(false)
+	end
+end
+
+local function IsInvalidTile(tile)
+  return tile == WORLD_TILES.VOID_TECHNICAL or
+  tile == WORLD_TILES.MS_MOUNTAIN_LOW_TECHNICAL or
+  tile == WORLD_TILES.MS_MOUNTAIN_LOW_2_TECHNICAL or
+  tile == WORLD_TILES.MS_MOUNTAIN_HIGH_TECHNICAL or
+  tile == WORLD_TILES.MS_PERMAFROST_TECHNICAL or 
+  (not tile == 1 and not TileGroupManager:IsLandTile(tile))
+end
+
+local function ReturnItemToWorld(proj, thrower, do_mine_at, keep_height)
+	local item = proj.item
+	proj.item = nil
+
+	if item == nil or not item:IsValid() then
 		return
 	end
 
 	local x, y, z = proj.Transform:GetWorldPosition()
-	axe.Transform:SetPosition(x, 0, z)
-	axe:ReturnToScene()
-	if axe.components.inventoryitem ~= nil then
-		axe.components.inventoryitem:OnDropped(true)
+	if not keep_height then
+		y = 0
+	end
+	item.Transform:SetPosition(x, y, z)
+	item:ReturnToScene()
+  -- So it does not fall into the void.
+  if IsInvalidTile(TheWorld.Map:GetTileAtPoint(x, 0, z)) then
+    LaunchAt(item, item, thrower, 10, 3, 3, 0)
+  end
+	if item.components.inventoryitem ~= nil then
+		item.components.inventoryitem:OnDropped(true)
 	end
 
-	if thrower ~= nil and thrower:IsValid() then
+	if do_mine_at and thrower ~= nil and thrower:IsValid() then
 		ChopTreesAt(thrower, x, 0, z)
 	end
 
-	if axe.components.finiteuses ~= nil then
-		axe.components.finiteuses:Use(1)
+	if item.components.finiteuses ~= nil then
+		item.components.finiteuses:Use(1)
 	end
 end
 
 local function DropAxe(proj, thrower, target)
-	ReturnAxeToWorld(proj, thrower)
+	ReturnItemToWorld(proj, thrower)
 	if proj:IsValid() then
 		proj:Remove()
 	end
 end
 
+local function OnHit(proj, thrower, target)
+	if target ~= nil and target:IsValid() and target:HasTag("mountain_throw_target") then
+		ChopMSBush(thrower, target)
+	end
+	-- 从命中高度落下，而不是直接放到地面
+	ReturnItemToWorld(proj, thrower, false, true)
+	if proj:IsValid() then
+		proj:Remove()
+	end
+end
+
+local function OnMiss(proj, thrower)
+	ReturnItemToWorld(proj, thrower, false, true)
+	if proj:IsValid() then
+		proj:Remove()
+	end
+end
 local function SpellFn(inst, doer, pos)
 	local proj = SpawnPrefab("mountain_aluminum_axe_projectile")
 	if proj == nil then
@@ -134,6 +179,38 @@ local function SpellFn(inst, doer, pos)
 	proj.components.aimedprojectile.damage = TUNING.AXE_DAMAGE
 		* (doer.components.combat ~= nil and doer.components.combat.damagemultiplier or 1)
 	proj.components.aimedprojectile:Throw(doer, pos)
+
+	return true
+end
+
+local function ThrowAtBush(inst, doer, target)
+	if doer == nil or target == nil or not target:IsValid() or not target:HasTag("mountain_throw_target") then
+		return false
+	end
+
+	local proj = SpawnPrefab("mountain_aluminum_axe_projectile")
+	if proj == nil then
+		return false
+	end
+
+	local x, y, z = doer.Transform:GetWorldPosition()
+	proj.Transform:SetPosition(x, y, z)
+
+	if inst.components.inventoryitem ~= nil and inst.components.inventoryitem:IsHeld() then
+		inst.components.inventoryitem:RemoveFromOwner(true)
+	end
+	inst:RemoveFromScene()
+
+	local tx, ty, tz = target.Transform:GetWorldPosition()
+	local dest = Vector3(tx, ty, tz)
+
+	proj.item = inst
+	proj.components.aimedprojectile.weapon = inst
+	proj.components.aimedprojectile.damage = 0
+	proj.components.aimedprojectile:SetOnHitFn(OnHit)
+	proj.components.aimedprojectile:SetOnMissFn(OnMiss)
+	proj.components.aimedprojectile:SetHitWorkAction(nil)
+	proj.components.aimedprojectile:Throw(doer, dest, { fly_3d = true, target = target })
 
 	return true
 end
@@ -158,7 +235,8 @@ local function axe_fn()
 	inst:AddTag("throw_line")
 	inst:AddTag("nopunch")
 	inst:AddTag("weapon")
-
+  inst:AddTag("ms_aluminum_pickaxe")
+  
 	local floater_swap_data = { sym_build = "mountain_aluminum_axe", sym_name = "swap_aluminum_axe" }
 	MakeInventoryFloatable(inst, "small", 0.05, { 1.2, 0.75, 1.2 }, true, -11, floater_swap_data)
 
@@ -203,7 +281,9 @@ local function axe_fn()
 	inst:AddComponent("aoespell")
 	inst.components.aoespell:SetSpellFn(SpellFn)
 
-	MakeHauntableLaunch(inst)
+  inst.ThrowAtBush = ThrowAtBush
+	
+  MakeHauntableLaunch(inst)
 
 	return inst
 end
@@ -248,7 +328,7 @@ local function projectile_fn()
 	inst.components.aimedprojectile:SetLaunchOffset(Vector3(0.5, 0.75, 0))
 
 	inst:ListenForEvent("onremove", function()
-		ReturnAxeToWorld(inst, nil)
+		ReturnItemToWorld(inst, nil)
 	end)
 
 	return inst

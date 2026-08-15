@@ -35,7 +35,7 @@ end
 
 local function OnLoad(inst, data)
 	if data ~= nil and data.target_x then
-    local exit = SpawnPrefab("ms_cave_exit")
+    local exit = SpawnPrefab("ms_arenateleporter_exit")
     exit.Transform:SetPosition(data.target_x, data.target_y, data.target_z)
     exit:SetExitTarget(inst)
     inst:SetExitTarget(exit)

@@ -35,29 +35,29 @@ SetSharedLootTable( 'rock1',
 
  
 local function OnWork(inst, worker, workleft)
-    if workleft <= 0 then
-        local pt = inst:GetPosition()
-        SpawnPrefab("rock_break_fx").Transform:SetPosition(pt.x, pt.y, pt.z)
-        inst.components.lootdropper:DropLoot(pt)
+    local pt = inst:GetPosition()
+    local angle = inst.Transform:GetRotation()
+    SpawnPrefab("mountain_wooden_box").Transform:SetPosition(pt.x + math.cos(angle)*2, pt.y, pt.z-math.sin(angle)*2)
+    inst.components.lootdropper:DropLoot(pt)
+    inst.AnimState:PlayAnimation("idle")
+    inst.components.timer:StartTimer("regenerate", TUNING.MS_MOUNTAIN_BUSH_REGEN_DURATION + math.random(-TUNING.MS_MOUNTAIN_BUSH_REGEN_VARIATION, TUNING.MS_MOUNTAIN_BUSH_REGEN_VARIATION))
+end
 
-        if inst.showCloudFXwhenRemoved then
-            local fx = SpawnPrefab("collapse_small")
-            fx.Transform:SetPosition(pt.x, pt.y, pt.z)
-        end
+local function OnTimerDone(inst)
+  inst.AnimState:PlayAnimation("idle_full")
+  inst.components.workable:SetWorkLeft(1)
+  inst:AddTag("mountain_throw_target")
+end
 
-		if not inst.doNotRemoveOnWorkDone then
-	        inst:Remove()
-		end
+local function OnInit(inst)  
+  print(inst.components.timer:TimerExists("regenerate"), inst.components.workable.workleft)
+  if not( inst.components.timer and inst.components.timer:TimerExists("regenerate")) and inst.AnimState:IsCurrentAnimation("idle") then
+    if math.random() > 0.66 then
+      OnTimerDone(inst)
     else
-		local anim = 
-            (workleft < TUNING.ROCKS_MINE / 3 and "low") or
-            (workleft < TUNING.ROCKS_MINE * 2 / 3 and "med") or
-            "full"
-
-	
-
-		inst.AnimState:PlayAnimation(anim)
+      inst.components.timer:StartTimer("regenerate", TUNING.MS_MOUNTAIN_BUSH_REGEN_DURATION + math.random(-TUNING.MS_MOUNTAIN_BUSH_REGEN_VARIATION, TUNING.MS_MOUNTAIN_BUSH_REGEN_VARIATION))
     end
+  end
 end
 
 local function fn()
@@ -81,7 +81,7 @@ local function fn()
     
     inst.Transform:SetEightFaced()
     
-    inst:AddTag("mountain_throw_target")
+    
     
     inst.entity:SetPristine()
 
@@ -91,18 +91,23 @@ local function fn()
 
    
 
-    --[[inst:AddComponent("lootdropper")
+    inst:AddComponent("lootdropper")
 
     local workable = inst:AddComponent("workable")
     workable:SetWorkAction(ACTIONS.CHOP)
+    workable.maxwork = 1
     workable:SetWorkLeft(1)
     workable:SetOnWorkCallback(OnWork)
     inst.components.workable:SetWorkable(false)
-    ]]--
+    
     inst:AddComponent("inspectable")
 
     inst:AddComponent("savedrotation")
     
+    inst:AddComponent("timer")
+    inst:ListenForEvent("timerdone", OnTimerDone)
+    
+    inst:DoTaskInTime(0, OnInit)
     --MakeHauntableWork(inst)
     
     return inst

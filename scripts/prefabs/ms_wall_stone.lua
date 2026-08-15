@@ -61,7 +61,7 @@ local function fn()
 
     local workable = inst:AddComponent("workable")
     workable:SetWorkAction(ACTIONS.MINE)
-    workable:SetWorkLeft(TUNING.ROCKS_MINE)
+    workable:SetWorkLeft(1)
     workable:SetOnWorkCallback(OnWork)
 
 

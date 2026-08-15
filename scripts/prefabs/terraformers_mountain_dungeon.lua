@@ -84,7 +84,10 @@ local function MakeTerraformer(name, tiles, snow_randomseed, snow_rarity, size, 
         local centerx, centery = TheWorld.net.components.dungeonmapoverwatch:GetPointForLevel(level)
             
         local posx, posy, posz = inst.Transform:GetWorldPosition()
-        
+        if inst.prefab ~= "terraformer_mountain_dungeon_level_1" then
+          local light = SpawnPrefab("light_fake_overworld")
+          light.Transform:SetPosition(posx, 0, posz)  
+        end
         inst.Transform:SetPosition(math.floor((centerx+posx+posx)/12)*4, posy, math.floor((centery+posz+posz)/12)*4)
 
         local posx, posy, posz = inst.Transform:GetWorldPosition()
@@ -92,10 +95,7 @@ local function MakeTerraformer(name, tiles, snow_randomseed, snow_rarity, size, 
         -- Now check if we are near other terraformers. If do, it kills itself.
         local nearest_terraformers = TheSim:FindEntities(posx, posy, posz, 40, {"ms_terraformer"})
         if nearest_terraformers then for k,v in pairs(nearest_terraformers) do v:Remove() end end
-        if inst.prefab ~= "terraformer_mountain_dungeon_level_1" then
-          local light = SpawnPrefab("light_fake_overworld")
-          light.Transform:SetPosition(posx, 0, posz)  
-        end
+        
         local center_x, center_y = TheWorld.Map:GetTileXYAtPoint(posx, posy, posz)
         
         -- Replace void with CLOUD_WHITE, so there is no collision between land and void and for minimap rendering
@@ -113,6 +113,8 @@ local function MakeTerraformer(name, tiles, snow_randomseed, snow_rarity, size, 
             for j = -3, 3 do 
               local plug = SpawnPrefab("giant_plug_marker")
               plug.Transform:SetPosition(posx+i*16.66*4, 0, posz+j*16.66*4)  
+              local light = SpawnPrefab("light_fake_overworld")
+              light.Transform:SetPosition(posx, 0, posz)  
             end
           end
         end
@@ -255,9 +257,9 @@ end
 return MakeTerraformer("terraformer_mountain_dungeon_level_1", {WORLD_TILES.MS_MOUNTAIN_LOW_2, WORLD_TILES.MS_MOUNTAIN_LOW}, nil, 1, 60, 0, 0, 0, 0, 0, 0, 0, 0, 0), -- super-duper special case 
 MakeTerraformer("terraformer_mountain_dungeon_level_2", {WORLD_TILES.MS_MOUNTAIN_LOW_2, WORLD_TILES.MS_MOUNTAIN_LOW}, nil, 1, 50, 3, 3, 4, 3, 4, 3, 4, 3, 4, "terraformer_mountain_dungeon_level_3", TUNING.MS_TERRAFORMER_OFFSET_X[2], TUNING.MS_TERRAFORMER_OFFSET_Y[2]),
 MakeTerraformer("terraformer_mountain_dungeon_level_3", WORLD_TILES.MS_MOUNTAIN_HIGH, nil, 1, 40, 3, 2, 4, 2, 4, 2, 4, 2, 4, "terraformer_mountain_dungeon_level_4", TUNING.MS_TERRAFORMER_OFFSET_X[3], TUNING.MS_TERRAFORMER_OFFSET_Y[3]),
-MakeTerraformer("terraformer_mountain_dungeon_level_4", WORLD_TILES.MS_MOUNTAIN_HIGH, nil, 1, 35, 3, 2, 3, 2, 3, 2, 3, 2, 3, "terraformer_mountain_dungeon_level_5", TUNING.MS_TERRAFORMER_OFFSET_X[4], TUNING.MS_TERRAFORMER_OFFSET_Y[4]),
+MakeTerraformer("terraformer_mountain_dungeon_level_4", WORLD_TILES.MS_MOUNTAIN_HIGH, nil, 1, 35, 3, 1, 3, 1, 3, 1, 3, 1, 3, "terraformer_mountain_dungeon_level_5", TUNING.MS_TERRAFORMER_OFFSET_X[4], TUNING.MS_TERRAFORMER_OFFSET_Y[4]),
 MakeTerraformer("terraformer_mountain_dungeon_level_5", WORLD_TILES.MS_MOUNTAIN_HIGH, math.random() * 100, 0.7, 30, 3, 1, 3, 1, 3, 1, 3, 1, 3, "terraformer_mountain_dungeon_level_6",  TUNING.MS_TERRAFORMER_OFFSET_X[5], TUNING.MS_TERRAFORMER_OFFSET_Y[5]),
 
-MakeTerraformer("terraformer_mountain_dungeon_level_6", WORLD_TILES.MS_PERMAFROST, math.random() * 100, 0.4, 25, 3, 1, 3, 1, 3, 1, 3, 1, 3, "terraformer_mountain_dungeon_level_7",  TUNING.MS_TERRAFORMER_OFFSET_X[6], TUNING.MS_TERRAFORMER_OFFSET_Y[6]),
+MakeTerraformer("terraformer_mountain_dungeon_level_6", WORLD_TILES.MS_PERMAFROST, math.random() * 100, 0.4, 25, 2, 1, 2, 1, 2, 1, 2, 1, 2, "terraformer_mountain_dungeon_level_7",  TUNING.MS_TERRAFORMER_OFFSET_X[6], TUNING.MS_TERRAFORMER_OFFSET_Y[6]),
 MakeTerraformer("terraformer_mountain_dungeon_level_7", WORLD_TILES.MS_PERMAFROST, math.random() * 100, 0.2, 20, 2, 1, 2, 1, 2, 1, 2, 1, 2, "terraformer_mountain_dungeon_level_8",  TUNING.MS_TERRAFORMER_OFFSET_X[7], TUNING.MS_TERRAFORMER_OFFSET_Y[7]),
 MakeTerraformer("terraformer_mountain_dungeon_level_8", WORLD_TILES.MS_PERMAFROST, math.random() * 100, 0.1, -100, 0, 20,20,20,20,20,20,20,20, nil,  TUNING.MS_TERRAFORMER_OFFSET_X[8], TUNING.MS_TERRAFORMER_OFFSET_Y[8])
