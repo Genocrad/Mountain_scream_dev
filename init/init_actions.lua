@@ -43,12 +43,20 @@ end
 
 AddAction(MS_MINE_STALACTITE)
 
-local MS_THROW_STALACTITE = Action({ priority = 10, distance = 15, mount_valid = true })
-MS_THROW_STALACTITE.id = "MS_THROW_STALACTITE"
-MS_THROW_STALACTITE.str = "Throw"
-MS_THROW_STALACTITE.fn = MS_MINE_STALACTITE.fn 
+local MS_THROW = Action({ priority = 10, distance = 15, mount_valid = true })
+MS_THROW.id = "MS_THROW"
+MS_THROW.str = "Throw"
+MS_THROW.fn = function(act)
+  print( act.invobject.ThrowAtBush)
+	if act.invobject ~= nil
+			and act.target ~= nil
+			and act.invobject.ThrowAtBush ~= nil then
+		return act.invobject:ThrowAtBush(act.doer, act.target)
+	end
+	return false
+end
 
-AddAction(MS_THROW_STALACTITE)
+AddAction(MS_THROW)
 
 local is_chinese = locale == "zh" or locale == "zht" or locale == "zhr"
 STRINGS.ACTIONS.MS_MINE_STALACTITE = is_chinese and "开采" or "Mine"
@@ -61,10 +69,12 @@ AddComponentAction("EQUIPPED", "aoetargeting", function(inst, doer, target, acti
           table.insert(actions, ACTIONS.MS_MINE_STALACTITE)
         -- Luigi: For future, as it is unclear what zeroguzok means with "box" on a bush.
         elseif target:HasTag("mountain_throw_target") then
-          table.insert(actions, ACTIONS.MS_THROW_STALACTITE)
+          table.insert(actions, ACTIONS.MS_THROW)
         end
 	end
 end)
 
 AddStategraphActionHandler("wilson", ActionHandler(ACTIONS.MS_MINE_STALACTITE, "throw_line"))
 AddStategraphActionHandler("wilson_client", ActionHandler(ACTIONS.MS_MINE_STALACTITE, "throw_line"))
+AddStategraphActionHandler("wilson", ActionHandler(ACTIONS.MS_THROW, "throw_line"))
+AddStategraphActionHandler("wilson_client", ActionHandler(ACTIONS.MS_THROW, "throw_line"))
