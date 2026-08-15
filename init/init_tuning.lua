@@ -199,6 +199,15 @@ TUNING.MS_LEVEL_CONTENTS = {
 			},
 		},
 	},
+	[9] = {
+		distributepercent = 1,
+		distributeprefabs = {
+			mountain_sandspike_tall = 1.0,
+      mountain_sandspike_med = 1.0,
+      mountain_sandspike_short = 1.0,
+
+		},
+	},
 }
 TUNING.MS_LEVEL_WALL_CONTENTS = {
   [1] = {
@@ -249,6 +258,12 @@ TUNING.MS_LEVEL_WALL_CONTENTS = {
 			ms_wall_stone = 1.0,
 			ms_wall_bush = 0,
 		},  
+  },
+  [9] = {
+    distributepercent = 0.2,
+		distributeprefabs = {
+			ms_wall_stone = 1.0,
+		},
   },
   [10] = {
     distributepercent = 0.2,
@@ -423,6 +438,10 @@ TUNING.MOUNTAIN_KIKI_PROJECTILE = {
 TUNING.MOUNTAIN_BUSH = {
 	REGROW_TIME = TUNING.MARSHBUSH_REGROW_TIME, -- 4 天
 }
+
+
+TUNING.MS_MOUNTAIN_BUSH_REGEN_DURATION = TUNING.TOTAL_DAY_TIME * 3
+TUNING.MS_MOUNTAIN_BUSH_REGEN_VARIATION = TUNING.TOTAL_DAY_TIME * 0.5
 
 -- mountain_yoth_lance（伤害随耐久降低而减少）
 TUNING.MOUNTAIN_YOTH_LANCE = {
