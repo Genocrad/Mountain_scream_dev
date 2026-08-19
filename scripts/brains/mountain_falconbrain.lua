@@ -2,6 +2,7 @@ require "behaviours/wander"
 require "behaviours/chaseandattack"
 require "behaviours/attackwall"
 require "behaviours/doaction"
+require "behaviours/leash"
 local BrainCommon = require("brains/braincommon")
 
 local FINDFOOD_CANT_TAGS = { "INLIMBO", "outofreach" }
@@ -16,7 +17,7 @@ local function IsFoodValid(item, inst)
 end
 
 local function EatFoodAction(inst)
-	if inst._returning_home then
+	if inst._returning_home or inst._cross_flooring then
 		return
 	end
 	if inst.sg:HasStateTag("busy") and not inst.sg:HasStateTag("wantstoeat") then
@@ -34,7 +35,7 @@ local function EatFoodAction(inst)
 end
 
 local function GoHomeAction(inst)
-	if inst._returning_home then
+	if inst._returning_home or inst._cross_flooring then
 		return nil
 	end
 	return inst.components.homeseeker ~= nil
@@ -56,12 +57,17 @@ end
 
 local function HasCombatTarget(inst)
 	return not inst._returning_home
+		and not inst._cross_flooring
 		and inst.components.combat ~= nil
 		and inst.components.combat.target ~= nil
 end
 
 local function ShouldLeash(inst)
-	return GetHome(inst) ~= nil and not HasCombatTarget(inst) and not inst._returning_home
+	return GetHome(inst) ~= nil
+		and not HasCombatTarget(inst)
+		and not inst._returning_home
+		and not inst._cross_flooring
+		and inst._pursuit_target == nil
 end
 
 function MountainFalconBrain:OnStart()
@@ -71,7 +77,8 @@ function MountainFalconBrain:OnStart()
 
 		AttackWall(self.inst),
 
-		-- 山域追杀：有目标时不拴巢，跨层由 prefab 周期任务处理
+		-- Same-floor chase only. Cross-floor is handled by the prefab pursuit tick
+		-- (fly away → teleport near player → land → re-aggro).
 		WhileNode(function() return HasCombatTarget(self.inst) end, "TerritoryPursuit",
 			ChaseAndAttack(
 				self.inst,
@@ -79,7 +86,12 @@ function MountainFalconBrain:OnStart()
 				TUNING.MOUNTAIN_FALCON.MAX_CHASE_DIST
 			)),
 
-		WhileNode(function() return not TheWorld.state.isday and not self.inst._returning_home end, "IsNight",
+		WhileNode(function()
+				return not TheWorld.state.isday
+					and not self.inst._returning_home
+					and not self.inst._cross_flooring
+					and self.inst._pursuit_target == nil
+			end, "IsNight",
 			DoAction(self.inst, GoHomeAction)),
 
 		WhileNode(function() return ShouldLeash(self.inst) end, "PeaceLeash",
@@ -92,7 +104,12 @@ function MountainFalconBrain:OnStart()
 
 		DoAction(self.inst, EatFoodAction, "eat food", true),
 
-		WhileNode(function() return GetHome(self.inst) ~= nil and not self.inst._returning_home end, "HasHome",
+		WhileNode(function()
+				return GetHome(self.inst) ~= nil
+					and not self.inst._returning_home
+					and not self.inst._cross_flooring
+					and self.inst._pursuit_target == nil
+			end, "HasHome",
 			Wander(self.inst, GetHomePos, TUNING.MOUNTAIN_FALCON.MAX_WANDER_DIST)),
 	}, .25)
 

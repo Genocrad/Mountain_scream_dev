@@ -111,26 +111,32 @@ function DungeonMapOverwatch:AddPoint(level, x, y)
 end
 
 function DungeonMapOverwatch:GetPointForLevel(level)
-    if self.terraformers_points[level] and #self.terraformers_points[level]>0 then
-      if level == 1 then
-        local x = 0
-        local y = 0
-        for k, v in pairs(self.terraformers_points[level]) do
-          x = x + v[1]
-          y = y + v[2]
-        end
-        if self.map_points_level_x[level] == 0 then
-          local tile_x,tile_y = TheWorld.Map:GetTileXYAtPoint(x/#self.terraformers_points[level], 0, y/#self.terraformers_points[level])
-          self.map_points_level_x[level] = tile_x
-          self.map_points_level_y[level] = tile_y
-          self._map_points_level_y:set(self.map_points_level_y)
-          self._map_points_level_x:set(self.map_points_level_x)
-        end
-        return x/#self.terraformers_points[level],y/#self.terraformers_points[level]
+    -- Prefer live terraformer centroid when available (any floor, not only level 1).
+    if self.terraformers_points[level] and #self.terraformers_points[level] > 0 then
+      local x = 0
+      local y = 0
+      for _, v in pairs(self.terraformers_points[level]) do
+        x = x + v[1]
+        y = y + v[2]
       end
-    else
-     return -self.map_width*2+self._map_points_level_x:value()[level]*4, -self.map_height*2+self._map_points_level_y:value()[level]*4
+      x = x / #self.terraformers_points[level]
+      y = y / #self.terraformers_points[level]
+      if level == 1 and self.map_points_level_x[level] == 0 then
+        local tile_x, tile_y = TheWorld.Map:GetTileXYAtPoint(x, 0, y)
+        self.map_points_level_x[level] = tile_x
+        self.map_points_level_y[level] = tile_y
+        self._map_points_level_y:set(self.map_points_level_y)
+        self._map_points_level_x:set(self.map_points_level_x)
+      end
+      return x, y
     end
+
+    local xs = self._map_points_level_x:value()
+    local ys = self._map_points_level_y:value()
+    if xs == nil or ys == nil or xs[level] == nil or ys[level] == nil then
+      return nil, nil
+    end
+    return -self.map_width * 2 + xs[level] * 4, -self.map_height * 2 + ys[level] * 4
 end
 
 function DungeonMapOverwatch:GetTileDiffForLevel(level)
@@ -147,23 +153,34 @@ function DungeonMapOverwatch:GetTileDiffForLevel(level)
 end 
 
 function DungeonMapOverwatch:GetNearestLevel(x,y,z)
-  local level = 1
-  local point_x, point_y = self:GetPointForLevel(1)
-  local min = (x-point_x) * (x-point_x) + (z-point_y) * (z-point_y)  
-  local min_x = 99999
-  local min_z = 99999
-  for i =2, #self._map_points_level_x:value() do
-    point_x, point_y = self:GetPointForLevel(i)
-    if min > (x-point_x) * (x-point_x) + (z-point_y) * (z-point_y) then
-      min = (x-point_x) * (x-point_x) + (z-point_y) * (z-point_y)  
-      level = i
-      min_x = math.abs(x-point_x)
-      min_z = math.abs(z-point_y)
+  local xs = self._map_points_level_x:value()
+  if xs == nil or #xs < 1 then
+    return nil
+  end
+
+  local best_level = nil
+  local best_min = math.huge
+  local best_min_x = math.huge
+  local best_min_z = math.huge
+
+  for i = 1, #xs do
+    local point_x, point_y = self:GetPointForLevel(i)
+    if point_x ~= nil and point_y ~= nil then
+      local dx = x - point_x
+      local dz = z - point_y
+      local distsq = dx * dx + dz * dz
+      if distsq < best_min then
+        best_min = distsq
+        best_level = i
+        best_min_x = math.abs(dx)
+        best_min_z = math.abs(dz)
+      end
     end
   end
-  -- As we want a square area, not circle area for a level.
-  if min_x < 200 and min_z < 200 then
-    return level
+
+  -- Square territory per floor (not circle).
+  if best_level ~= nil and best_min_x < 200 and best_min_z < 200 then
+    return best_level
   end
   return nil
 end

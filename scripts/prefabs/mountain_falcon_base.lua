@@ -15,28 +15,53 @@ SetSharedLootTable("mountain_falcon_base",
 	{ "boneshard", 1.00 },
 })
 
-local function SpawnGuardFalcon(inst, attacker)
-	local defender = inst.components.childspawner:SpawnChild(attacker, "mountain_falcon")
-	if defender ~= nil and attacker ~= nil and defender.components.combat ~= nil then
-		defender.components.combat:SetTarget(attacker)
-		defender.components.combat:BlankOutAttacks(1.5 + math.random() * 2)
+-- ChildSpawner:CanSpawn() requires spawning == true. We keep auto free-roam off
+-- (StopSpawning), and only flip spawning on while manually releasing guards.
+local function WithSpawningEnabled(spawner, fn)
+	local was_spawning = spawner.spawning
+	if not was_spawning then
+		spawner:StartSpawning()
+	end
+	fn()
+	if not was_spawning then
+		spawner:StopSpawning()
 	end
 end
 
 local function SpawnAllGuards(inst, attacker)
-	if not inst.components.health:IsDead() and inst.components.childspawner ~= nil then
-		inst.AnimState:PlayAnimation("hit")
-		inst.AnimState:PushAnimation("idle", false)
-		local num_to_release = inst.components.childspawner.childreninside
-		for k = 1, num_to_release do
-			SpawnGuardFalcon(inst, attacker)
-		end
+	if inst.components.health:IsDead() or inst.components.childspawner == nil then
+		return
 	end
+
+	inst.AnimState:PlayAnimation("hit")
+	inst.AnimState:PushAnimation("idle", false)
+
+	local spawner = inst.components.childspawner
+	local num_to_release = spawner.childreninside
+	if num_to_release <= 0 then
+		return
+	end
+
+	WithSpawningEnabled(spawner, function()
+		for _ = 1, num_to_release do
+			local defender = spawner:SpawnChild(attacker, "mountain_falcon")
+			if defender ~= nil and attacker ~= nil and defender.components.combat ~= nil then
+				if defender.RememberPursuitTarget ~= nil then
+					defender:RememberPursuitTarget(attacker)
+				end
+				defender.components.combat:SetTarget(attacker)
+				defender.components.combat:BlankOutAttacks(1.5 + math.random() * 2)
+			end
+		end
+	end)
 end
 
 local function OnKilled(inst)
 	if inst.components.childspawner ~= nil then
-		inst.components.childspawner:ReleaseAllChildren()
+		local spawner = inst.components.childspawner
+		WithSpawningEnabled(spawner, function()
+			spawner:ReleaseAllChildren()
+		end)
 	end
 
 	RemovePhysicsColliders(inst)
@@ -47,9 +72,6 @@ local function OnKilled(inst)
 end
 
 local function OnEntityWake(inst)
-	if inst.components.childspawner ~= nil then
-		inst.components.childspawner:StartSpawning()
-	end
 	inst.SoundEmitter:PlaySound("dontstarve/creatures/hound/mound_LP", "loop")
 end
 
@@ -87,14 +109,19 @@ local function fn()
 	inst.components.health:SetMaxHealth(TUNING.MOUNTAIN_FALCON_BASE.HEALTH)
 	inst:ListenForEvent("death", OnKilled)
 
-	inst:AddComponent("childspawner")
-	inst.components.childspawner.childname = "mountain_falcon"
-	inst.components.childspawner:SetRegenPeriod(TUNING.MOUNTAIN_FALCON_BASE.REGEN_PERIOD)
-	inst.components.childspawner:SetSpawnPeriod(TUNING.MOUNTAIN_FALCON_BASE.SPAWN_PERIOD)
-	inst.components.childspawner:SetMaxChildren(
+	local childspawner = inst:AddComponent("childspawner")
+	childspawner.childname = "mountain_falcon"
+	childspawner:SetRegenPeriod(TUNING.MOUNTAIN_FALCON_BASE.REGEN_PERIOD)
+	childspawner:SetSpawnPeriod(TUNING.MOUNTAIN_FALCON_BASE.SPAWN_PERIOD)
+	childspawner:SetMaxChildren(
 		math.random(TUNING.MOUNTAIN_FALCON_BASE.CHILDREN_MIN, TUNING.MOUNTAIN_FALCON_BASE.CHILDREN_MAX)
 	)
-	inst.components.childspawner:StartRegen()
+	local to_fill = childspawner.maxchildren - (childspawner.childreninside or 0)
+	if to_fill > 0 then
+		childspawner:AddChildrenInside(to_fill)
+	end
+	childspawner:StartRegen()
+	childspawner:StopSpawning()
 
 	inst:AddComponent("combat")
 	inst.components.combat:SetOnHit(SpawnAllGuards)

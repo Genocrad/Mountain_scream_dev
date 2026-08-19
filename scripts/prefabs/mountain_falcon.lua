@@ -21,7 +21,7 @@ SetSharedLootTable("mountain_falcon",
 
 local SHARE_TARGET_DIST = 30
 local MAX_TARGET_SHARES = 5
-local PURSUIT_TICK = 0.5
+local PURSUIT_TICK = 0.25
 
 local RETARGET_CANT_TAGS = { "wall", "mountain_falcon_base", "mountain_falcon" }
 local RETARGET_ONEOF_TAGS = { "character", "monster" }
@@ -40,19 +40,24 @@ local function GetMountainLevel(ent)
 	return overwatch:GetNearestLevel(x, y, z)
 end
 
-local function IsOnMountainTerritory(ent)
-	local level = GetMountainLevel(ent)
+local function IsMountainSurfaceLevel(level)
 	return level ~= nil and level <= TUNING.MS_CAVES_START
+end
+
+local function IsOnMountainTerritory(ent)
+	return IsMountainSurfaceLevel(GetMountainLevel(ent))
 end
 
 local function ClearPursuitTimers(inst)
 	inst._pursuit_start = nil
 	inst._pursuit_lost_since = nil
-	inst._cross_floor_fail = nil
 	inst._cross_floor_dest = nil
+	inst._pursuit_target = nil
+	inst._pursuit_target_level = nil
+	inst._cross_floor_hold_start = nil
+	inst._cross_floor_ready_since = nil
 end
 
--- 追杀 / 回巢飞行期间禁止 EntitySleep，否则玩家换层后隼会因距离过远睡着并被 DoReturn 收巢。
 local function SetPursuitCanSleep(inst, can_sleep)
 	if inst._pursuit_can_sleep == can_sleep then
 		return
@@ -62,14 +67,16 @@ local function SetPursuitCanSleep(inst, can_sleep)
 end
 
 local function IsActivelyPursuing(inst)
-	if inst._returning_home or inst._deaggro_pending then
+	if inst._returning_home or inst._deaggro_pending or inst._cross_flooring then
+		return true
+	end
+	if inst._pursuit_target ~= nil then
 		return true
 	end
 	local target = inst.components.combat ~= nil and inst.components.combat.target or nil
 	if target ~= nil then
 		return true
 	end
-	-- 丢失目标宽限期内仍保持清醒，以便跨层追杀或回巢
 	if inst._pursuit_start ~= nil or inst._pursuit_lost_since ~= nil then
 		return true
 	end
@@ -81,6 +88,9 @@ local function SyncPursuitSleep(inst)
 end
 
 local function DoReturn(inst)
+	if not inst:IsValid() then
+		return false
+	end
 	if inst.components.homeseeker ~= nil and inst.components.homeseeker:HasHome() then
 		local home = inst.components.homeseeker.home
 		if home ~= nil and home:IsValid() and home.components.childspawner ~= nil then
@@ -92,23 +102,36 @@ local function DoReturn(inst)
 end
 
 local function FinishReturnHome(inst)
-	inst._returning_home = false
+	if not inst:IsValid() then
+		return
+	end
+
+	inst._cross_flooring = false
 	ClearPursuitTimers(inst)
 	if inst.components.combat ~= nil then
 		inst.components.combat:DropTarget()
 	end
-	SetPursuitCanSleep(inst, true)
-	if not DoReturn(inst) then
-		-- 无巢：降落到当前位置
-		local x, y, z = inst.Transform:GetWorldPosition()
-		inst.Physics:Stop()
-		inst.Transform:SetPosition(x, 15, z)
-		inst.sg:GoToState("flyback")
+
+	-- GoHome BEFORE re-enabling sleep. Otherwise EntitySleep can race and the
+	-- bird vanishes without being counted back into childreninside.
+	local went_home = DoReturn(inst)
+	inst._returning_home = false
+	if went_home or not inst:IsValid() then
+		return
 	end
+
+	SetPursuitCanSleep(inst, true)
+	local x, y, z = inst.Transform:GetWorldPosition()
+	inst.Physics:Stop()
+	inst.Transform:SetPosition(x, 15, z)
+	inst.sg:GoToState("flyback")
 end
 
 local function RequestReturnHome(inst)
-	if (inst.components.health ~= nil and inst.components.health:IsDead()) then
+	if not inst:IsValid() then
+		return
+	end
+	if inst.components.health ~= nil and inst.components.health:IsDead() then
 		return
 	end
 	if inst._returning_home and inst.sg ~= nil and inst.sg.currentstate ~= nil
@@ -118,15 +141,18 @@ local function RequestReturnHome(inst)
 
 	inst._returning_home = true
 	inst._deaggro_pending = nil
+	inst._cross_flooring = false
 	ClearPursuitTimers(inst)
 	if inst.components.combat ~= nil then
 		inst.components.combat:DropTarget()
 	end
-	-- 回巢飞行中保持清醒，避免中途 EntitySleep
+	-- Stay awake until GoHome finishes.
 	SetPursuitCanSleep(inst, false)
 
 	if inst.sg ~= nil and not inst.sg:HasStateTag("dead") then
 		inst.sg:GoToState("return_home_fly")
+	else
+		FinishReturnHome(inst)
 	end
 end
 
@@ -143,6 +169,62 @@ local function ScheduleReturnHome(inst)
 		i._deaggro_pending = nil
 		RequestReturnHome(i)
 	end)
+end
+
+local function RememberPursuitTarget(inst, target)
+	if target == nil or not target:IsValid() then
+		return
+	end
+	inst._pursuit_target = target
+	inst._pursuit_target_level = GetMountainLevel(target)
+	if inst._pursuit_start == nil then
+		inst._pursuit_start = GetTime()
+	end
+	inst._pursuit_lost_since = nil
+	SetPursuitCanSleep(inst, false)
+end
+
+local function GetPursuitTarget(inst)
+	local target = inst.components.combat ~= nil and inst.components.combat.target or nil
+	if target ~= nil and target:IsValid() then
+		RememberPursuitTarget(inst, target)
+		return target
+	end
+	target = inst._pursuit_target
+	if target ~= nil and target:IsValid() then
+		return target
+	end
+	inst._pursuit_target = nil
+	return nil
+end
+
+local function IsHardInvalidTarget(target)
+	if target == nil or not target:IsValid() then
+		return true
+	end
+	if target:HasTag("playerghost") then
+		return true
+	end
+	if target.components.health == nil or target.components.health:IsDead() then
+		return true
+	end
+	local level = GetMountainLevel(target)
+	-- Cave annex / off-mountain: hard stop. nil during teleport gets a grace window instead.
+	if level ~= nil and level > TUNING.MS_CAVES_START then
+		return true
+	end
+	return false
+end
+
+local function IsSoftValidPursuitTarget(inst, target)
+	if IsHardInvalidTarget(target) then
+		return false
+	end
+	if not inst.components.combat:CanTarget(target) then
+		-- Mid-teleport / limbo: keep sticky pursuit briefly.
+		return inst._pursuit_target == target
+	end
+	return true
 end
 
 local function FindLandingNearTarget(target)
@@ -163,55 +245,156 @@ local function FindLandingNearTarget(target)
 	if offset ~= nil then
 		return x + offset.x, z + offset.z
 	end
-	if TheWorld.Map:IsPassableAtPoint(x, 0, z) then
-		return x, z
+	-- Always fall back to the target itself so cross-floor never aborts on tile quirks.
+	return x, z
+end
+
+-- Player can see the new floor: visible, out of climb/drop SG, controls back.
+local CLIMB_HOLD_SG = {
+	ms_door_use = true,
+	ms_door_use_pre = true,
+	abyss_drop = true,
+}
+
+local function IsPursuitTargetScreenReady(target)
+	if target == nil or not target:IsValid() then
+		return false
 	end
-	return nil
+	if target:HasTag("INLIMBO") then
+		return false
+	end
+	if target.IsVisible ~= nil and not target:IsVisible() then
+		return false
+	end
+	if target.sg ~= nil and target.sg.currentstate ~= nil then
+		local name = target.sg.currentstate.name
+		if CLIMB_HOLD_SG[name] then
+			return false
+		end
+	end
+	local pc = target.components.playercontroller
+	if pc ~= nil and pc.enabled == false then
+		return false
+	end
+	return true
+end
+
+-- Hold above the player until screen is ready (+ settle), or timeout.
+local function ShouldFinishCrossFloorHold(inst)
+	local cfg = TUNING.MOUNTAIN_FALCON
+	local hold_start = inst._cross_floor_hold_start or GetTime()
+	if GetTime() - hold_start >= cfg.CROSS_FLOOR_LAND_TIMEOUT then
+		return true
+	end
+
+	local target = inst._pursuit_target
+		or (inst.components.combat ~= nil and inst.components.combat.target)
+		or nil
+	if not IsPursuitTargetScreenReady(target) then
+		inst._cross_floor_ready_since = nil
+		return false
+	end
+
+	if inst._cross_floor_ready_since == nil then
+		-- Slight per-bird stagger so a pack doesn't land on the same frame.
+		inst._cross_floor_ready_since = GetTime() + math.random() * 0.35
+	end
+	return GetTime() >= inst._cross_floor_ready_since + cfg.CROSS_FLOOR_LAND_SETTLE
+end
+
+local function NeedsCrossFloorPursue(inst, target)
+	if target == nil or not target:IsValid() then
+		return false
+	end
+
+	local cfg = TUNING.MOUNTAIN_FALCON
+	-- Floors are hundreds of units apart; same-floor combat stays well under this.
+	local distsq = inst:GetDistanceSqToInst(target)
+	if distsq >= cfg.CROSS_FLOOR_DIST * cfg.CROSS_FLOOR_DIST then
+		return true
+	end
+
+	local my_level = GetMountainLevel(inst)
+	local their_level = GetMountainLevel(target)
+	local prev_level = inst._pursuit_target_level
+
+	if my_level ~= nil and their_level ~= nil and my_level ~= their_level then
+		return true
+	end
+
+	-- Target changed floors since last successful sighting (teleport).
+	if their_level ~= nil and prev_level ~= nil and their_level ~= prev_level then
+		return true
+	end
+
+	return false
 end
 
 local function TryCrossFloorPursue(inst, target)
-	if inst._returning_home
-		or inst._deaggro_pending
-		or inst.sg:HasStateTag("flight")
-		or inst.sg:HasStateTag("busy")
-		or inst.sg:HasStateTag("dead") then
-		return
+	if inst._returning_home or inst._deaggro_pending or inst._cross_flooring then
+		return false
+	end
+	if inst.sg == nil or inst.sg:HasStateTag("dead") then
+		return false
+	end
+	if inst.sg:HasStateTag("flight") then
+		return false
 	end
 
 	local cfg = TUNING.MOUNTAIN_FALCON
 	if inst._cross_floor_ready ~= nil and GetTime() < inst._cross_floor_ready then
-		return
+		return false
 	end
 
 	local lx, lz = FindLandingNearTarget(target)
 	if lx == nil then
-		inst._cross_floor_fail = (inst._cross_floor_fail or 0) + 1
-		if inst._cross_floor_fail >= 2 then
-			RequestReturnHome(inst)
-		end
-		return
+		return false
 	end
 
-	inst._cross_floor_fail = 0
+	RememberPursuitTarget(inst, target)
+	inst._cross_flooring = true
 	inst._cross_floor_ready = GetTime() + cfg.CROSS_FLOOR_COOLDOWN
 	inst._cross_floor_dest = { x = lx, z = lz }
+
+	-- Re-assert combat target so KeepTarget/brain stay in pursuit after landing.
+	if inst.components.combat ~= nil and inst.components.combat.target ~= target then
+		inst.components.combat:SetTarget(target)
+	end
+
 	inst.sg:GoToState("pursue_crossfloor")
+	return true
+end
+
+local function OnCrossFloorLanded(inst)
+	inst._cross_flooring = false
+	inst._cross_floor_hold_start = nil
+	inst._cross_floor_ready_since = nil
+	local target = GetPursuitTarget(inst)
+	if target ~= nil and not IsHardInvalidTarget(target) then
+		RememberPursuitTarget(inst, target)
+		if inst.components.combat ~= nil then
+			inst.components.combat:SetTarget(target)
+		end
+	end
+	SyncPursuitSleep(inst)
 end
 
 local function IsValidPursuitTarget(inst, target)
 	if target == nil or not target:IsValid() then
 		return false
 	end
-	if target:HasTag("playerghost") then
-		return false
-	end
-	if target.components.health == nil or target.components.health:IsDead() then
+	if IsHardInvalidTarget(target) then
 		return false
 	end
 	if not inst.components.combat:CanTarget(target) then
 		return false
 	end
-	if not IsOnMountainTerritory(target) then
+	-- Soft territory: allow chase while level is briefly nil (door travel).
+	local level = GetMountainLevel(target)
+	if level ~= nil and level > TUNING.MS_CAVES_START then
+		return false
+	end
+	if level == nil and inst._pursuit_target ~= target then
 		return false
 	end
 	return true
@@ -222,39 +405,63 @@ local function UpdatePursuit(inst)
 
 	if inst._returning_home
 		or inst._deaggro_pending
+		or inst._cross_flooring
 		or (inst.components.health ~= nil and inst.components.health:IsDead())
-		or inst.sg:HasStateTag("flight") then
+		or (inst.sg ~= nil and inst.sg:HasStateTag("flight")) then
 		return
 	end
 
 	local cfg = TUNING.MOUNTAIN_FALCON
-	local target = inst.components.combat ~= nil and inst.components.combat.target or nil
+	local target = GetPursuitTarget(inst)
 
 	if target ~= nil then
-		if not IsValidPursuitTarget(inst, target) then
+		if IsHardInvalidTarget(target) then
 			ScheduleReturnHome(inst)
 			return
 		end
 
-		if inst._pursuit_start == nil then
-			inst._pursuit_start = GetTime()
-		end
-		inst._pursuit_lost_since = nil
+		local their_level = GetMountainLevel(target)
 
-		if GetTime() - inst._pursuit_start >= cfg.DEAGGRO_TIMEOUT then
+		-- Distance/level mismatch always wins: climb teleports must trigger even if
+		-- GetNearestLevel is briefly nil at door edges.
+		if NeedsCrossFloorPursue(inst, target) then
+			inst._pursuit_lost_since = nil
+			RememberPursuitTarget(inst, target)
+			TryCrossFloorPursue(inst, target)
+			return
+		end
+
+		if their_level ~= nil and their_level > TUNING.MS_CAVES_START then
+			ScheduleReturnHome(inst)
+			return
+		end
+
+		-- Left the mountain for real (both off territory, not mid-door).
+		if their_level == nil and not IsOnMountainTerritory(inst) then
+			if inst._pursuit_lost_since == nil then
+				inst._pursuit_lost_since = GetTime()
+			elseif GetTime() - inst._pursuit_lost_since >= cfg.LOST_TARGET_TIME then
+				RequestReturnHome(inst)
+			end
+			return
+		end
+
+		if their_level == nil then
+			-- Target mid-travel or on a fuzzy edge: hold sticky target.
+			return
+		end
+
+		inst._pursuit_lost_since = nil
+		RememberPursuitTarget(inst, target)
+
+		if inst._pursuit_start ~= nil and GetTime() - inst._pursuit_start >= cfg.DEAGGRO_TIMEOUT then
 			RequestReturnHome(inst)
 			return
 		end
 
-		local my_level = GetMountainLevel(inst)
-		local their_level = GetMountainLevel(target)
-		if my_level ~= their_level then
-			TryCrossFloorPursue(inst, target)
-		end
 		return
 	end
 
-	-- 曾进入追杀但目标已丢：短暂等待后回巢（死亡/离山走 ScheduleReturnHome，不等待）
 	if inst._pursuit_start ~= nil or inst._pursuit_lost_since ~= nil then
 		if inst._pursuit_lost_since == nil then
 			inst._pursuit_lost_since = GetTime()
@@ -269,11 +476,12 @@ end
 local function IsValidTarget(guy, inst)
 	return not inst._returning_home
 		and not inst._deaggro_pending
-		and IsValidPursuitTarget(inst, guy)
+		and IsSoftValidPursuitTarget(inst, guy)
+		and IsOnMountainTerritory(guy)
 end
 
 local function Retarget(inst)
-	if inst._returning_home or inst._deaggro_pending then
+	if inst._returning_home or inst._deaggro_pending or inst._cross_flooring then
 		return nil
 	end
 	return FindEntity(inst, TUNING.HOUND_TARGET_DIST, IsValidTarget, nil, RETARGET_CANT_TAGS, RETARGET_ONEOF_TAGS)
@@ -283,11 +491,17 @@ local function KeepTarget(inst, target)
 	if inst._returning_home or inst._deaggro_pending then
 		return false
 	end
-	if IsValidPursuitTarget(inst, target) then
+	-- Keep sticky during cross-floor flight / teleport grace.
+	if inst._cross_flooring and inst._pursuit_target == target then
 		return true
 	end
-	-- 死亡 / 变鬼 / 离开山体 / 进洞穴：立刻安排回巢
-	ScheduleReturnHome(inst)
+	if IsSoftValidPursuitTarget(inst, target) then
+		RememberPursuitTarget(inst, target)
+		return true
+	end
+	if IsHardInvalidTarget(target) then
+		ScheduleReturnHome(inst)
+	end
 	return false
 end
 
@@ -304,6 +518,7 @@ local function OnAttacked(inst, data)
 		return
 	end
 
+	RememberPursuitTarget(inst, attacker)
 	inst.components.combat:SetTarget(attacker)
 	inst.components.combat:ShareTarget(attacker, SHARE_TARGET_DIST, IsFalcon, MAX_TARGET_SHARES)
 end
@@ -312,34 +527,49 @@ local function OnAttackOther(inst, data)
 	if inst._returning_home then
 		return
 	end
-	inst.components.combat:ShareTarget(data.target, SHARE_TARGET_DIST, IsFalcon, MAX_TARGET_SHARES)
+	if data ~= nil and data.target ~= nil then
+		RememberPursuitTarget(inst, data.target)
+		inst.components.combat:ShareTarget(data.target, SHARE_TARGET_DIST, IsFalcon, MAX_TARGET_SHARES)
+	end
 end
 
 local function OnNewCombatTarget(inst, data)
 	if data ~= nil and data.target ~= nil and not inst._returning_home then
-		inst._pursuit_start = GetTime()
-		inst._pursuit_lost_since = nil
-		-- 接战即禁止 sleep，避免玩家立刻换层导致 EntitySleep 抢先回巢
-		SetPursuitCanSleep(inst, false)
+		RememberPursuitTarget(inst, data.target)
 	end
 end
 
 local function OnDroppedTarget(inst)
-	if not inst._returning_home and inst._pursuit_start ~= nil and inst._pursuit_lost_since == nil then
+	if inst._returning_home or inst._cross_flooring then
+		return
+	end
+	-- Sticky pursuit: restore combat target if we still want them.
+	local sticky = inst._pursuit_target
+	if sticky ~= nil and sticky:IsValid() and not IsHardInvalidTarget(sticky) then
+		inst:DoTaskInTime(0, function(i)
+			if not i:IsValid() or i._returning_home then
+				return
+			end
+			if i._pursuit_target == sticky and sticky:IsValid() and not IsHardInvalidTarget(sticky) then
+				i.components.combat:SetTarget(sticky)
+			end
+		end)
+		return
+	end
+	if inst._pursuit_start ~= nil and inst._pursuit_lost_since == nil then
 		inst._pursuit_lost_since = GetTime()
 	end
 	SyncPursuitSleep(inst)
 end
 
 local function OnEntitySleep(inst)
-	-- 追杀中不应 sleep；若仍触发（边界），禁止回巢并尝试保持清醒
 	if IsActivelyPursuing(inst) then
 		SetPursuitCanSleep(inst, false)
 		return
 	end
-	-- 非追杀：睡着时收队回巢，避免闲置卡在别层
 	ClearPursuitTimers(inst)
 	inst._returning_home = false
+	inst._cross_flooring = false
 	SetPursuitCanSleep(inst, true)
 	DoReturn(inst)
 end
@@ -357,6 +587,7 @@ local function OnPreLoad(inst, data)
 	end
 	ClearPursuitTimers(inst)
 	inst._returning_home = false
+	inst._cross_flooring = false
 	SetPursuitCanSleep(inst, true)
 end
 
@@ -408,7 +639,6 @@ local function fn()
 	eater:SetDiet({ FOODTYPE.MEAT }, { FOODTYPE.MEAT })
 	eater:SetStrongStomach(true)
 
-	-- 支持排箫等催眠；不设自然入睡（夜间走回巢逻辑）
 	local sleeper = inst:AddComponent("sleeper")
 	sleeper:SetResistance(3)
 	sleeper.sleeptestfn = nil
@@ -445,6 +675,9 @@ local function fn()
 
 	inst.RequestReturnHome = RequestReturnHome
 	inst.FinishReturnHome = FinishReturnHome
+	inst.OnCrossFloorLanded = OnCrossFloorLanded
+	inst.ShouldFinishCrossFloorHold = ShouldFinishCrossFloorHold
+	inst.RememberPursuitTarget = RememberPursuitTarget
 	inst.IsValidPursuitTarget = IsValidPursuitTarget
 	inst.GetMountainLevel = GetMountainLevel
 

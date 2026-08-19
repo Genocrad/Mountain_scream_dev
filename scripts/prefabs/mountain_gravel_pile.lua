@@ -11,14 +11,14 @@ local prefabs =
 }
 
 ------------------------------------------------------------------------------------------------------------------------
--- 每次挖掘：75% rocks / 12.5% flint / 12.5% mountain_suspicious_ore（互斥，合计 100%）
+-- 每次挖掘：50% rocks / 40% flint / 10% mountain_suspicious_ore（互斥，合计 100%）
 
 local function DropDigLoot(inst)
 	local r = math.random()
 	local loot
-	if r < 0.75 then
+	if r < 0.50 then
 		loot = "rocks"
-	elseif r < 0.875 then
+	elseif r < 0.90 then
 		loot = "flint"
 	else
 		loot = "mountain_suspicious_ore"

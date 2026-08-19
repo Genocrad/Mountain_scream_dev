@@ -124,6 +124,11 @@ local states =
 				inst.Physics:Teleport(pt.x, pt.y, pt.z)
 				inst.DynamicShadow:Enable(true)
 				inst.components.health:SetInvincible(false)
+				if inst.OnCrossFloorLanded ~= nil then
+					inst:OnCrossFloorLanded()
+				else
+					inst._cross_flooring = false
+				end
 				inst.sg:GoToState("idle", "fly_back_pst")
 			end
 		end,
@@ -138,20 +143,31 @@ local states =
 		},
 	},
 
-	-- 跨层追杀：飞起 → 瞬移到目标层落点上方 → 降落
+	-- 跨层追杀：飞起 → 瞬移到目标层高空待命 → 玩家看清后再降落
 	State{
 		name = "pursue_crossfloor",
 		tags = { "flight", "busy", "noelectrocute" },
 		onenter = function(inst)
+			inst._cross_flooring = true
 			inst.Physics:Stop()
 			inst.DynamicShadow:Enable(false)
-			inst.components.health:SetInvincible(true)
+			if inst.components.health ~= nil then
+				inst.components.health:SetInvincible(true)
+			end
 
 			inst.AnimState:PlayAnimation("fly_away_pre")
 			inst.AnimState:PushAnimation("fly_away_loop", true)
 
 			inst.Physics:SetMotorVel(0, 10 + math.random() * 2, 0)
-			inst.sg.statemem.teleport_at = GetTime() + 0.85
+			local fly_up = (TUNING.MOUNTAIN_FALCON.CROSS_FLOOR_FLY_UP_TIME or 0.85)
+			inst.sg.statemem.teleport_at = GetTime() + fly_up
+
+			local target = inst._pursuit_target
+				or (inst.components.combat ~= nil and inst.components.combat.target)
+			if target ~= nil and target:IsValid() then
+				local x, y, z = target.Transform:GetWorldPosition()
+				inst._cross_floor_dest = { x = x, z = z }
+			end
 		end,
 
 		onupdate = function(inst)
@@ -161,6 +177,12 @@ local states =
 				return
 			end
 			if GetTime() < inst.sg.statemem.teleport_at then
+				local target = inst._pursuit_target
+					or (inst.components.combat ~= nil and inst.components.combat.target)
+				if target ~= nil and target:IsValid() then
+					local x, y, z = target.Transform:GetWorldPosition()
+					inst._cross_floor_dest = { x = x, z = z }
+				end
 				return
 			end
 
@@ -168,12 +190,70 @@ local states =
 			local dest = inst._cross_floor_dest
 			inst._cross_floor_dest = nil
 
+			local target = inst._pursuit_target
+				or (inst.components.combat ~= nil and inst.components.combat.target)
+			if target ~= nil and target:IsValid() then
+				local x, y, z = target.Transform:GetWorldPosition()
+				dest = { x = x, z = z }
+			end
+
+			inst.Physics:Stop()
 			if dest ~= nil then
-				inst.Physics:Stop()
 				inst.Transform:SetPosition(dest.x, 15, dest.z)
-				inst.sg:GoToState("flyback")
 			else
-				inst.sg:GoToState("return_home_fly")
+				local x, y, z = inst.Transform:GetWorldPosition()
+				inst.Transform:SetPosition(x, 15, z)
+			end
+			inst.sg:GoToState("pursue_crossfloor_hold")
+		end,
+
+		timeline =
+		{
+			TimeEvent(6 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve/creatures/bat/flap") end),
+			TimeEvent(13 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve/creatures/bat/flap") end),
+			TimeEvent(23 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve/creatures/bat/flap") end),
+			TimeEvent(33 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve/creatures/bat/flap") end),
+			TimeEvent(41 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve/creatures/bat/flap") end),
+		},
+	},
+
+	-- 新层高空待命：跟踪玩家水平位置，等画面就绪（或超时）后再 flyback
+	State{
+		name = "pursue_crossfloor_hold",
+		tags = { "flight", "busy", "noelectrocute" },
+		onenter = function(inst)
+			inst._cross_flooring = true
+			inst._cross_floor_hold_start = GetTime()
+			inst._cross_floor_ready_since = nil
+
+			inst.Physics:Stop()
+			inst.DynamicShadow:Enable(false)
+			if inst.components.health ~= nil then
+				inst.components.health:SetInvincible(true)
+			end
+
+			inst.AnimState:PlayAnimation("fly_away_loop", true)
+
+			local x, y, z = inst.Transform:GetWorldPosition()
+			inst.Transform:SetPosition(x, 15, z)
+		end,
+
+		onupdate = function(inst)
+			-- Hover and track the target so landing stays near the player.
+			local target = inst._pursuit_target
+				or (inst.components.combat ~= nil and inst.components.combat.target)
+			if target ~= nil and target:IsValid() then
+				local tx, ty, tz = target.Transform:GetWorldPosition()
+				inst.Transform:SetPosition(tx, 15, tz)
+			else
+				local x, y, z = inst.Transform:GetWorldPosition()
+				inst.Transform:SetPosition(x, 15, z)
+			end
+
+			local should_land = inst.ShouldFinishCrossFloorHold ~= nil
+				and inst:ShouldFinishCrossFloorHold()
+			if should_land then
+				inst.sg:GoToState("flyback")
 			end
 		end,
 

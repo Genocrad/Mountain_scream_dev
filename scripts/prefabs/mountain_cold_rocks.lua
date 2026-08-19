@@ -18,6 +18,8 @@ SetSharedLootTable("mountain_cold_rock_1",
 	{ "flint", 1.00 },
 	{ "flint", 1.00 },
 	{ "goldnugget", 0.50 },
+	{ "ms_copper_ore", 0.50 },
+	{ "ms_alu_ore", 0.50 },
 })
 
 SetSharedLootTable("mountain_cold_rock_2",
@@ -25,12 +27,16 @@ SetSharedLootTable("mountain_cold_rock_2",
 	{ "flint", 1.00 },
 	{ "flint", 1.00 },
 	{ "goldnugget", 0.50 },
+	{ "ms_copper_ore", 0.50 },
+	{ "ms_alu_ore", 0.50 },
 })
 
 SetSharedLootTable("mountain_cold_rock_3",
 {
 	{ "flint", 1.00 },
-	{ "goldnugget", 0.50 },
+	{ "goldnugget", 0.30 },
+	{ "ms_copper_ore", 0.30 },
+	{ "ms_alu_ore", 0.30 },
 })
 
 ------------------------------------------------------------------------------------------------------------------------

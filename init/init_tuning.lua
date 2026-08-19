@@ -361,13 +361,17 @@ TUNING.MOUNTAIN_FALCON_BASE = {
 
 -- mountain_falcon 山域追杀（Territory Pursuit）
 TUNING.MOUNTAIN_FALCON = {
-	MAX_CHASE_TIME = 60,           -- ChaseAndAttack 行为树追击时长
-	MAX_CHASE_DIST = 200,          -- 同层追击距离（跨层靠飞跃，不靠寻路）
-	DEAGGRO_TIMEOUT = 60,          -- 接战后最长追杀时间，到点强制回巢
-	LOST_TARGET_TIME = 8,          -- 丢失有效目标后多久回巢
-	CROSS_FLOOR_COOLDOWN = 2,      -- 跨层飞跃冷却
+	MAX_CHASE_TIME = 8,            -- 同层 ChaseAndAttack 超时后仍由 pursuit tick 续追/跨层
+	MAX_CHASE_DIST = 55,           -- 同层寻路追击上限；超过改走飞跃跨层
+	DEAGGRO_TIMEOUT = 240,         -- 接战后最长追杀时间，到点强制回巢
+	LOST_TARGET_TIME = 12,         -- 丢失有效目标后多久回巢
+	CROSS_FLOOR_DIST = 45,         -- 与目标水平距离超过此值视为换层，触发飞跃追杀
+	CROSS_FLOOR_COOLDOWN = 1.25,   -- 跨层飞跃冷却
 	CROSS_FLOOR_LAND_RADIUS = 4,   -- 落点相对目标的搜索半径
 	CROSS_FLOOR_LAND_ATTEMPTS = 8,
+	CROSS_FLOOR_FLY_UP_TIME = 0.85,-- 旧层飞起多久后瞬移到新层高空
+	CROSS_FLOOR_LAND_SETTLE = 0.55,-- 玩家画面就绪后再多等一会再降落
+	CROSS_FLOOR_LAND_TIMEOUT = 6,  -- 高空待命超时强制降落，避免卡死
 	HOUSE_MAX_DIST = 40,           -- 非追杀时拴巢
 	HOUSE_RETURN_DIST = 50,
 	MAX_WANDER_DIST = 8,
@@ -497,8 +501,8 @@ TUNING.MOUNTAIN_SUSPICIOUS_ORE = {
 	WORK_LEFT = 1,
 	-- 档位权重；敲开时固定掉 1 rocks，再按权重抽 1 项（档内均分）
 	LOOT_TIERS = {
-		{ weight = 50,    items = { "flint", "ice", "nitre", "saltrock", "cutstone" } },
-		{ weight = 40,    items = { "ancientfruit_gem", "fossil_piece", "thulecite_pieces", "goldnugget", "marble" } },
+		{ weight = 50,    items = { "ancientfruit_gem", "goldnugget", "ms_copper_ore", "ms_alu_ore", "ms_coal" } },
+		{ weight = 40,    items = { "fossil_piece", "thulecite_pieces", "goldnugget", "marble", "flint", "ice", "nitre", "saltrock", "cutstone" } },
 		{ weight = 10,    items = { "thulecite", "dreadstone", "heatrock" } },
 		{ weight = 1,     items = { "ancienttree_seed" } },
 		{ weight = 0.01,  items = { "trinket_4" } },

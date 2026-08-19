@@ -13,26 +13,27 @@ local CUBE_RECIPES =
 	{
 		name = "ms_shroom_skin",
 		product = "shroom_skin",
-		ingredient = "moon_cap",
-		cost = 0.125,
+		ingredient = "shroomcake",
+		cost = 0.15,
 	},
 	{
 		name = "ms_dragon_scales",
 		product = "dragon_scales",
-		ingredient = "redgem",
-		cost = 0.125,
+		ingredient = "charcoal",
+		amount = 40,
+		cost = 0.15,
 	},
 	{
 		name = "ms_greengem",
 		product = "greengem",
-		ingredient = "moonglass",
+		ingredient = "redgem",
 		cost = 0.05,
 	},
 	{
 		name = "ms_deerclops_eyeball",
 		product = "deerclops_eyeball",
 		ingredient = "milkywhites",
-		cost = 0.125,
+		cost = 0.15,
 	},
 	{
 		name = "ms_klaussackkey",
@@ -70,7 +71,7 @@ local CUBE_RECIPES =
 		name = "ms_royal_jelly",
 		product = "royal_jelly",
 		ingredient = "honey",
-		cost = 0.125,
+		cost = 0.15,
 	},
 	{
 		name = "ms_skeletonhat",
@@ -82,7 +83,7 @@ local CUBE_RECIPES =
 		name = "ms_mandrake",
 		product = "mandrake",
 		ingredient = "carrot",
-		cost = 0.125,
+		cost = 0.15,
 	},
 }
 
@@ -261,7 +262,7 @@ for _, def in ipairs(CUBE_RECIPES) do
 			table.insert(ingredients, Ingredient(prefab, 1))
 		end
 	else
-		table.insert(ingredients, Ingredient(def.ingredient, 1))
+		table.insert(ingredients, Ingredient(def.ingredient, def.amount or 1))
 	end
 	-- amount 0：仅展示 / 要求持有，不整颗消耗；耐久由制作回调按百分比扣除
 	table.insert(ingredients, Ingredient(CUBE_PREFAB, 0, CUBE_ATLAS))
