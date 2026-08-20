@@ -15,7 +15,9 @@ local function IsMsTile(tile)
   tile == WORLD_TILES.MS_MOUNTAIN_LOW_2 or
   tile == WORLD_TILES.MS_MOUNTAIN_HIGH or
   tile == WORLD_TILES.MS_PERMAFROST or
-  tile == WORLD_TILES.MS_SNOW
+  tile == WORLD_TILES.MS_SNOW or 
+  tile == WORLD_TILES.ROCKY
+  
 end
 
 local function IsMsTechnicalTile(tile)
@@ -96,7 +98,10 @@ function DungeonWallSpawner:SpawnArenaTeleporter()
       for i = -1, 1 do 
         for j = -1, 1 do
           TheWorld.Map:SetTile(tile_x + i, tile_z + j, WORLD_TILES.VOID_TECHNICAL) 
-          TheWorld.Map:SetTile(tile_x + i + TUNING.MS_TERRAFORMER_OFFSET_X[8], tile_z + j + TUNING.MS_TERRAFORMER_OFFSET_Y[8], WORLD_TILES.MS_PERMAFROST)
+          TheWorld.Map:SetTile(tile_x + i + TUNING.MS_TERRAFORMER_OFFSET_X[8], tile_z + j + TUNING.MS_TERRAFORMER_OFFSET_Y[8], WORLD_TILES.MS_SNOW)
+          if TheWorld.components.undertile ~= nil then
+            TheWorld.components.undertile:SetTileUnderneath(tile_x + i + TUNING.MS_TERRAFORMER_OFFSET_X[8], tile_z + j + TUNING.MS_TERRAFORMER_OFFSET_Y[8], WORLD_TILES.MS_PERMAFROST)
+          end
         end
       end
       
@@ -105,6 +110,8 @@ function DungeonWallSpawner:SpawnArenaTeleporter()
       light.Transform:SetPosition(x + TUNING.MS_TERRAFORMER_OFFSET_X[8] * 4, 0, z + TUNING.MS_TERRAFORMER_OFFSET_Y[8] * 4) 
       light = SpawnPrefab("light_fake_overworld")
       light.Transform:SetPosition(x + TUNING.MS_TERRAFORMER_OFFSET_X[8] * 4, 0, z + TUNING.MS_TERRAFORMER_OFFSET_Y[8] * 4) 
+      local top = SpawnPrefab("mountain_top")
+      top.Transform:SetPosition(x + TUNING.MS_TERRAFORMER_OFFSET_X[8] * 4, 0, z + TUNING.MS_TERRAFORMER_OFFSET_Y[8] * 4) 
       for i = -3, 3 do
         for j = -3, 3 do 
           local plug = SpawnPrefab("giant_plug_marker")
@@ -128,7 +135,10 @@ function DungeonWallSpawner:SpawnArenaTeleporter()
   end
   for i = -7, 7 do 
     for j = -arena_width[i+8], arena_width[i+8] do
-      TheWorld.Map:SetTile(tile_x + i + TUNING.MS_TERRAFORMER_OFFSET_X[8] + TUNING.MS_TERRAFORMER_OFFSET_X[9], tile_z + j + TUNING.MS_TERRAFORMER_OFFSET_Y[8] + TUNING.MS_TERRAFORMER_OFFSET_Y[9], WORLD_TILES.MS_PERMAFROST) 
+      TheWorld.Map:SetTile(tile_x + i + TUNING.MS_TERRAFORMER_OFFSET_X[8] + TUNING.MS_TERRAFORMER_OFFSET_X[9], tile_z + j + TUNING.MS_TERRAFORMER_OFFSET_Y[8] + TUNING.MS_TERRAFORMER_OFFSET_Y[9], WORLD_TILES.MS_SNOW) 
+      if TheWorld.components.undertile ~= nil then
+        TheWorld.components.undertile:SetTileUnderneath(tile_x + i + TUNING.MS_TERRAFORMER_OFFSET_X[8] + TUNING.MS_TERRAFORMER_OFFSET_X[9], tile_z + j + TUNING.MS_TERRAFORMER_OFFSET_Y[8] + TUNING.MS_TERRAFORMER_OFFSET_Y[9], WORLD_TILES.MS_PERMAFROST)
+      end
       TheWorld.net.components.dungeonmapoverwatch:AddSpawnPointsForTile(9, tile_x + i + TUNING.MS_TERRAFORMER_OFFSET_X[8] + TUNING.MS_TERRAFORMER_OFFSET_X[9], tile_z + j + TUNING.MS_TERRAFORMER_OFFSET_Y[8] + TUNING.MS_TERRAFORMER_OFFSET_Y[9])
     end
   end

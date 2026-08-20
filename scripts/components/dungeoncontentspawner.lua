@@ -120,6 +120,7 @@ local function SpawnCommunityAt(cx, cz, def)
 	local radius = def.radius
 		or (community_tuning and community_tuning.SPAWN_RADIUS)
 		or 10
+  local tile = def.tile 
 	local member_clear = def.member_clear_radius
 		or (community_tuning and community_tuning.MEMBER_CLEAR_RADIUS)
 		or 1.75
@@ -155,7 +156,19 @@ local function SpawnCommunityAt(cx, cz, def)
 			spawned = spawned + 1
 		end
 	end
-
+  
+  if tile then
+    local center_x, center_y = TheWorld.Map:GetTileXYAtPoint(cx, 0, cz)
+    local tileradius = def.tileradius or 5
+    for tile_i = -tileradius, tileradius do
+      for tile_j = -tileradius, tileradius do
+        if tile_i * tile_i + tile_j * tile_j < tileradius * tileradius + 4 and
+          IsSpawnableMountainTile(TheWorld.Map:GetTile(center_x + tile_i, center_y + tile_j)) then 
+            TheWorld.Map:SetTile(center_x + tile_i, center_y + tile_j, tile)
+        end
+      end
+    end
+  end
 	return spawned
 end
 
@@ -187,13 +200,24 @@ function DungeonContentSpawner:SpawnLevelDecor(level)
 
 	for _, point in ipairs(points) do
 		local x, z = point.x, point.y
+    local current_tile = map:GetTileAtPoint(x, 0, z)
 		if x ~= nil and z ~= nil
 			and math.random() < chance
-			and IsSpawnableMountainTile(map:GetTileAtPoint(x, 0, z))
+			and IsSpawnableMountainTile(current_tile)
 			and map:IsPassableAtPoint(x, 0, z)
 			and IsPointClear(x, z, clear_radius)
 		then
-			local prefab = PickPrefab(contents.distributeprefabs)
+      local full_table = {}
+      for k, v in pairs(contents.distributeprefabs["any"]) do 
+        full_table[k] = v
+      end
+      
+      if contents.distributeprefabs[TURF_NUMBER_TO_NAME[current_tile]] then
+        for k, v in pairs(contents.distributeprefabs[TURF_NUMBER_TO_NAME[current_tile]]) do 
+          full_table[k] = v
+        end      
+      end
+			local prefab = PickPrefab(full_table)
 			if prefab ~= nil then
 				local ent = SpawnPrefab(prefab)
 				if ent ~= nil then
