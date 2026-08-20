@@ -14,6 +14,7 @@ modimport("postinit/components/playervision")
 modimport("postinit/components/teleporter")
 
 modimport("postinit/widgets/mapwidget")
+modimport("postinit/widgets/uiclock")
 
 -- 全局控制：魔像/魔柱存在时锁定全部 mountain_golem_platform
 local function EnsurePlatformCtrl(inst)
