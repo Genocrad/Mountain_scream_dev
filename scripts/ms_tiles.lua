@@ -49,28 +49,15 @@ TileManager.AddTile(
     }
 )
 
-TileManager.AddTile(
-    "VOID_TECHNICAL",
-    TileRanges.IMPASSABLE,
-    {ground_name = "Void technical"},
-    {
-        name="cave",
-        noise_texture="ms_turf_void_technical",
-        runsound="dontstarve/movement/run_dirt",
-        walksound="dontstarve/movement/walk_dirt",
-        snowsound="dontstarve/movement/run_ice",
-        mudsound="dontstarve/movement/run_mud",
-        is_shoreline = true,
-    }
-)
+
 
 TileManager.AddTile(
     "MS_MOUNTAIN_LOW_TECHNICAL",
     TileRanges.LAND,
     {ground_name = "Void technical"},
     {
-        name="deciduous",
-        noise_texture="ms_turf_mountain",
+        name="ms_edge",
+        noise_texture="ms_turf_edge",
         runsound="dontstarve/movement/run_dirt",
         walksound="dontstarve/movement/walk_dirt",
         snowsound="dontstarve/movement/run_ice",
@@ -83,8 +70,8 @@ TileManager.AddTile(
     TileRanges.LAND,
     {ground_name = "Void technical"},
     {
-        name="deciduous",
-        noise_texture="ms_turf_mountain2",
+        name="ms_edge",
+        noise_texture="ms_turf_edge",
         runsound="dontstarve/movement/run_dirt",
         walksound="dontstarve/movement/walk_dirt",
         snowsound="dontstarve/movement/run_ice",
@@ -97,8 +84,8 @@ TileManager.AddTile(
     TileRanges.LAND,
     {ground_name = "Void technical"},
     {
-        name="rocky",
-        noise_texture="ms_turf_mountain_high",
+        name="ms_edge",
+        noise_texture="ms_turf_edge",
         runsound="dontstarve/movement/run_dirt",
         walksound="dontstarve/movement/walk_dirt",
         snowsound="dontstarve/movement/run_ice",
@@ -111,8 +98,22 @@ TileManager.AddTile(
     TileRanges.LAND,
     {ground_name = "Void technical"},
     {
-        name="rocky",
-        noise_texture="turf_permafrost",
+        name="ms_edge",
+        noise_texture="ms_turf_edge",
+        runsound="dontstarve/movement/run_dirt",
+        walksound="dontstarve/movement/walk_dirt",
+        snowsound="dontstarve/movement/run_ice",
+        mudsound="dontstarve/movement/run_mud",
+    }
+)
+
+TileManager.AddTile(
+    "VOID_TECHNICAL",
+    TileRanges.IMPASSABLE,
+    {ground_name = "Void technical"},
+    {
+        name="void_technical_edge",
+        noise_texture="ms_turf_void_technical",
         runsound="dontstarve/movement/run_dirt",
         walksound="dontstarve/movement/walk_dirt",
         snowsound="dontstarve/movement/run_ice",
@@ -260,7 +261,7 @@ TileManager.AddTile(
     TileRanges.LAND,
     {ground_name = "MS Mountain high"},
     {
-        name = "rocky",
+        name = "ms_edge",
         noise_texture = "ms_turf_mountain_high",
         runsound="dontstarve/movement/run_marsh",
         walksound="dontstarve/movement/walk_marsh",
@@ -351,6 +352,11 @@ TileManager.AddTile(
     }
 )
 
+-- move technical tiles down
+TileManager.ChangeTileRenderOrder(WORLD_TILES.MS_MOUNTAIN_LOW_TECHNICAL, WORLD_TILES.QUAGMIRE_GATEWAY)
+TileManager.ChangeTileRenderOrder(WORLD_TILES.MS_MOUNTAIN_LOW_2_TECHNICAL, WORLD_TILES.QUAGMIRE_GATEWAY)
+TileManager.ChangeTileRenderOrder(WORLD_TILES.MS_MOUNTAIN_HIGH_TECHNICAL, WORLD_TILES.QUAGMIRE_GATEWAY)
+TileManager.ChangeTileRenderOrder(WORLD_TILES.MS_PERMAFROST_TECHNICAL, WORLD_TILES.QUAGMIRE_GATEWAY)
 
 TileGroupManager:AddValidTile(TileGroups.MS_CLOUDS, WORLD_TILES.CLOUDS_WHITE)
 TileGroupManager:AddValidTile(TileGroups.MS_CLOUDS, WORLD_TILES.CLOUDS_DARK)
@@ -370,3 +376,15 @@ TileGroupManager:AddValidTile(TileGroups.MS_TECHNICAL, WORLD_TILES.MS_MOUNTAIN_L
 TileGroupManager:AddValidTile(TileGroups.MS_TECHNICAL, WORLD_TILES.MS_MOUNTAIN_HIGH_TECHNICAL)
 TileGroupManager:AddValidTile(TileGroups.MS_TECHNICAL, WORLD_TILES.MS_PERMAFROST_TECHNICAL)
 mod_protect_TileManager = true
+
+-- Luigi: Idk where to put this otherwise 
+-- Values are for contentspawner component
+
+TURF_NUMBER_TO_NAME = {
+  [WORLD_TILES.ROCKY] = "rocky",
+  [WORLD_TILES.MS_MOUNTAIN_LOW] = "ms_mountain_low",
+  [WORLD_TILES.MS_MOUNTAIN_LOW_2] = "ms_mountain_low_2",
+  [WORLD_TILES.MS_MOUNTAIN_HIGH] = "ms_mountain_high",
+  [WORLD_TILES.MS_PERMAFROST] = "ms_permafrost",
+}
+  
