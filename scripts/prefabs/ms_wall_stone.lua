@@ -10,11 +10,6 @@ local prefabs =
   "mountain_suspicious_ore"
 }
 
-SetSharedLootTable( 'rock1',
-{
-    {'mountain_suspicious_ore',  1.00},
-})
-
 
  
 local function OnWork(inst, worker, workleft)
@@ -22,7 +17,6 @@ local function OnWork(inst, worker, workleft)
     SpawnPrefab("rock_break_fx").Transform:SetPosition(pt.x, pt.y, pt.z)
     local angle = inst.Transform:GetRotation()
     SpawnPrefab("mountain_suspicious_ore").Transform:SetPosition(pt.x + math.cos(angle)*2, pt.y, pt.z-math.sin(angle)*2)
-    inst.components.lootdropper:DropLoot(pt)
     inst:Remove()
 end
 
@@ -57,7 +51,6 @@ local function fn()
 
    
 
-    inst:AddComponent("lootdropper")
 
     local workable = inst:AddComponent("workable")
     workable:SetWorkAction(ACTIONS.MINE)

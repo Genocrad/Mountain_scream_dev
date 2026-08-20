@@ -63,7 +63,8 @@ local function fn()
     inst.entity:AddAnimState()
     inst.entity:AddSoundEmitter()
     inst.entity:AddNetwork()
-
+    inst.entity:AddMiniMapEntity()
+      
     MakeObstaclePhysics(inst, 3)
     
     inst.AnimState:SetBank("ms_climbing")
@@ -78,7 +79,9 @@ local function fn()
     inst.AnimState:SetSymbolAddColour("climbing", 0, 0, 1, 1)
     
     inst:AddTag("climbable")
-
+    
+    inst.MiniMapEntity:SetIcon("ms_climbing.tex")
+      
     inst.entity:SetPristine()
 
     if not TheWorld.ismastersim then

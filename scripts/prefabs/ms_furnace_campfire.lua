@@ -28,7 +28,17 @@ local function onextinguish(inst)
 end
 
 local function ontakefuel(inst)
-    inst.SoundEmitter:PlaySound("dontstarve/common/fireAddFuel")
+  inst.SoundEmitter:PlaySound("dontstarve/common/fireAddFuel")
+end
+
+local function ontakefuelitemfn(inst, item)
+  print(inst.furnace)
+  if inst.furnace and item.prefab == "ms_coal" then
+    inst.furnace.components.temperature:DoDelta(200, true)
+    if inst.furnace.components.furnituredecortaker.decor_item then
+      inst.furnace.components.furnituredecortaker.decor_item.components.temperature:DoDelta(100, true)
+    end
+  end
 end
 
 local function updatefuelrate(inst)
@@ -46,34 +56,18 @@ end
 
 local HEAT_OUTPUTS = { 2, 5, 5, 10 }
 local function onfuelchange(newsection, oldsection, inst)
-    if newsection <= 0 then
-        inst.components.burnable:Extinguish()
-        inst.AnimState:PlayAnimation("dead")
-        RemovePhysicsColliders(inst)
-
+  if newsection <= 0 then
 		if inst.queued_charcoal then
 			SpawnPrefab("charcoal").Transform:SetPosition(inst.Transform:GetWorldPosition())
 			inst.queued_charcoal = nil
-		else
-			SpawnPrefab("ash").Transform:SetPosition(inst.Transform:GetWorldPosition())
 		end
-
-        inst.components.fueled.accepting = false
-        inst:RemoveComponent("cooker")
-        inst:RemoveComponent("workable")
-        inst.persists = false
-        inst:AddTag("NOCLICK")
-        inst:DoTaskInTime(1, ErodeAway)
     else
-        if not inst.components.burnable:IsBurning() then
-            updatefuelrate(inst)
-            inst.components.burnable:Ignite()
-        end
-        inst.AnimState:PlayAnimation("cooking_loop_fire")
-        inst.components.burnable:SetFXLevel(newsection, inst.components.fueled:GetSectionPercent())
-        
-        
-
+      if not inst.components.burnable:IsBurning() then
+        updatefuelrate(inst)
+        inst.components.burnable:Ignite()
+      end
+      inst.AnimState:PlayAnimation("cooking_loop_fire")
+      inst.components.burnable:SetFXLevel(newsection, inst.components.fueled:GetSectionPercent())
 		if newsection == inst.components.fueled.sections then
 			inst.queued_charcoal = not inst.disable_charcoal
 		end
@@ -181,7 +175,8 @@ local function fn()
 
     inst:AddComponent("burnable")
     --inst.components.burnable:SetFXLevel(2)
-    inst.components.burnable:AddBurnFX("ms_furnace_campfirefire", Vector3(0, 0, 0), "firefx", true)
+    inst.components.burnable:AddBurnFX("ms_furnace_campfirefire", Vector3(0, 0, 0), "firefx")
+    inst.components.burnable:SetFXOffset(0, 30, 0)
     inst:ListenForEvent("onextinguish", onextinguish)
 
     -------------------------
@@ -199,6 +194,7 @@ local function fn()
     inst.components.fueled:SetSections(20)
 
     inst.components.fueled:SetTakeFuelFn(ontakefuel)
+    inst.components.fueled:SetTakeFuelItemFn(ontakefuelitemfn)
     inst.components.fueled:SetUpdateFn(onupdatefueled)
     inst.components.fueled:SetSectionCallback(onfuelchange)
     inst.components.fueled:InitializeFuelLevel(TUNING.CAMPFIRE_FUEL_START)

@@ -32,7 +32,7 @@ SetSharedLootTable( 'ms_copper_rock',
     {'rocks',  1.00},
     {'rocks',  1.00},
     {'rocks',  1.00},
-    {'ms_alu_ore',  1.00},
+    {'ms_copper_ore',  1.00},
     {'flint',  1.00},
     {'ms_copper_ore',  0.50},
     {'ms_copper_ore',  0.25},
@@ -51,6 +51,16 @@ SetSharedLootTable( 'ms_coal_rock',
     {'flint',  0.60},
 })
 
+SetSharedLootTable( 'ms_geode_rock',
+{
+    {'rocks',  1.00},
+    {'rocks',  1.00},
+    {'rocks',  1.00},
+    {'ms_geode',  1.00},
+    {'ms_geode',  0.25},
+    {'flint',  1.00},
+    {'flint',  0.60},
+})
  
 local function OnWork(inst, worker, workleft)
     if workleft <= 0 then
@@ -127,5 +137,5 @@ end
 return Prefab("ms_" .. oretype .. "_rock", fn, assets, prefabs)
 end
 
-return MakeRock("alu"), MakeRock("coal"), MakeRock("copper") 
+return MakeRock("alu"), MakeRock("coal"), MakeRock("copper"), MakeRock("geode")
 

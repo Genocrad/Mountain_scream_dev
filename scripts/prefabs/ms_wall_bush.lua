@@ -21,18 +21,6 @@ local prefabs =
 	"spooked_spider_rock_fx",
 }
 
-SetSharedLootTable( 'rock1',
-{
-    {'rocks',  1.00},
-    {'rocks',  1.00},
-    {'rocks',  1.00},
-  --{'nitre',  1.00},
-    {'flint',  1.00},
-    --{'nitre',  0.25},
-    {'flint',  0.60},
-})
-
-
  
 local function OnWork(inst, worker, workleft)
     local pt = inst:GetPosition()

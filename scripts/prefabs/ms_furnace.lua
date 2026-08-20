@@ -32,13 +32,18 @@ local function onhammered(inst, worker)
     local fx = SpawnPrefab("collapse_small")
     fx.Transform:SetPosition(inst.Transform:GetWorldPosition())
     fx:SetMaterial("metal")
+    inst.fire.bellow:Remove()
     inst.fire:Remove()
+    inst.back:Remove()
     inst:Remove()
 end
 
 local function onhit(inst, worker)
   if inst.components.stewer.product ~= nil then
     inst.AnimState:PlayAnimation("hit_door_closed")
+    if inst.back then
+      inst.back.AnimState:PlayAnimation("hit_back")
+    end
     if inst.components.stewer:IsCooking() then
       inst.AnimState:PushAnimation("cooking_loop", true)
     else
@@ -131,6 +136,7 @@ local function onbuilt(inst)
     local x, y, z = inst.Transform:GetWorldPosition()
     local fire = SpawnPrefab("ms_furnace_campfire")
     fire.Transform:SetPosition(x,y,z)
+      inst.fire.furnace = inst
 end
 
 
@@ -190,9 +196,29 @@ local function onloadpostpass(inst, newents, data)
     local x, y, z = inst.Transform:GetWorldPosition()
     local ents = TheSim:FindEntities(x, y, z, 1, {"ms_furnace_campfire"})
     inst.fire = ents[1]
+    inst.fire.furnace = inst
 end
 
 --
+local function backfn()
+  local inst = CreateEntity()
+  
+  inst.entity:AddTransform()
+  inst.entity:AddAnimState()
+  
+  inst.AnimState:SetBank("ms_furnace")
+  inst.AnimState:SetBuild("ms_furnace")
+  inst.AnimState:PlayAnimation("place_back")
+  inst.AnimState:PushAnimation("cooking_loop_back")
+  inst.AnimState:SetFinalOffset(-2)
+  return inst
+end
+
+local function OnInit(inst)
+  local x, y, z = inst.Transform:GetWorldPosition()
+  local back = SpawnPrefab("ms_furnace_back").Transform:SetPosition(x,y,z)
+  inst.back = back
+end
 
 local function fn()
   local inst = CreateEntity()
@@ -224,13 +250,16 @@ local function fn()
   inst.AnimState:SetBank("ms_furnace")
   inst.AnimState:SetBuild("ms_furnace")
   inst.AnimState:PlayAnimation("idle_open")
-  inst.AnimState:SetManualBB(0, -350, 600, 500)   
+  inst.AnimState:SetManualBB(0, -300, 600, 500)   
   
-  inst.MiniMapEntity:SetIcon("cookpot.png")
+  inst.MiniMapEntity:SetIcon("ms_furnace.tex")
 
   MakeSnowCoveredPristine(inst)
-
-
+  if not TheNet:IsDedicated() then
+    inst.back = SpawnPrefab("ms_furnace_back")
+    inst.back.entity:SetParent(inst.entity)
+  end
+  
   inst.entity:SetPristine()
 
   if not TheWorld.ismastersim then
@@ -288,4 +317,6 @@ local function fn()
   return inst
 end
 
-return Prefab("ms_furnace", fn, assets, prefabs)
+return Prefab("ms_furnace", fn, assets, prefabs),
+      Prefab("ms_furnace_back", backfn, assets, prefabs),
+      MakePlacer("ms_furnace_placer", "ms_furnace", "ms_furnace", "placer")

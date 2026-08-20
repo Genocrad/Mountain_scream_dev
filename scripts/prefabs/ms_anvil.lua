@@ -50,7 +50,7 @@ local function fn_helper()
 
   inst.AnimState:SetBank("ms_anvil")
   inst.AnimState:SetBuild("ms_anvil")
-  inst.AnimState:PlayAnimation("idle")
+  inst.AnimState:PlayAnimation("center_idle")
   inst.AnimState:SetFinalOffset(-1)
   inst.AnimState:SetRayTestOnBB(false)
   
@@ -168,7 +168,7 @@ local function fn()
   inst.entity:AddAnimState()
   inst.entity:AddSoundEmitter()
   inst.entity:AddNetwork()
-
+  inst.entity:AddMiniMapEntity()
   
   inst:AddTag("decortable")
 
@@ -178,6 +178,7 @@ local function fn()
   inst.AnimState:HideSymbol("swap_object")
   inst.AnimState:SetFinalOffset(-2)
 
+  inst.MiniMapEntity:SetIcon("ms_anvil.tex")
   
   inst.entity:SetPristine()
 
@@ -226,5 +227,6 @@ local function fn()
 end
 
 
-return Prefab("ms_anvil", fn, assets, nil), Prefab("ms_anvil_helper", fn_helper, assets, nil)
+return Prefab("ms_anvil", fn, assets, nil), Prefab("ms_anvil_helper", fn_helper, assets, nil),
+MakePlacer("ms_anvil_placer", "ms_anvil", "ms_anvil", "placer")
   

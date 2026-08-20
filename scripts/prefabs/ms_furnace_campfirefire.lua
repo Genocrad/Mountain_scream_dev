@@ -55,7 +55,8 @@ end
 		inst.AnimState:SetBloomEffectHandle("shaders/anim.ksh")
 		--inst.AnimState:SetRayTestOnBB(true)
 		inst.AnimState:SetFinalOffset(-1)
-
+    inst.AnimState:SetScale(1,0.5)
+    
 		inst:AddTag("FX")
     inst:AddTag("NOCLICK")
 		--HASHEATER (from heater component) added to pristine state for optimization

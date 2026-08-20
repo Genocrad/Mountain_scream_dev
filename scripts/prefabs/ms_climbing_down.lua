@@ -61,7 +61,7 @@ local function fn()
   inst.AnimState:SetLayer(LAYER_WORLD_BACKGROUND)
   inst.AnimState:SetSortOrder(2)
 
-  inst.MiniMapEntity:SetIcon("vault_lobby_exit.png")
+  inst.MiniMapEntity:SetIcon("ms_climbing_down.tex")
 
   inst.Transform:SetEightFaced()
 
