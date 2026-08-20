@@ -92,4 +92,6 @@ PrefabFiles = {
   "ms_wall_bush",
   "ms_wall_stone",
   "ms_ore_rocks",
+  "ms_geode_ore",
+  "hat_tinfoil",
 }
