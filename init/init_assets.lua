@@ -126,6 +126,7 @@ local MOUNTAIN_ITEMS = {
 	"mountain_wathgrithr_shield",
 	"mountain_armor_copper",
 	"mountain_helmet_copper",
+	"hat_tinfoil",
 	"mountain_copper_axe",
 	"mountain_copper_pickaxe",
 	"mountain_copper_bat_1",
@@ -143,6 +144,8 @@ local MOUNTAIN_ITEMS = {
 	"mountain_frozen_meatballs",
 	"mountain_wooden_box",
 	"mountain_goapaca_horn",
+	"ms_anvil",
+  	"ms_furnace",
 }
 for _, v in ipairs(MOUNTAIN_ITEMS) do
 	RegisterInventoryItemAtlas(MOUNTAIN_ITEMS_ATLAS, v..".tex")
