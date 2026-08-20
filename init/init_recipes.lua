@@ -563,3 +563,8 @@ AddRecipe2("mountain_windhorn", { Ingredient("ms_bronze_detail", 1), Ingredient(
 -- Armour
 AddRecipe2("mountain_helmet_copper", { Ingredient("ms_bronze_detail", 2) }, TECH.SCIENCE_TWO, nil, {"ARMOUR"})
 AddRecipe2("mountain_armor_copper", { Ingredient("ms_bronze_detail", 2) }, TECH.SCIENCE_TWO, nil, {"ARMOUR"})
+AddRecipe2("hat_tinfoil", { Ingredient("ms_alu_ore", 4) }, TECH.MAGIC_THREE, nil, {"MAGIC", "CLOTHING"})
+
+-- Smithing
+AddRecipe2("ms_furnace", { Ingredient("cutstone", 10), Ingredient("ms_coal", 3) }, TECH.SCIENCE_TWO, {placer = "ms_furnace_placer"}, {"STRUCTURES"})
+AddRecipe2("ms_anvil", { Ingredient("cutstone", 5), Ingredient("ms_alu_ore", 3) }, TECH.SCIENCE_TWO, {placer = "ms_anvil_placer"}, {"STRUCTURES"})
