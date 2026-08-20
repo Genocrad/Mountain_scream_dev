@@ -367,6 +367,7 @@ TileGroupManager:AddValidTile(TileGroups.MS_NON_CLOUDS, WORLD_TILES.MS_MOUNTAIN_
 TileGroupManager:AddValidTile(TileGroups.MS_NON_CLOUDS, WORLD_TILES.MS_MOUNTAIN_HIGH)
 TileGroupManager:AddValidTile(TileGroups.MS_NON_CLOUDS, WORLD_TILES.MS_SNOW)
 TileGroupManager:AddValidTile(TileGroups.MS_NON_CLOUDS, WORLD_TILES.MS_PERMAFROST)
+TileGroupManager:AddValidTile(TileGroups.MS_NON_CLOUDS, WORLD_TILES.ROCKY)
 
 TileGroupManager:AddValidTile(TileGroups.MS_ICE_BRIDGE, WORLD_TILES.MS_BRIDGE)
 
