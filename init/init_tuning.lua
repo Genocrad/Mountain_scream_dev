@@ -22,44 +22,62 @@ TUNING.MS_LEVEL_CONTENTS = {
 	[1] = {
 		distributepercent = 0.14,
 		distributeprefabs = {
-			rock1 = 0.5,
-			rocks = 0.1,
-			mountain_green_stone_1 = 1.0,
-			mountain_green_stone_2 = 1.0,
-			mountain_green_stone_3 = 1.0,
-			mountain_plants_grass = 0.25,
-			mountain_plants_bush_1 = 0.15,
-			mountain_plants_bush_2 = 0.10,
-			mountain_plants_bush_3 = 0.05,
-			mountain_plants_branches = 0.08,
-			mountain_plants_tree = 0.06,
-			mountain_plants_flower_1 = 0.04,
-			mountain_plants_flower_2 = 0.04,
-			mountain_plants_flower_3 = 0.04,
-			mountain_bush = 0.05,
-		},
+      any = {
+        mountain_green_stone_1 = 0.5,
+        mountain_green_stone_2 = 0.5,
+        mountain_green_stone_3 = 0.5,
+        mountain_plants_grass = 0.25,
+        mountain_plants_branches = 0.08,
+      },
+      ms_mountain_low = {
+        rock1 = 0.5,
+        rocks = 0.1,
+        ms_copper_rock = 0.04,
+        ms_coal_rock = 0.04,
+      },
+      ms_mountain_low_2 = {
+        mountain_plants_bush_1 = 0.30,
+        mountain_plants_bush_2 = 0.15,
+        mountain_plants_bush_3 = 0.1,
+        mountain_plants_tree = 0.1,
+        mountain_plants_flower_1 = 0.1,
+        mountain_plants_flower_2 = 0.1,
+        mountain_plants_flower_3 = 0.1,
+        mountain_bush = 0.1,
+      },
+    
+    },
 		herds = {
 			{ prefab = "mountain_goat", size = 8, count = 1 },
 		},
 	},
 	[2] = {
 		distributepercent = 0.12,
+    
 		distributeprefabs = {
-			rock1 = 0.5,
-			rocks = 0.1,
-			mountain_green_stone_1 = 1.0,
-			mountain_green_stone_2 = 1.0,
-			mountain_green_stone_3 = 1.0,
-			mountain_plants_grass = 0.20,
-			mountain_plants_bush_1 = 0.12,
-			mountain_plants_bush_2 = 0.08,
-			mountain_plants_bush_3 = 0.04,
-			mountain_plants_branches = 0.06,
-			mountain_plants_tree = 0.05,
-			mountain_plants_flower_1 = 0.03,
-			mountain_plants_flower_2 = 0.03,
-			mountain_plants_flower_3 = 0.03,
-			mountain_bush = 0.04,
+      any = {
+        mountain_green_stone_1 = 0.5,
+        mountain_green_stone_2 = 0.5,
+        mountain_green_stone_3 = 0.5,
+        mountain_plants_grass = 0.20,
+        mountain_plants_branches = 0.06,
+      },
+      ms_mountain_low = {
+        rock1 = 0.5,
+        rocks = 0.1,
+        ms_copper_rock = 0.06,
+        ms_coal_rock = 0.06,
+      },
+      ms_mountain_low_2 = {
+        mountain_plants_bush_1 = 0.30,
+        mountain_plants_bush_2 = 0.15,
+        mountain_plants_bush_3 = 0.1,
+        mountain_plants_tree = 0.1,
+        mountain_plants_flower_1 = 0.1,
+        mountain_plants_flower_2 = 0.1,
+        mountain_plants_flower_3 = 0.1,
+        mountain_bush = 0.1,
+      },
 		},
 		herds = {
 			{ prefab = "mountain_goat", size = 8, count = 1 },
@@ -68,18 +86,25 @@ TUNING.MS_LEVEL_CONTENTS = {
 	[3] = {
 		distributepercent = 0.12,
 		distributeprefabs = {
-			rock2 = 0.5,
-			rock_flintless = 0.5,
-			mountain_cold_rock_1 = 1.0,
-			mountain_cold_rock_2 = 1.0,
-			mountain_cold_rock_3 = 1.0,
-			mountain_gravel_pile = 1.0,
-			boneshard = 0.12,
-			houndbone = 0.12,
-			cutgrass = 0.08,
-			mountain_plants_grass = 0.08,
-			mountain_bush = 1.0,
-		},
+      any = {
+        rock2 = 0.5,
+        rock_flintless = 0.5,
+        ms_copper_rock = 0.08,
+        ms_alu_rock = 0.08,
+        ms_coal_rock = 0.08,
+        mountain_cold_rock_1 = 1.0,
+        mountain_cold_rock_2 = 1.0,
+        mountain_cold_rock_3 = 1.0,
+        mountain_gravel_pile = 1.0,
+        mountain_plants_grass = 0.08,
+        mountain_bush = 1.0,
+      },
+      rocky = {
+        boneshard = 0.12,
+        houndbone = 0.12,
+        cutgrass = 0.08,
+      }
+    },
 		-- Side cave rooms linked to this floor (SpawnCaveLayout level arg).
 		cave = {
 			distributepercent = 0.22,
@@ -95,6 +120,10 @@ TUNING.MS_LEVEL_CONTENTS = {
 				mountain_stalactite_3 = 1.0,
 				mountain_gravel_pile = 1.0,
 				mushtree_small = 1.0,
+        ms_geode_rock = 0.6,
+        ms_copper_rock = 0.6,
+        ms_alu_rock = 0.6,
+        ms_coal_rock = 0.6,
 				rock2 = 1.0,
 			},
 		},
@@ -102,38 +131,71 @@ TUNING.MS_LEVEL_CONTENTS = {
 	[4] = {
 		distributepercent = 0.12,
 		distributeprefabs = {
-			rock2 = 0.5,
-			rock_flintless = 0.5,
-			mountain_snowpile = 1.0,
-			mountain_cold_rock_1 = 1.0,
-			mountain_cold_rock_2 = 1.0,
-			mountain_cold_rock_3 = 1.0,
-			rock_ice = 1.0,
-			mountain_gravel_pile = 1.0,
-			boneshard = 0.12,
-			houndbone = 0.12,
-			cutgrass = 0.08,
-			mountain_plants_grass = 0.08,
-			mountain_bush = 1.0,
-			mountain_falcon_base = 0.08,
+			any = { 
+        rock2 = 0.5,
+        rock_flintless = 0.5,
+        mountain_snowpile = 1.0,
+        mountain_cold_rock_1 = 1.0,
+        mountain_cold_rock_2 = 1.0,
+        mountain_cold_rock_3 = 1.0,
+        rock_ice = 1.0,
+        mountain_gravel_pile = 1.0,
+        ms_copper_rock = 0.1,
+        ms_alu_rock = 0.1,
+        ms_coal_rock = 0.1,
+        mountain_plants_grass = 0.08,
+        mountain_bush = 1.0,
+      },
+		},
+    communities = {
+			{
+				count = 1,
+				radius = 10,
+        tile = WORLD_TILES.ROCKY,
+        tileradius = 3,
+        clear_radius = 1,
+				members = {
+					{ prefab = "mountain_falcon_base", min = 3, max = 4 },
+					{ prefab = "houndbone", min = 7, max = 10 },
+          { prefab = "boneshard", min = 7, max = 10 },
+          { prefab = "cutgrass", min = 7, max = 10 },
+				},
+			},
 		},
 	},
 	[5] = {
 		distributepercent = 0.1,
 		distributeprefabs = {
-			rock2 = 0.5,
-			rock_flintless = 0.5,
-			mountain_snowpile = 1.0,
-			mountain_cold_rock_1 = 1.0,
-			mountain_cold_rock_2 = 1.0,
-			mountain_cold_rock_3 = 1.0,
-			rock_ice = 1.0,
-			mountain_gravel_pile = 1.0,
-			boneshard = 0.12,
-			houndbone = 0.12,
-			cutgrass = 0.08,
-			mountain_plants_grass = 0.08,
-			mountain_bush = 1.0,
+			any = {
+        rock2 = 0.5,
+        rock_flintless = 0.5,
+        mountain_snowpile = 1.0,
+        mountain_cold_rock_1 = 1.0,
+        mountain_cold_rock_2 = 1.0,
+        mountain_cold_rock_3 = 1.0,
+        rock_ice = 1.0,
+        ms_copper_rock = 0.1,
+        ms_alu_rock = 0.1,
+        ms_coal_rock = 0.1,
+        mountain_gravel_pile = 1.0,
+        mountain_plants_grass = 0.08,
+        mountain_bush = 1.0,
+      },
+		},
+    communities = {
+			{
+				count = 2,
+				radius = 10,
+        tile = WORLD_TILES.ROCKY,
+        tileradius = 3,
+        clear_radius = 1,
+				members = {
+					{ prefab = "mountain_falcon_base", min = 2, max = 3 },
+					{ prefab = "houndbone", min = 7, max = 10 },
+          { prefab = "boneshard", min = 7, max = 10 },
+          { prefab = "cutgrass", min = 7, max = 10 },
+				},
+			},
 		},
 		cave = {
 			distributepercent = 0.22,
@@ -147,6 +209,10 @@ TUNING.MS_LEVEL_CONTENTS = {
 				mountain_stalactite_1 = 1.0,
 				mountain_stalactite_2 = 1.0,
 				mountain_stalactite_3 = 1.0,
+        ms_copper_rock = 1,
+        ms_alu_rock = 1,
+        ms_coal_rock = 1,
+        ms_geode_rock = 1,
 				mountain_gravel_pile = 1.0,
 				mushtree_small = 1.0,
 				rock2 = 1.0,
@@ -156,22 +222,27 @@ TUNING.MS_LEVEL_CONTENTS = {
 	[6] = {
 		distributepercent = 0.1,
 		distributeprefabs = {
-			mountain_snowpile = 1.0,
-			rock_ice = 1.0,
-			mountain_bush = 1.0,
-			mandrake_planted = 0.04,
-			mountain_snowpeak_stone_1 = 1.0,
-			mountain_snowpeak_stone_2 = 1.0,
-			mountain_snowpeak_stone_3 = 1.0,
-			cavein_boulder = 0.04,
+			any = {
+        mountain_snowpile = 1.0,
+        rock_ice = 1.0,
+        mountain_bush = 1.0,
+        mandrake_planted = 0.04,
+        mountain_snowpeak_stone_1 = 1.0,
+        mountain_snowpeak_stone_2 = 1.0,
+        mountain_snowpeak_stone_3 = 1.0,
+        cavein_boulder = 0.04,
+      }
 		},
 		communities = {
 			{
 				count = 1,
 				radius = 10,
+        tile = WORLD_TILES.ROCKY,
+        tileradius = 4,
 				members = {
 					{ prefab = "mountain_kiki_house", min = 3, max = 4 },
 					{ prefab = "mountain_crater_pool", min = 3, max = 4 },
+          { prefab = "cavein_boulder", min = 5, max = 8 },
 				},
 			},
 		},
@@ -179,33 +250,39 @@ TUNING.MS_LEVEL_CONTENTS = {
 	[7] = {
 		distributepercent = 0.1,
 		distributeprefabs = {
-			mountain_snowpile = 1.0,
-			rock_ice = 1.0,
-			mountain_bush = 1.0,
-			mandrake_planted = 0.04,
-			mountain_snowpeak_stone_1 = 1.0,
-			mountain_snowpeak_stone_2 = 1.0,
-			mountain_snowpeak_stone_3 = 1.0,
-			cavein_boulder = 0.04,
+			any = {
+        mountain_snowpile = 1.0,
+        rock_ice = 1.0,
+        mountain_bush = 1.0,
+        mandrake_planted = 0.04,
+        mountain_snowpeak_stone_1 = 1.0,
+        mountain_snowpeak_stone_2 = 1.0,
+        mountain_snowpeak_stone_3 = 1.0,
+        cavein_boulder = 0.04,
+      }
 		},
 		communities = {
 			{
 				count = 1,
 				radius = 10,
+        tile = WORLD_TILES.ROCKY,
+        tileradius = 4,
 				members = {
 					{ prefab = "mountain_kiki_house", min = 3, max = 4 },
 					{ prefab = "mountain_crater_pool", min = 3, max = 4 },
+          { prefab = "cavein_boulder", min = 5, max = 8 },
 				},
 			},
 		},
 	},
 	[9] = {
-		distributepercent = 1,
+		distributepercent = 0.3,
 		distributeprefabs = {
-			mountain_sandspike_tall = 1.0,
-      mountain_sandspike_med = 1.0,
-      mountain_sandspike_short = 1.0,
-
+      any = {
+        mountain_sandspike_tall = 1.0,
+        mountain_sandspike_med = 1.0,
+        mountain_sandspike_short = 1.0,
+      }
 		},
 	},
 }
@@ -269,14 +346,12 @@ TUNING.MS_LEVEL_WALL_CONTENTS = {
     distributepercent = 0.2,
 		distributeprefabs = {
 			ms_wall_stone = 1.0,
-			ms_wall_bush = 0,
 		},  
   },
   [11] = {
     distributepercent = 0.2,
 		distributeprefabs = {
 			ms_wall_stone = 1.0,
-			ms_wall_bush = 0,
 		},  
   },
 }
@@ -509,6 +584,20 @@ TUNING.MOUNTAIN_SUSPICIOUS_ORE = {
 	},
 }
 
+-- XK, ill make those individual in case zeroguzok wants to adjust loots even more.
+TUNING.MS_GEODE_ORE = {
+  WORK_LEFT = 1,
+  LOOTS = {
+    { weight = 1, prefab = "greengem"},
+    { weight = 1, prefab = "yellowgem"},
+    { weight = 1, prefab = "orangegem"},
+    { weight = 2, prefab = "purplegem"},
+    { weight = 2, prefab = "ms_copper_ore"},
+    { weight = 2, prefab = "ms_alu_ore"},
+    { weight = 3, prefab = "redgem"},
+    { weight = 3, prefab = "bluegem"},
+  }
+}
 -- mountain_green_stone（绿石；三种体型）
 TUNING.MOUNTAIN_GREEN_STONE = {
 	WORK_1 = TUNING.ROCKS_MINE,     -- 6：full → med → short
@@ -662,6 +751,11 @@ TUNING.MOUNTAIN_HELMET_COPPER = {
 	CONDITION = 1050,
 	WATERPROOFNESS = TUNING.WATERPROOFNESS_SMALL, -- 与橄榄球头盔相同
 	ABSORPTION_PHASES = TUNING.MOUNTAIN_ARMOR_COPPER.ABSORPTION_PHASES,
+}
+
+TUNING.HAT_TINFOIL = {
+  CONDITION = 100,
+  ABSORTION = 0.6,
 }
 
 -- mountain_super_gildedaxe / pickaxe / shovel
