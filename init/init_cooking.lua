@@ -67,6 +67,9 @@ AddCookerRecipe("ms_furnace", {
 AddIngredientValues({"mountain_icecream"}, { dairy = 1, frozen = 1 })
 -- 怪物鸟腿：可入锅，0.5 肉度 + 1 怪物度（烤后同值）
 AddIngredientValues({"mountain_monster_drumstick"}, { meat = .5, monster = 1 }, true)
+-- 苹果：1 水果度（烤后同值）；大苹果：2 水果度
+AddIngredientValues({"ms_apple"}, { fruit = 1 }, true)
+AddIngredientValues({"ms_big_apple"}, { fruit = 2 })
 
 local foods = require("mountain_preparedfoods")
 local recipe_cards = require("cooking").recipe_cards

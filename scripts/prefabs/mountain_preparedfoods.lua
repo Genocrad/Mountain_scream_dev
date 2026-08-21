@@ -129,7 +129,7 @@ local function MakePreparedFood(data)
 
         inst:AddComponent("inventoryitem")
         inst.components.inventoryitem.atlasname = MS_ITEMS_ATLAS
-        inst.components.inventoryitem.imagename = data.name
+        inst.components.inventoryitem.imagename = data.inv_image or data.name
         if data.OnPutInInventory then
             inst:ListenForEvent("onputininventory", data.OnPutInInventory)
         end
@@ -138,6 +138,8 @@ local function MakePreparedFood(data)
             inst.components.inventoryitem:ChangeImageName(spicename.."_over")
         elseif data.basename ~= nil then
             inst.components.inventoryitem:ChangeImageName(data.basename)
+        elseif data.inv_image ~= nil then
+            inst.components.inventoryitem:ChangeImageName(data.inv_image)
         end
 
         inst:AddComponent("stackable")

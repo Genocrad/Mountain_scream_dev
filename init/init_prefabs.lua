@@ -60,6 +60,8 @@ PrefabFiles = {
 	"mountain_stalagmite",
 	"mountain_bush",
 	"mountain_plants",
+	"ms_apple_tree",
+	"ms_apple",
 	"mountain_yoth_lance",
 	"mountain_wathgrithr_shield",
 	"mountain_armor_copper",
