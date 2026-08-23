@@ -40,6 +40,13 @@ local fruit_anims =
 
 local chop_tree, chop_down_tree, tree_burnt
 
+local function RandomizeAnimFrame(inst)
+	local n = inst.AnimState:GetCurrentAnimationNumFrames()
+	if n > 1 then
+		inst.AnimState:SetFrame(math.random(n) - 1)
+	end
+end
+
 local function PushSway(inst)
 	if inst.anims ~= nil and inst.anims.sway1 ~= nil then
 		inst.AnimState:PushAnimation(math.random() > .5 and inst.anims.sway1 or inst.anims.sway2, true)
@@ -52,6 +59,7 @@ local function Sway(inst)
 	elseif inst.anims ~= nil and inst.anims.idle ~= nil then
 		inst.AnimState:PlayAnimation(inst.anims.idle, true)
 	end
+	RandomizeAnimFrame(inst)
 end
 
 local function inspect_tree(inst)
@@ -72,18 +80,13 @@ local function PickApplePrefab()
 	return math.random() < TUNING.MS_APPLE_TREE.BIG_APPLE_CHANCE and "ms_big_apple" or "ms_apple"
 end
 
-local function DropApples(inst, picker, pt)
+local function DropApples(inst, pt)
 	pt = pt or inst:GetPosition()
+	if inst.components.lootdropper == nil then
+		return
+	end
 	for _ = 1, TUNING.MS_APPLE_TREE.APPLES do
-		local prefab = PickApplePrefab()
-		if picker ~= nil and picker.components.inventory ~= nil then
-			local item = SpawnPrefab(prefab)
-			if item ~= nil then
-				picker.components.inventory:GiveItem(item, nil, pt)
-			end
-		elseif inst.components.lootdropper ~= nil then
-			inst.components.lootdropper:SpawnLootPrefab(prefab, pt)
-		end
+		inst.components.lootdropper:SpawnLootPrefab(PickApplePrefab(), pt)
 	end
 end
 
@@ -139,18 +142,16 @@ local function SetupChopWorkable(inst)
 	inst.components.workable:SetOnFinishCallback(chop_down_tree)
 end
 
-local function DisablePickable(inst)
-	if inst.components.pickable ~= nil then
-		inst.components.pickable.canbepicked = false
-		inst.components.pickable.hasbeenpicked = true
-	end
+-- ms_apple_harvestable：能否掉果
+-- mountain_throw_target：与灌木相同的投掷标记（结果期），便于左键收集
+local function DisableHarvest(inst)
+	inst:RemoveTag("ms_apple_harvestable")
+	inst:RemoveTag("mountain_throw_target")
 end
 
-local function EnablePickable(inst)
-	if inst.components.pickable ~= nil then
-		inst.components.pickable.canbepicked = true
-		inst.components.pickable.hasbeenpicked = false
-	end
+local function EnableHarvest(inst)
+	inst:AddTag("ms_apple_harvestable")
+	inst:AddTag("mountain_throw_target")
 end
 
 local function MakeSeedBurnable(inst)
@@ -181,7 +182,7 @@ local function SetSeed(inst)
 	inst.anims = { idle = "idle_seed" }
 	inst:RemoveTag("shelter")
 
-	DisablePickable(inst)
+	DisableHarvest(inst)
 
 	if inst.components.lootdropper ~= nil then
 		inst.components.lootdropper:SetLoot({})
@@ -192,6 +193,7 @@ local function SetSeed(inst)
 	MakeSeedBurnable(inst)
 
 	inst.AnimState:PlayAnimation("idle_seed", true)
+	RandomizeAnimFrame(inst)
 end
 
 local function GrowToSeed(inst)
@@ -204,7 +206,7 @@ local function SetShort(inst)
 	inst.anims = short_anims
 	inst:AddTag("shelter")
 
-	DisablePickable(inst)
+	DisableHarvest(inst)
 
 	MakeObstaclePhysics(inst, .25)
 	SetupChopWorkable(inst)
@@ -230,7 +232,7 @@ local function SetFruit(inst)
 	MakeObstaclePhysics(inst, .25)
 	SetupChopWorkable(inst)
 	MakeTreeBurnable(inst)
-	EnablePickable(inst)
+	EnableHarvest(inst)
 
 	if inst.components.lootdropper ~= nil then
 		inst.components.lootdropper:SetLoot(MakeLogLoot())
@@ -279,10 +281,7 @@ local function make_stump(inst)
 		inst:RemoveComponent("growable")
 	end
 
-	DisablePickable(inst)
-	if inst.components.pickable ~= nil then
-		inst:RemoveComponent("pickable")
-	end
+	DisableHarvest(inst)
 
 	RemovePhysicsColliders(inst)
 
@@ -332,9 +331,9 @@ chop_down_tree = function(inst, chopper)
 		inst.components.lootdropper:DropLoot(pt + TheCamera:GetRightVec())
 	end
 
-	local was_fruiting = inst.components.pickable ~= nil and inst.components.pickable.canbepicked
+	local was_fruiting = inst:HasTag("ms_apple_harvestable")
 	if was_fruiting then
-		DropApples(inst, nil, he_right and (pt - TheCamera:GetRightVec()) or (pt + TheCamera:GetRightVec()))
+		DropApples(inst, he_right and (pt - TheCamera:GetRightVec()) or (pt + TheCamera:GetRightVec()))
 	end
 
 	make_stump(inst)
@@ -354,10 +353,7 @@ local function OnBurnt(inst, immediate)
 			inst:RemoveComponent("growable")
 		end
 
-		DisablePickable(inst)
-		if inst.components.pickable ~= nil then
-			inst:RemoveComponent("pickable")
-		end
+		DisableHarvest(inst)
 
 		inst:RemoveTag("shelter")
 		MakeHauntableWork(inst)
@@ -387,12 +383,27 @@ tree_burnt = function(inst)
 	OnBurnt(inst)
 end
 
-local function onpickedfn(inst, picker)
-	DropApples(inst, picker)
+-- 铝斧命中调用：有果则掉落并回到 short 阶段；无果则 false（斧仍正常落地）
+local function HarvestApples(inst, harvester)
+	if not inst:HasTag("ms_apple_harvestable") then
+		return false
+	end
+
+	DropApples(inst)
+	DisableHarvest(inst)
+
 	if inst.components.growable ~= nil then
 		inst.components.growable:SetStage(2)
 		inst.components.growable:StartGrowing()
 	end
+
+	PlayChopSound(inst, harvester)
+	if inst.anims ~= nil and inst.anims.chop ~= nil then
+		inst.AnimState:PlayAnimation(inst.anims.chop)
+		PushSway(inst)
+	end
+
+	return true
 end
 
 local function onsave(inst, data)
@@ -443,6 +454,7 @@ local function MakeTree(snowy)
 		inst:AddTag("plant")
 		inst:AddTag("tree")
 		inst:AddTag("shelter")
+		inst:AddTag("ms_apple_tree")
 
 		inst.AnimState:SetBank("ms_apple_tree")
 		inst.AnimState:SetBuild("ms_apple_tree")
@@ -467,12 +479,6 @@ local function MakeTree(snowy)
 
 		inst:AddComponent("lootdropper")
 
-		inst:AddComponent("pickable")
-		inst.components.pickable.picksound = "dontstarve/wilson/harvest_berries"
-		inst.components.pickable:SetUp(nil, nil)
-		inst.components.pickable.onpickedfn = onpickedfn
-		DisablePickable(inst)
-
 		inst:AddComponent("workable")
 		inst.components.workable:SetWorkAction(ACTIONS.CHOP)
 		inst.components.workable:SetOnWorkCallback(chop_tree)
@@ -494,10 +500,9 @@ local function MakeTree(snowy)
 		MakeSnowCovered(inst)
 		MakeWaxablePlant(inst)
 
+		inst.HarvestApples = HarvestApples
 		inst.OnSave = onsave
 		inst.OnLoad = onload
-
-		inst.AnimState:SetFrame(math.random(inst.AnimState:GetCurrentAnimationNumFrames()) - 1)
 
 		return inst
 	end

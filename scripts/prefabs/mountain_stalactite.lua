@@ -63,7 +63,7 @@ end
 local function OnWork(inst, worker, workleft)
 	if workleft <= 0 then
 		local x, _, z = inst.Transform:GetWorldPosition()
-		local drop_y = TUNING.MOUNTAIN_STALACTITE.THROW_HIT_HEIGHT or 15
+		local drop_y = inst.throw_hit_height or TUNING.MOUNTAIN_STALACTITE.THROW_HIT_HEIGHT or 15
 		local pos = Vector3(x, drop_y, z)
 		SpawnPrefab("rock_break_fx").Transform:SetPosition(pos:Get())
 		inst.components.lootdropper:DropLoot(pos)
@@ -107,6 +107,9 @@ local function MakeStalactite(anim_stages, loottable, workleft)
 
 		inst:AddTag("boulder")
 		inst:AddTag("mountain_stalactite")
+
+		-- 实体在地面 Y=0，动画挂在天花板；铝镐飞向此高度
+		inst.throw_hit_height = TUNING.MOUNTAIN_STALACTITE.THROW_HIT_HEIGHT
 
 		inst.scrapbook_anim = default_anim
 

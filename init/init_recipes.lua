@@ -568,3 +568,13 @@ AddRecipe2("hat_tinfoil", { Ingredient("ms_alu_ore", 4) }, TECH.MAGIC_THREE, nil
 -- Smithing
 AddRecipe2("ms_furnace", { Ingredient("cutstone", 10), Ingredient("ms_coal", 3) }, TECH.SCIENCE_TWO, {placer = "ms_furnace_placer"}, {"STRUCTURES"})
 AddRecipe2("ms_anvil", { Ingredient("cutstone", 5), Ingredient("ms_alu_ore", 3) }, TECH.SCIENCE_TWO, {placer = "ms_anvil_placer"}, {"STRUCTURES"})
+
+AddRecipe2("ms_golden_apple",
+	{
+		Ingredient("ms_apple", 1, "images/inventoryimages/mountain_items.xml"),
+		Ingredient("ms_gold_ingot", 8, "images/inventoryimages/inventoryimages_ingots.xml"),
+	},
+	TECH.SCIENCE_TWO,
+	nil,
+	{ "RESTORATION" }
+)

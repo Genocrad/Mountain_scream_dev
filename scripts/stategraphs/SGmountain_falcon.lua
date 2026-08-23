@@ -224,7 +224,7 @@ local states =
 		onenter = function(inst)
 			inst._cross_flooring = true
 			inst._cross_floor_hold_start = GetTime()
-			inst._cross_floor_ready_since = nil
+			inst._cross_floor_land_at = nil
 
 			inst.Physics:Stop()
 			inst.DynamicShadow:Enable(false)

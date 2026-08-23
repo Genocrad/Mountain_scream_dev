@@ -70,6 +70,13 @@ end
 
 ------------------------------------------------------------------------------------------------------------------------
 
+local function HarvestAppleTree(doer, target)
+	if target ~= nil and target:IsValid() and target.HarvestApples ~= nil then
+		return target:HarvestApples(doer)
+	end
+	return false
+end
+
 local function ChopTreesAt(doer, x, y, z)
 	local efficiency = TUNING.MOUNTAIN_ALUMINUM_AXE.CHOP_EFFICIENCY
 	local radius = TUNING.MOUNTAIN_ALUMINUM_AXE.CHOP_RADIUS
@@ -83,11 +90,23 @@ local function ChopTreesAt(doer, x, y, z)
 	end
 end
 
+local function PlayChopSound(doer, target)
+	if target ~= nil and target.SoundEmitter ~= nil
+			and not (doer ~= nil and doer:HasTag("playerghost")) then
+		target.SoundEmitter:PlaySound(
+			doer ~= nil and doer:HasTag("beaver") and
+			"dontstarve/characters/woodie/beaver_chop_tree" or
+			"dontstarve/wilson/use_axe_tree"
+		)
+	end
+end
+
 local function ChopMSBush(doer, target)
 	if target == nil or not target:IsValid() or target.components.workable == nil then
 		return
 	end
-  
+
+	PlayChopSound(doer, target)
 	target.components.workable:SetWorkable(true)
 	target.components.workable:WorkedBy(doer, 1)
 
@@ -97,12 +116,12 @@ local function ChopMSBush(doer, target)
 end
 
 local function IsInvalidTile(tile)
-  return tile == WORLD_TILES.VOID_TECHNICAL or
-  tile == WORLD_TILES.MS_MOUNTAIN_LOW_TECHNICAL or
-  tile == WORLD_TILES.MS_MOUNTAIN_LOW_2_TECHNICAL or
-  tile == WORLD_TILES.MS_MOUNTAIN_HIGH_TECHNICAL or
-  tile == WORLD_TILES.MS_PERMAFROST_TECHNICAL or 
-  (not tile == 1 and not TileGroupManager:IsLandTile(tile))
+	return tile == WORLD_TILES.VOID_TECHNICAL or
+		tile == WORLD_TILES.MS_MOUNTAIN_LOW_TECHNICAL or
+		tile == WORLD_TILES.MS_MOUNTAIN_LOW_2_TECHNICAL or
+		tile == WORLD_TILES.MS_MOUNTAIN_HIGH_TECHNICAL or
+		tile == WORLD_TILES.MS_PERMAFROST_TECHNICAL or
+		(not tile == 1 and not TileGroupManager:IsLandTile(tile))
 end
 
 local function ReturnItemToWorld(proj, thrower, do_mine_at, keep_height)
@@ -119,10 +138,10 @@ local function ReturnItemToWorld(proj, thrower, do_mine_at, keep_height)
 	end
 	item.Transform:SetPosition(x, y, z)
 	item:ReturnToScene()
-  -- So it does not fall into the void.
-  if IsInvalidTile(TheWorld.Map:GetTileAtPoint(x, 0, z)) then
-    LaunchAt(item, item, thrower, 10, 3, 3, 0)
-  end
+	-- So it does not fall into the void.
+	if IsInvalidTile(TheWorld.Map:GetTileAtPoint(x, 0, z)) then
+		LaunchAt(item, item, thrower, 10, 3, 3, 0)
+	end
 	if item.components.inventoryitem ~= nil then
 		item.components.inventoryitem:OnDropped(true)
 	end
@@ -137,17 +156,35 @@ local function ReturnItemToWorld(proj, thrower, do_mine_at, keep_height)
 end
 
 local function DropAxe(proj, thrower, target)
-	ReturnItemToWorld(proj, thrower)
+	-- 右键 AOE 投掷落地：范围砍树
+	ReturnItemToWorld(proj, thrower, true)
 	if proj:IsValid() then
 		proj:Remove()
 	end
 end
 
-local function OnHit(proj, thrower, target)
-	if target ~= nil and target:IsValid() and target:HasTag("mountain_throw_target") then
-		ChopMSBush(thrower, target)
+local function GetThrowDest(target)
+	local tx, ty, tz = target.Transform:GetWorldPosition()
+	local hit_y = target.throw_hit_height
+	if hit_y == nil then
+		if target:HasTag("ms_apple_tree") then
+			hit_y = ty + TUNING.MOUNTAIN_ALUMINUM_AXE.APPLE_TREE_THROW_OFFSET
+		else
+			hit_y = ty
+		end
 	end
-	-- 从命中高度落下，而不是直接放到地面
+	return Vector3(tx, hit_y, tz)
+end
+
+-- 左键定向投掷命中：结果期苹果树打落苹果；灌木砍箱
+local function OnHit(proj, thrower, target)
+	if target ~= nil and target:IsValid() then
+		if target:HasTag("ms_apple_harvestable") then
+			HarvestAppleTree(thrower, target)
+		elseif target:HasTag("mountain_throw_target") then
+			ChopMSBush(thrower, target)
+		end
+	end
 	ReturnItemToWorld(proj, thrower, false, true)
 	if proj:IsValid() then
 		proj:Remove()
@@ -160,6 +197,7 @@ local function OnMiss(proj, thrower)
 		proj:Remove()
 	end
 end
+
 local function SpellFn(inst, doer, pos)
 	local proj = SpawnPrefab("mountain_aluminum_axe_projectile")
 	if proj == nil then
@@ -174,7 +212,7 @@ local function SpellFn(inst, doer, pos)
 	end
 	inst:RemoveFromScene()
 
-	proj.axe = inst
+	proj.item = inst
 	proj.components.aimedprojectile.weapon = inst
 	proj.components.aimedprojectile.damage = TUNING.AXE_DAMAGE
 		* (doer.components.combat ~= nil and doer.components.combat.damagemultiplier or 1)
@@ -184,7 +222,13 @@ local function SpellFn(inst, doer, pos)
 end
 
 local function ThrowAtBush(inst, doer, target)
-	if doer == nil or target == nil or not target:IsValid() or not target:HasTag("mountain_throw_target") then
+	if doer == nil or target == nil or not target:IsValid() then
+		return false
+	end
+
+	local ok = target:HasTag("ms_apple_harvestable")
+		or (target:HasTag("mountain_throw_target") and not target:HasTag("ms_apple_tree"))
+	if not ok then
 		return false
 	end
 
@@ -201,8 +245,7 @@ local function ThrowAtBush(inst, doer, target)
 	end
 	inst:RemoveFromScene()
 
-	local tx, ty, tz = target.Transform:GetWorldPosition()
-	local dest = Vector3(tx, ty, tz)
+	local dest = GetThrowDest(target)
 
 	proj.item = inst
 	proj.components.aimedprojectile.weapon = inst
@@ -235,8 +278,8 @@ local function axe_fn()
 	inst:AddTag("throw_line")
 	inst:AddTag("nopunch")
 	inst:AddTag("weapon")
-  inst:AddTag("ms_aluminum_pickaxe")
-  
+	inst:AddTag("ms_aluminum_axe")
+
 	local floater_swap_data = { sym_build = "mountain_aluminum_axe", sym_name = "swap_aluminum_axe" }
 	MakeInventoryFloatable(inst, "small", 0.05, { 1.2, 0.75, 1.2 }, true, -11, floater_swap_data)
 
@@ -281,9 +324,9 @@ local function axe_fn()
 	inst:AddComponent("aoespell")
 	inst.components.aoespell:SetSpellFn(SpellFn)
 
-  inst.ThrowAtBush = ThrowAtBush
-	
-  MakeHauntableLaunch(inst)
+	inst.ThrowAtBush = ThrowAtBush
+
+	MakeHauntableLaunch(inst)
 
 	return inst
 end
@@ -316,7 +359,7 @@ local function projectile_fn()
 	end
 
 	inst.persists = false
-	inst.axe = nil
+	inst.item = nil
 
 	inst:AddComponent("aimedprojectile")
 	inst.components.aimedprojectile:SetSpeed(TUNING.MOUNTAIN_ALUMINUM_AXE.THROW_SPEED)

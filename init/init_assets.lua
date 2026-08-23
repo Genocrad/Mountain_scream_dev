@@ -148,6 +148,8 @@ local MOUNTAIN_ITEMS = {
   	"ms_furnace",
 	"ms_apple",
 	"ms_apple_cooked",
+	"ms_apple_dried",
+	"ms_golden_apple",
 	"ms_big_apple",
 	"ms_apple_core",
 	"ms_apple_pie",

@@ -55,7 +55,7 @@ local function ClearPursuitTimers(inst)
 	inst._pursuit_target = nil
 	inst._pursuit_target_level = nil
 	inst._cross_floor_hold_start = nil
-	inst._cross_floor_ready_since = nil
+	inst._cross_floor_land_at = nil
 end
 
 local function SetPursuitCanSleep(inst, can_sleep)
@@ -279,7 +279,7 @@ local function IsPursuitTargetScreenReady(target)
 	return true
 end
 
--- Hold above the player until screen is ready (+ settle), or timeout.
+-- Hold above the player until screen is ready (+ post-ready delay for client fade), or timeout.
 local function ShouldFinishCrossFloorHold(inst)
 	local cfg = TUNING.MOUNTAIN_FALCON
 	local hold_start = inst._cross_floor_hold_start or GetTime()
@@ -291,15 +291,16 @@ local function ShouldFinishCrossFloorHold(inst)
 		or (inst.components.combat ~= nil and inst.components.combat.target)
 		or nil
 	if not IsPursuitTargetScreenReady(target) then
-		inst._cross_floor_ready_since = nil
+		inst._cross_floor_land_at = nil
 		return false
 	end
 
-	if inst._cross_floor_ready_since == nil then
-		-- Slight per-bird stagger so a pack doesn't land on the same frame.
-		inst._cross_floor_ready_since = GetTime() + math.random() * 0.35
+	if inst._cross_floor_land_at == nil then
+		local post_ready = cfg.CROSS_FLOOR_LAND_POST_READY_DELAY or 0
+		local jitter = cfg.CROSS_FLOOR_LAND_POST_READY_JITTER or 0
+		inst._cross_floor_land_at = GetTime() + post_ready + math.random() * jitter
 	end
-	return GetTime() >= inst._cross_floor_ready_since + cfg.CROSS_FLOOR_LAND_SETTLE
+	return GetTime() >= inst._cross_floor_land_at
 end
 
 local function NeedsCrossFloorPursue(inst, target)
@@ -368,7 +369,7 @@ end
 local function OnCrossFloorLanded(inst)
 	inst._cross_flooring = false
 	inst._cross_floor_hold_start = nil
-	inst._cross_floor_ready_since = nil
+	inst._cross_floor_land_at = nil
 	local target = GetPursuitTarget(inst)
 	if target ~= nil and not IsHardInvalidTarget(target) then
 		RememberPursuitTarget(inst, target)

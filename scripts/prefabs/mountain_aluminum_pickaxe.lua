@@ -121,11 +121,10 @@ local function ReturnItemToWorld(proj, thrower, do_mine_at, keep_height)
 	end
 	item.Transform:SetPosition(x, y, z)
 	item:ReturnToScene()
-  -- So it does not fall into the void.
-  if IsInvalidTile(TheWorld.Map:GetTileAtPoint(x, 0, z)) then
-    c_announce(item)
-    LaunchAt(item, item, thrower, 10, 3, 3, 0)
-  end
+	-- So it does not fall into the void.
+	if IsInvalidTile(TheWorld.Map:GetTileAtPoint(x, 0, z)) then
+		LaunchAt(item, item, thrower, 10, 3, 3, 0)
+	end
 	if item.components.inventoryitem ~= nil then
 		item.components.inventoryitem:OnDropped(true)
 	end
@@ -205,8 +204,11 @@ local function ThrowAtStalactite(inst, doer, target)
 	end
 	inst:RemoveFromScene()
 
-	local tx, _, tz = target.Transform:GetWorldPosition()
-	local dest = Vector3(tx, TUNING.MOUNTAIN_STALACTITE.THROW_HIT_HEIGHT, tz)
+	-- 钟乳石：实体 Y=0，用 throw_hit_height（天花板）
+	-- 墙面可疑矿石(ms_wall_stone)：生成时已有真实 Y，直接飞向实体位置
+	local tx, ty, tz = target.Transform:GetWorldPosition()
+	local hit_y = target.throw_hit_height or ty
+	local dest = Vector3(tx, hit_y, tz)
 
 	proj.item = inst
 	proj.components.aimedprojectile.weapon = inst
