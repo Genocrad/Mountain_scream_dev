@@ -5,6 +5,7 @@ GLOBAL.setfenv(1, GLOBAL)
 
 local TIMEOUT = 2
 
+local SNOW_TOWNPORTAL_FX = "ms_teleportsnowcoffin_fx"
 
 local function ToggleOffPhysics(inst)
     inst.sg.statemem.isphysicstoggle = true
@@ -22,6 +23,113 @@ local function ToggleOnPhysics(inst)
     COLLISION.MS_CLOUDS
 	)
 end
+
+-- 竞技场传送：自写进出状态，直接生成雪特效（不碰官方 entertownportal）
+AddStategraphState("wilson",
+	State{
+		name = "ms_entertownportal",
+		tags = { "doing", "busy", "nopredict", "nomorph", "nodangle" },
+
+		onenter = function(inst, data)
+			ToggleOffPhysics(inst)
+			inst.Physics:Stop()
+			inst.components.locomotor:Stop()
+
+			inst.sg.statemem.target = data.teleporter
+			inst.sg.statemem.teleportarrivestate = "ms_exittownportal_pre"
+
+			inst.AnimState:PlayAnimation("townportal_enter_pre")
+
+			inst.sg.statemem.fx = SpawnPrefab(SNOW_TOWNPORTAL_FX)
+			inst.sg.statemem.fx.Transform:SetPosition(inst.Transform:GetWorldPosition())
+		end,
+
+		timeline =
+		{
+			TimeEvent(8 * FRAMES, function(inst)
+				inst.sg.statemem.isteleporting = true
+				inst.components.health:SetInvincible(true)
+				if inst.components.playercontroller ~= nil then
+					inst.components.playercontroller:Enable(false)
+				end
+				inst.DynamicShadow:Enable(false)
+			end),
+			TimeEvent(18 * FRAMES, function(inst)
+				inst:Hide()
+			end),
+			TimeEvent(26 * FRAMES, function(inst)
+				if inst.sg.statemem.target ~= nil and
+					inst.sg.statemem.target.components.teleporter ~= nil and
+					inst.sg.statemem.target.components.teleporter:Activate(inst) then
+					inst:Hide()
+					inst.sg.statemem.fx:KillFX()
+				else
+					inst.sg:GoToState("exittownportal")
+				end
+			end),
+		},
+
+		onexit = function(inst)
+			inst.sg.statemem.fx:KillFX()
+
+			if inst.sg.statemem.isphysicstoggle then
+				ToggleOnPhysics(inst)
+			end
+
+			if inst.sg.statemem.isteleporting then
+				inst.components.health:SetInvincible(false)
+				if inst.components.playercontroller ~= nil then
+					inst.components.playercontroller:Enable(true)
+				end
+				inst:Show()
+				inst.DynamicShadow:Enable(true)
+			end
+		end,
+	}
+)
+
+AddStategraphState("wilson",
+	State{
+		name = "ms_exittownportal_pre",
+		tags = { "doing", "busy", "nopredict", "nomorph", "nodangle" },
+
+		onenter = function(inst)
+			ToggleOffPhysics(inst)
+			inst.components.locomotor:Stop()
+
+			inst.sg.statemem.fx = SpawnPrefab(SNOW_TOWNPORTAL_FX)
+			inst.sg.statemem.fx.Transform:SetPosition(inst.Transform:GetWorldPosition())
+
+			inst:Hide()
+			inst.components.health:SetInvincible(true)
+			if inst.components.playercontroller ~= nil then
+				inst.components.playercontroller:Enable(false)
+			end
+			inst.DynamicShadow:Enable(false)
+
+			inst.sg:SetTimeout(32 * FRAMES)
+		end,
+
+		ontimeout = function(inst)
+			inst.sg:GoToState("exittownportal")
+		end,
+
+		onexit = function(inst)
+			inst.sg.statemem.fx:KillFX()
+
+			if inst.sg.statemem.isphysicstoggle then
+				ToggleOnPhysics(inst)
+			end
+
+			inst:Show()
+			inst.components.health:SetInvincible(false)
+			if inst.components.playercontroller ~= nil then
+				inst.components.playercontroller:Enable(true)
+			end
+			inst.DynamicShadow:Enable(true)
+		end,
+	}
+)
 
 AddStategraphState("wilson", 
   State{

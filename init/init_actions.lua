@@ -27,6 +27,31 @@ AddStategraphActionHandler("wilson", ActionHandler(ACTIONS.MS_USE_DOOR, "ms_door
 AddStategraphActionHandler("wilson_client", ActionHandler(ACTIONS.MS_USE_DOOR, "ms_door_use_pre"))
 
 ------------------------------------------------------------------------------------------------------------------------
+-- 竞技场传送：带 ms_snow_teleport 的门走自定义进出状态（雪特效），懒人塔仍走官方 entertownportal
+
+local old_TELEPORT_fn = ACTIONS.TELEPORT.fn
+ACTIONS.TELEPORT.fn = function(act)
+	if act.doer ~= nil and act.doer.sg ~= nil then
+		local teleporter
+		if act.invobject ~= nil then
+			if act.doer.sg.currentstate.name == "dolongaction" then
+				teleporter = act.invobject
+			end
+		elseif act.target ~= nil
+			and act.doer.sg.currentstate.name == "give" then
+			teleporter = act.target
+		end
+		if teleporter ~= nil
+			and teleporter:HasTag("teleporter")
+			and teleporter:HasTag("ms_snow_teleport") then
+			act.doer.sg:GoToState("ms_entertownportal", { teleporter = teleporter })
+			return true
+		end
+	end
+	return old_TELEPORT_fn(act)
+end
+
+------------------------------------------------------------------------------------------------------------------------
 -- 铝镐对石钟乳/墙面矿石：专用「开采」→ 直线飞向目标命中高度
 
 local MS_MINE_STALACTITE = Action({ priority = 10, distance = 15, mount_valid = true })

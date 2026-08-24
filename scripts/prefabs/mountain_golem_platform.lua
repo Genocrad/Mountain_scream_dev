@@ -36,6 +36,18 @@ local function DisableConstructionSite(inst)
 	end
 end
 
+local function ApplyLightVisibility(inst)
+	if inst._construction_locked:value() then
+		inst.AnimState:Hide("light")
+	else
+		inst.AnimState:Show("light")
+	end
+end
+
+local function OnConstructionLockedDirty(inst)
+	ApplyLightVisibility(inst)
+end
+
 OnConstructed = function(inst, doer)
 	if not inst.components.constructionsite:IsComplete() then
 		return
@@ -66,15 +78,20 @@ local function SetConstructionLocked(inst, locked)
 		if locked then
 			DisableConstructionSite(inst)
 		end
+		-- 存档加载/重复同步时仍刷新 light，避免视觉与锁定状态脱节
+		inst._construction_locked:set(locked)
+		ApplyLightVisibility(inst)
 		return
 	end
 
 	inst._locked = locked
+	inst._construction_locked:set(locked)
 	if locked then
 		DisableConstructionSite(inst)
 	else
 		EnableConstructionSite(inst)
 	end
+	ApplyLightVisibility(inst)
 end
 
 local function OnRemoveEntity(inst)
@@ -106,10 +123,14 @@ local function fn()
 
 	inst:AddTag("constructionsite")
 	inst._locked = false
+	-- 可建造时显示 light；不可建造时隐藏。经 net_bool 同步到客户端。
+	inst._construction_locked = net_bool(inst.GUID, "mountain_golem_platform.locked", "constructionlockeddirty")
 
 	inst.entity:SetPristine()
 
 	if not TheWorld.ismastersim then
+		inst:ListenForEvent("constructionlockeddirty", OnConstructionLockedDirty)
+		ApplyLightVisibility(inst)
 		return inst
 	end
 
