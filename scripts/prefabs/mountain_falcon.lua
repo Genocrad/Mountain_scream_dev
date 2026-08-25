@@ -650,7 +650,7 @@ local function fn()
 	combat:SetAttackPeriod(TUNING.HOUND_ATTACK_PERIOD)
 	combat:SetRetargetFunction(3, Retarget)
 	combat:SetKeepTargetFunction(KeepTarget)
-	combat:SetHurtSound("dontstarve/creatures/bat/hurt")
+	combat:SetHurtSound("ms_sfx/ms_fx/hawk_hurt")
 	combat.lastwasattackedtime = -math.huge
 
 	local health = inst:AddComponent("health")
