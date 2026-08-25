@@ -36,7 +36,7 @@ local STAGE =
 		idle = "idle_full",
 		dig = "dig_full",
 		next = "med",
-		radius = 1,
+		radius = 1.5,
 	},
 	med =
 	{

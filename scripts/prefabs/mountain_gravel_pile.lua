@@ -139,7 +139,7 @@ local function fn()
 	inst.entity:AddNetwork()
 	inst.entity:AddMiniMapEntity()
 
-	MakeObstaclePhysics(inst, 1)
+	MakeObstaclePhysics(inst, 1.5) -- Luigi: Made a bit bigger due to "barricades" being easier
 
 	inst.AnimState:SetBank("mountain_gravel_pile")
 	inst.AnimState:SetBuild("mountain_gravel_pile")
