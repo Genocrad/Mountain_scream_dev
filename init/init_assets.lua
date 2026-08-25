@@ -37,11 +37,8 @@ Assets = {
 
 	--------------------------------------------------------
 	-- Sound
-	Asset("SOUNDPACKAGE", "sound/music_mod.fev"),
-	Asset("SOUND", "sound/music_mod.fsb"),
-	Asset("SOUNDPACKAGE", "sound/sound_mod_tutorial.fev"),
-	Asset("SOUND", "sound/sound_mod_tutorial.fsb"),
-
+	Asset("SOUNDPACKAGE", "sound/ms_sfx.fev"),
+	Asset("SOUND", "sound/ms_sfx.fsb"),
 	--------------------------------------------------------
 	-- Anim / shaders
 	Asset("ANIM", "anim/clouds_overlay.zip"),
