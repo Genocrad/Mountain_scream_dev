@@ -34,7 +34,7 @@ local function OnWork(inst, worker, workleft)
       inst.components.workable:SetWorkLeft(TUNING.MS_GIANT_BOULDER.WORK_PER_DROP[inst.oretype])
     end
 		local anim = 
-            (workleft < TUNING.MS_GIANT_BOULDER.WORK_PER_DROP[inst.oretype] and inst.biome .. "_ore" .. typetonumber[inst.oretype]) or
+            (workleft <= TUNING.MS_GIANT_BOULDER.WORK_PER_DROP[inst.oretype] and inst.biome .. "_ore" .. typetonumber[inst.oretype]) or
             (workleft < TUNING.MS_GIANT_BOULDER.WORK_LEFT / 4 and inst.biome .. "_crack3") or
             (workleft < TUNING.MS_GIANT_BOULDER.WORK_LEFT / 2 and inst.biome .. "_crack2") or
             (workleft < TUNING.MS_GIANT_BOULDER.WORK_LEFT * 3 / 4 and inst.biome .. "_crack1") or
@@ -57,6 +57,8 @@ end
 local function OnLoad(inst, data)
 	if data ~= nil and data.oretype then
     inst.oretype = data.oretype
+    -- Otherwise loads before Onload
+    OnWork(inst, { workleft = inst.components.workable.workleft })
   end
 end
 
@@ -101,7 +103,6 @@ local function MakeRock(biome)
     workable:SetWorkLeft(TUNING.MS_GIANT_BOULDER.WORK_LEFT + TUNING.MS_GIANT_BOULDER.WORK_PER_DROP[inst.oretype])
     workable:SetOnWorkCallback(OnWork)
     workable.savestate = true
-    workable:SetOnLoadFn(OnWork)
     
     inst:AddComponent("inspectable")
     
