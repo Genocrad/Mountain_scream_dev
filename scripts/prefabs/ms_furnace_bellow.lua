@@ -11,7 +11,7 @@ end
 local function OnActivate(inst, doer)
 	inst.AnimState:PlayAnimation("blow")
 	inst.AnimState:PushAnimation("idle", false)
-	inst.SoundEmitter:PlaySound("sound_mod_tutorial/ms_fx/bellow")
+	inst.SoundEmitter:PlaySound("ms_sfx/ms_fx/bellow")
   -- No check, if bellow does not have a linked campfire, we are in some SSS tier shit anyway.
   inst.campfire:OnBellowActivated()
 end
@@ -32,7 +32,6 @@ local function fn()
   
 	MakeSmallObstaclePhysics(inst, 0.7)
 
-	inst.MiniMapEntity:SetIcon("vault_switch.png")
 
 	inst.AnimState:SetBank("ms_bellow")
 	inst.AnimState:SetBuild("ms_bellow")

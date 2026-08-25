@@ -103,7 +103,7 @@ local function fn()
 	inst.components.combat.hiteffectsymbol = "lightning_goat_body"
 	inst.components.combat:SetAttackPeriod(TUNING.MOUNTAIN_GOAT.ATTACK_PERIOD)
 	inst.components.combat:SetKeepTargetFunction(GoatCommon.KeepTargetFn)
-	inst.components.combat:SetHurtSound("dontstarve_DLC001/creatures/lightninggoat/hurt")
+	inst.components.combat:SetHurtSound("ms_sfx/ms_fx/goat_hurt")
 
 	inst:AddComponent("sleeper")
 	inst.components.sleeper:SetResistance(4)
