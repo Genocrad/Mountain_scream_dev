@@ -2,140 +2,20 @@ local assets = {
     Asset("ANIM", "anim/ms_mountain_wall.zip")
 }
 
-
-  local function fn()
-      local inst = CreateEntity()
-
-      inst:AddTag("FX")
-
-      inst.entity:AddTransform()
-      inst.entity:AddAnimState()
-      inst.entity:AddNetwork()
-     
-      inst.Transform:SetScale(1.002,4,1.002)
-      inst.AnimState:SetBuild("ms_mountain_wall")
-      inst.AnimState:SetBank("ms_mountain_wall")
-       
-      inst.AnimState:PlayAnimation("idle")
-      inst.AnimState:SetOrientation(ANIM_ORIENTATION.OnGround)
-      inst.AnimState:SetDefaultEffectHandle(resolvefilepath("shaders/mountain_vertical_shader.ksh"))	
-      
-      inst.AnimState:SetDepthTestEnabled(true)
-      inst.AnimState:SetDepthWriteEnabled(true)
-
-      inst.AnimState:SetSymbolAddColour("wall", 0, 0, 1, 1)
-      inst.entity:SetPristine()
-              inst:AddComponent("distancefade")
-        inst.components.distancefade:Setup(15,25)
-      if not TheWorld.ismastersim then
-        return inst
-      end
-      inst:AddComponent("savedrotation")
-      return inst
-  end
-  
-    local function corner_right_fn()
-      local inst = CreateEntity()
-
-      --inst:AddTag("FX")
-
-      inst.entity:AddTransform()
-      inst.entity:AddAnimState()
-      inst.entity:AddNetwork()
-     
-      inst.Transform:SetScale(1.002,4,1.002)
-      inst.AnimState:SetBuild("ms_mountain_wall")
-      inst.AnimState:SetBank("ms_mountain_wall")
-        
-      inst.AnimState:PlayAnimation("idle_right_corner")
-      inst.AnimState:SetOrientation(ANIM_ORIENTATION.OnGround)
-      inst.AnimState:SetDefaultEffectHandle(resolvefilepath("shaders/mountain_vertical_shader.ksh"))	
-      
-      inst.AnimState:SetDepthTestEnabled(true)
-      inst.AnimState:SetDepthWriteEnabled(true)
-
-      inst.AnimState:SetSymbolAddColour("wall_half_right", 0, 0, 1, 1)
-      inst.entity:SetPristine()
-      if not TheWorld.ismastersim then
-        return inst
-      end
-      inst:AddComponent("savedrotation")      
-      return inst
-  end
-  
-  local function corner_left_fn()
-      local inst = CreateEntity()
-
-      --inst:AddTag("FX")
-
-      inst.entity:AddTransform()
-      inst.entity:AddAnimState()
-      inst.entity:AddNetwork()
-     
-      inst.Transform:SetScale(1.002,4,1.002)
-      inst.AnimState:SetBuild("ms_mountain_wall")
-      inst.AnimState:SetBank("ms_mountain_wall")
-        
-      inst.AnimState:PlayAnimation("idle_left_corner")
-      inst.AnimState:SetOrientation(ANIM_ORIENTATION.OnGround)
-      inst.AnimState:SetDefaultEffectHandle(resolvefilepath("shaders/mountain_vertical_shader.ksh"))	
-      
-      inst.AnimState:SetDepthTestEnabled(true)
-      inst.AnimState:SetDepthWriteEnabled(true)
-
-      inst.AnimState:SetSymbolAddColour("wall_half_left", 0, 0, 1, 1)
-      inst.entity:SetPristine()
-      if not TheWorld.ismastersim then
-        return inst
-      end
-      inst:AddComponent("savedrotation")
-      return inst
-  end
-  
-    local function slope_fn()
-      local inst = CreateEntity()
-
-      --inst:AddTag("FX")
-
-      inst.entity:AddTransform()
-      inst.entity:AddAnimState()
-      inst.entity:AddNetwork()
-     
-      inst.Transform:SetScale(1.01,4,1.01)
-      inst.AnimState:SetBuild("ms_mountain_wall")
-      inst.AnimState:SetBank("ms_mountain_wall")
-        
-      inst.AnimState:PlayAnimation("idle_left_slope")
-      inst.AnimState:SetOrientation(ANIM_ORIENTATION.OnGround)
-      inst.AnimState:SetDefaultEffectHandle(resolvefilepath("shaders/mountain_vertical_shader.ksh"))	
-      
-      inst.AnimState:SetDepthTestEnabled(true)
-      inst.AnimState:SetDepthWriteEnabled(true)
-      
-      inst.AnimState:SetSymbolAddColour("wall_half_right", 0.01, 0.08, 0, 1)
-      inst.AnimState:SetSymbolAddColour("wall_half_left", 0.01, 0.08, 0, 1)
-      inst.AnimState:SetSymbolLightOverride("wall_half_right", 1)
-      
-      inst.entity:SetPristine()
-      if not TheWorld.ismastersim then
-        return inst
-      end
-      inst:AddComponent("savedrotation")
-      return inst
-  end
-
   local function MakeWall(name, customfn)
     local function fn()
       local inst = CreateEntity()
 
-      inst:AddTag("FX")
-      inst:AddTag("DECOR")
-      inst:AddTag("NOCLICK")
-      
       inst.entity:AddTransform()
       inst.entity:AddAnimState()
       inst.entity:AddNetwork()
-     
+      
+
+      inst:AddTag("FX")
+      inst:AddTag("DECOR")
+      inst:AddTag("NOCLICK")
+      inst:AddTag("ms_wall")
+      
       inst.Transform:SetScale(1.01,4,1.01)
       inst.AnimState:SetBuild("ms_mountain_wall")
       inst.AnimState:SetBank("ms_mountain_wall")
