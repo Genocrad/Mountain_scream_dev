@@ -107,7 +107,7 @@ local states =
 		timeline =
 		{
 			TimeEvent(5 * FRAMES, function(inst)
-				inst.SoundEmitter:PlaySound("dontstarve_DLC001/creatures/lightninggoat/taunt")
+				inst.SoundEmitter:PlaySound("ms_sfx/ms_fx/goat_taunt")
 			end),
 			TimeEvent(27 * FRAMES, function(inst)
 				inst.SoundEmitter:PlaySound("dontstarve_DLC001/creatures/lightninggoat/hoof")
@@ -138,7 +138,7 @@ local states =
 		timeline =
 		{
 			TimeEvent(10 * FRAMES, function(inst)
-				inst.SoundEmitter:PlaySound("dontstarve_DLC001/creatures/lightninggoat/bleet")
+				inst.SoundEmitter:PlaySound("ms_sfx/ms_fx/goat_bleat")
 			end),
 		},
 
@@ -166,7 +166,7 @@ CommonStates.AddCombatStates(states,
 	deathtimeline =
 	{
 		TimeEvent(0 * FRAMES, function(inst)
-			inst.SoundEmitter:PlaySound("dontstarve_DLC001/creatures/lightninggoat/death")
+			inst.SoundEmitter:PlaySound("ms_sfx/ms_fx/goat_death")
 		end),
 	},
 })
@@ -176,7 +176,7 @@ CommonStates.AddSleepStates(states,
 	sleeptimeline =
 	{
 		TimeEvent(41 * FRAMES, function(inst)
-			inst.SoundEmitter:PlaySound("dontstarve_DLC001/creatures/lightninggoat/sleep")
+			inst.SoundEmitter:PlaySound("ms_sfx/ms_fx/goat_sleep")
 		end),
 	},
 })
