@@ -34,6 +34,7 @@ TUNING.MS_LEVEL_CONTENTS = {
 				rocks = 0.1,
 				ms_copper_rock = 0.04,
 				ms_coal_rock = 0.04,
+				ms_giant_boulder_grass = 0.01,
 			},
 			ms_mountain_low_2 = {
 				mountain_plants_bush_1 = 0.30,
@@ -67,6 +68,7 @@ TUNING.MS_LEVEL_CONTENTS = {
 				rocks = 0.1,
 				ms_copper_rock = 0.06,
 				ms_coal_rock = 0.06,
+				ms_giant_boulder_grass = 0.01,
 			},
 			ms_mountain_low_2 = {
 				mountain_plants_bush_1 = 0.30,
@@ -100,6 +102,7 @@ TUNING.MS_LEVEL_CONTENTS = {
 				mountain_plants_grass = 0.08,
 				mountain_bush = 1.0,
 				ms_apple_tree = 0.7,
+				ms_giant_boulder_rock = 0.04,
 			},
 			rocky = {
 				boneshard = 0.12,
@@ -127,6 +130,7 @@ TUNING.MS_LEVEL_CONTENTS = {
 				ms_alu_rock = 0.6,
 				ms_coal_rock = 0.6,
 				rock2 = 1.0,
+				ms_giant_boulder_rock = 0.5,
 			},
 		},
 	},
@@ -148,6 +152,7 @@ TUNING.MS_LEVEL_CONTENTS = {
 				mountain_plants_grass = 0.08,
 				mountain_bush = 1.0,
 				ms_apple_tree = 0.7,
+				ms_giant_boulder_rock = 0.04,
 			},
 		},
     	communities = {
@@ -184,6 +189,7 @@ TUNING.MS_LEVEL_CONTENTS = {
 				mountain_plants_grass = 0.08,
 				mountain_bush = 1.0,
 				ms_apple_tree = 0.7,
+				ms_giant_boulder_rock = 0.04,
 			},
 		},
     	communities = {
@@ -220,6 +226,7 @@ TUNING.MS_LEVEL_CONTENTS = {
 				mountain_gravel_pile = 1.0,
 				mushtree_small = 1.0,
 				rock2 = 1.0,
+				ms_giant_boulder_rock = 0.8,
 			},
 		},
 	},
@@ -236,6 +243,7 @@ TUNING.MS_LEVEL_CONTENTS = {
 				mountain_snowpeak_stone_3 = 1.0,
 				cavein_boulder = 0.04,
 				ms_apple_tree_snow = 0.7,
+				ms_giant_boulder_snow = 0.08,
 			}
 		},
 		communities = {
@@ -265,6 +273,7 @@ TUNING.MS_LEVEL_CONTENTS = {
 				mountain_snowpeak_stone_3 = 1.0,
 				cavein_boulder = 0.04,
 				ms_apple_tree_snow = 0.7,
+				ms_giant_boulder_snow = 0.08,
 			}
 		},
 		communities = {
@@ -649,16 +658,58 @@ TUNING.MOUNTAIN_SUSPICIOUS_ORE = {
 TUNING.MS_GEODE_ORE = {
   WORK_LEFT = 1,
   LOOTS = {
-    { weight = 1, prefab = "greengem"},
-    { weight = 1, prefab = "yellowgem"},
-    { weight = 1, prefab = "orangegem"},
-    { weight = 2, prefab = "purplegem"},
-    { weight = 2, prefab = "ms_copper_ore"},
-    { weight = 2, prefab = "ms_alu_ore"},
-    { weight = 3, prefab = "redgem"},
-    { weight = 3, prefab = "bluegem"},
+    greengem = 1,
+    yellowgem = 1,
+    orangegem = 1,
+    purplegem = 2,
+    ms_copper_ore = 2,
+    ms_alu_ore = 2,
+    redgem = 3,
+    bluegem = 3,
   }
 }
+
+-- Chances for inside of ms_giant_boulder
+
+TUNING.MS_GIANT_BOULDER = {
+  WORK_LEFT = 500,
+  VARIANTS = {
+    empty = 2,
+    metals = 2,
+    minerals = 3,
+    coal = 2,
+    thulecite = 1,
+  },
+  LOOTS = {
+    empty = {
+      rocks = 1,
+    },
+    metals = {
+      ms_alu_ore = 1,
+      ms_copper_ore = 1,
+      goldnugget = 1,
+    },
+    minerals = {
+      rocks = 1,
+      flint = 4,
+      nitre = 15,
+    },
+    coal = {
+      ms_coal = 1,
+    },
+    thulecite = {
+      thulecite_pieces = 1,
+    },
+  },
+  WORK_PER_DROP = {
+    metals = 12,
+    minerals = 6,
+    coal = 12,
+    thulecite = 24,
+    empty = -10,
+  }
+}
+
 -- mountain_green_stone（绿石；三种体型）
 TUNING.MOUNTAIN_GREEN_STONE = {
 	WORK_1 = TUNING.ROCKS_MINE,     -- 6：full → med → short
