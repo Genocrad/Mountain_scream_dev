@@ -134,9 +134,9 @@ local function onbuilt(inst)
     inst.AnimState:PushAnimation("idle_open", false)
     inst.SoundEmitter:PlaySound("dontstarve/common/cook_pot_craft")
     local x, y, z = inst.Transform:GetWorldPosition()
-    local fire = SpawnPrefab("ms_furnace_campfire")
-    fire.Transform:SetPosition(x,y,z)
-      inst.fire.furnace = inst
+    inst.fire = SpawnPrefab("ms_furnace_campfire")
+    inst.fire.Transform:SetPosition(x,y,z)
+    inst.fire.furnace = inst
 end
 
 
