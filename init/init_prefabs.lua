@@ -96,4 +96,6 @@ PrefabFiles = {
   "ms_ore_rocks",
   "ms_geode_ore",
   "hat_tinfoil",
+  "ms_barricade_spawner",
+  "ms_giant_boulder",
 }
