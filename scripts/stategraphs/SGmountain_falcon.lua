@@ -332,7 +332,7 @@ local states =
 
 		timeline =
 		{
-			TimeEvent(1 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve/creatures/bat/taunt") end),
+			TimeEvent(1 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("ms_sfx/ms_fx/hawk_taunt") end),
 			TimeEvent(7 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve/creatures/bat/flap") end),
 			TimeEvent(18 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve/creatures/bat/flap") end),
 			TimeEvent(28 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve/creatures/bat/flap") end),
@@ -406,7 +406,7 @@ CommonStates.AddSleepExStates(states,
 	},
 	sleeptimeline =
 	{
-		TimeEvent(23 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve/creatures/bat/sleep") end),
+		TimeEvent(23 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("ms_sfx/ms_fx/hawk_sleep") end),
 	},
 	endtimeline =
 	{
@@ -422,7 +422,7 @@ CommonStates.AddCombatStates(states,
 {
 	attacktimeline =
 	{
-		TimeEvent(8 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve/creatures/bat/bite") end),
+		TimeEvent(8 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("ms_sfx/ms_fx/hawk_attack") end),
 		TimeEvent(11 * FRAMES, function(inst)
 			inst.components.combat:DoAttack()
 			inst.SoundEmitter:PlaySound("dontstarve/creatures/bat/flap")
@@ -430,12 +430,12 @@ CommonStates.AddCombatStates(states,
 	},
 	hittimeline =
 	{
-		TimeEvent(1 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve/creatures/bat/hurt") end),
+		TimeEvent(1 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("ms_sfx/ms_fx/hawk_hurt") end),
 		TimeEvent(7 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve/creatures/bat/flap") end),
 	},
 	deathtimeline =
 	{
-		TimeEvent(1 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve/creatures/bat/death") end),
+		TimeEvent(1 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("ms_sfx/ms_fx/hawk_death") end),
 		TimeEvent(4 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve/creatures/bat/flap") end),
 		TimeEvent(15 * FRAMES, LandFlyingCreature),
 	},
