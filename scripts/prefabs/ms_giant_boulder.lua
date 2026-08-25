@@ -27,7 +27,6 @@ local typetonumber = {
 local function OnWork(inst, worker, workleft)
     if worker.workleft then
       workleft = worker.workleft
-      print(workleft)
     end
     if workleft < 1 then
       local item = SpawnPrefab(weighted_random_choice(TUNING.MS_GIANT_BOULDER.LOOTS[inst.oretype]))
@@ -40,9 +39,11 @@ local function OnWork(inst, worker, workleft)
             (workleft < TUNING.MS_GIANT_BOULDER.WORK_LEFT / 2 and inst.biome .. "_crack2") or
             (workleft < TUNING.MS_GIANT_BOULDER.WORK_LEFT * 3 / 4 and inst.biome .. "_crack1") or
             inst.biome .. "_crack0"
-
-	
-
+    
+    if workleft < TUNING.MS_GIANT_BOULDER.WORK_PER_DROP[inst.oretype] then
+      inst.MiniMapEntity:SetIcon("giant_boulder_" .. inst.oretype .. ".tex")
+    end
+    
 		inst.AnimState:PlayAnimation(anim)
     
 end
@@ -73,7 +74,8 @@ local function MakeRock(biome)
 
     inst.biome = biome
     inst.oretype = weighted_random_choice(TUNING.MS_GIANT_BOULDER.VARIANTS)
-    --inst.MiniMapEntity:SetIcon("ms_" .. oretype .. "_rock.tex")
+    
+    inst.MiniMapEntity:SetIcon("giant_boulder.tex")
     
     
 
