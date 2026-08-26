@@ -117,9 +117,9 @@ end
 
 local function OnInit(inst)
     local x, y, z = inst.Transform:GetWorldPosition()
-    local bellow = SpawnPrefab("ms_furnace_bellow")
-    bellow.Transform:SetPosition(x,y,z)
-    bellow.campfire = inst
+    inst.bellow = SpawnPrefab("ms_furnace_bellow")
+    inst.bellow.Transform:SetPosition(x,y,z)
+    inst.bellow.campfire = inst
     if inst.components.burnable ~= nil then
         inst.components.burnable:FixFX()
     end

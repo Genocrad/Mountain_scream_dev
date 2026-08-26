@@ -34,7 +34,6 @@ local function onhammered(inst, worker)
     fx:SetMaterial("metal")
     inst.fire.bellow:Remove()
     inst.fire:Remove()
-    inst.back:Remove()
     inst:Remove()
 end
 
@@ -80,12 +79,15 @@ local function ShowProduct(inst)
   end
   inst.components.furnituredecortaker:AcceptDecor(product)
   inst.components.stewer.product = nil
-
+  inst.components.stewer:StopCooking()
 end
 
 local function donecookfn(inst)
   inst.AnimState:PlayAnimation("cooking_post")
   inst.AnimState:PushAnimation("idle_open", false)
+  inst:DoTaskInTime(0.3, function() 
+  inst:RemoveTag("donecooking")
+  end)
   ShowProduct(inst)
   inst.SoundEmitter:KillSound("snd")
   inst.SoundEmitter:PlaySound("dontstarve/common/cookingpot_finish")
@@ -216,7 +218,8 @@ end
 
 local function OnInit(inst)
   local x, y, z = inst.Transform:GetWorldPosition()
-  local back = SpawnPrefab("ms_furnace_back").Transform:SetPosition(x,y,z)
+  local back = SpawnPrefab("ms_furnace_back")
+  back.Transform:SetPosition(x,y,z)
   inst.back = back
 end
 
