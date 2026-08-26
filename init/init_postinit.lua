@@ -13,6 +13,7 @@ modimport("postinit/components/temperature")
 modimport("postinit/components/playervision")
 modimport("postinit/components/teleporter")
 modimport("postinit/components/savedrotation")
+modimport("postinit/components/dynamicmusic")
 
 modimport("postinit/widgets/mapwidget")
 modimport("postinit/widgets/uiclock")
