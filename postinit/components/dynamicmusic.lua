@@ -60,14 +60,12 @@ AddPlayerPostInit(function(inst)
               local _busytheme = UpvalueHacker.GetUpvalue(inst.event_listeners["buildsuccess"][TheWorld][1], "_busytheme")
               local _extendtime = UpvalueHacker.GetUpvalue(inst.event_listeners["buildsuccess"][TheWorld][1], "_extendtime")
               local _dangertask = UpvalueHacker.GetUpvalue(inst.event_listeners["buildsuccess"][TheWorld][1], "_dangertask")
-              print(_busytask, _extendtime, GetTime(), GetTime() >= _extendtime)
               if not (TheWorld.state.iscaveday or TheWorld.state.iscavedusk) then
                 return
               elseif _busytask ~= nil then
                 _extendtime = GetTime() + 15
                 UpvalueHacker.SetUpvalue(TheWorld.event_listeners["enabledynamicmusic"][TheWorld][1], _extendtime, "StopBusy", "_extendtime")
               elseif _dangertask == nil and (_extendtime == 0 or GetTime() >= _extendtime) then
-                print(_busytheme, BUSYTHEMES.MOUNTAINS)
                 if _busytheme ~= BUSYTHEMES.MOUNTAINS then
                   _soundemitter:KillSound("busy")
                   _soundemitter:PlaySound("dontstarve/music/music_work_winter", "busy")
