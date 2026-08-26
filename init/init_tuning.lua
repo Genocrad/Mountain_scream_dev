@@ -45,7 +45,6 @@ TUNING.MS_LEVEL_CONTENTS = {
 				mountain_plants_flower_2 = 0.1,
 				mountain_plants_flower_3 = 0.1,
 				mountain_bush = 0.1,
-				ms_apple_tree = 0.5,
 			},
 			
 			},
@@ -79,7 +78,6 @@ TUNING.MS_LEVEL_CONTENTS = {
 				mountain_plants_flower_2 = 0.1,
 				mountain_plants_flower_3 = 0.1,
 				mountain_bush = 0.1,
-				ms_apple_tree = 0.5,
 			},
 		},
 		herds = {
@@ -101,7 +99,6 @@ TUNING.MS_LEVEL_CONTENTS = {
 				mountain_gravel_pile = 1.0,
 				mountain_plants_grass = 0.08,
 				mountain_bush = 1.0,
-				ms_apple_tree = 0.7,
 				ms_giant_boulder_rock = 0.04,
 			},
 			rocky = {
@@ -151,7 +148,6 @@ TUNING.MS_LEVEL_CONTENTS = {
 				ms_coal_rock = 0.1,
 				mountain_plants_grass = 0.08,
 				mountain_bush = 1.0,
-				ms_apple_tree = 0.7,
 				ms_giant_boulder_rock = 0.04,
 			},
 		},
@@ -188,7 +184,6 @@ TUNING.MS_LEVEL_CONTENTS = {
 				mountain_gravel_pile = 1.0,
 				mountain_plants_grass = 0.08,
 				mountain_bush = 1.0,
-				ms_apple_tree = 0.7,
 				ms_giant_boulder_rock = 0.04,
 			},
 		},
@@ -793,6 +788,7 @@ TUNING.MOUNTAIN_ALUMINUM_AXE = {
 	THROW_SPEED = 30,
 	THROW_RANGE = 15,
 	HIT_DIST = 0.75,
+	APPLE_TREE_THROW_OFFSET = 2, -- 左键投向结果期苹果树时的命中高度偏移
 }
 
 -- mountain_aluminum_pickaxe（只能投掷；落地自捡）

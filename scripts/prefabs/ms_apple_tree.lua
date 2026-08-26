@@ -238,6 +238,11 @@ local function SetFruit(inst)
 		inst.components.lootdropper:SetLoot(MakeLogLoot())
 	end
 
+	-- 结果期不自动退回 sapling；旧档残留计时也一并清掉
+	if inst.components.growable ~= nil then
+		inst.components.growable:StopGrowing()
+	end
+
 	Sway(inst)
 end
 
@@ -266,7 +271,8 @@ local growth_stages =
 	},
 	{
 		name = "short_fruit",
-		time = grow_times(TUNING.MS_APPLE_TREE.FRUIT_TO_SEED),
+		-- 必须返回 nil：字段缺失会走 FALLBACK_GROWTH_TIME（10s）
+		time = function() return nil end,
 		fn = SetFruit,
 		growfn = GrowToFruit,
 	},
@@ -423,6 +429,13 @@ local function onload(inst, data)
 	if inst._snowy then
 		ApplySnowTrunk(inst)
 	end
+	-- 结果期不继续生长（挡住旧档里残留的 FRUIT_TO_SEED 计时）
+	if inst.components.growable ~= nil
+		and inst.components.growable:GetStage() == 3
+		and not inst:HasTag("stump")
+		and not inst:HasTag("burnt") then
+		inst.components.growable:StopGrowing()
+	end
 	if data == nil then
 		return
 	end
@@ -492,7 +505,7 @@ local function MakeTree(snowy)
 		inst:AddComponent("growable")
 		inst.components.growable.stages = growth_stages
 		inst.components.growable:SetStage(math.random(1, 3))
-		inst.components.growable.loopstages = true
+		inst.components.growable.loopstages = false
 		inst.components.growable.springgrowth = true
 		inst.components.growable:StartGrowing()
 
