@@ -121,10 +121,15 @@ local function SpawnCommunityAt(cx, cz, def)
 		or (community_tuning and community_tuning.SPAWN_RADIUS)
 		or 10
   local tile = def.tile 
+  local preplacefn = def.preplacefn
 	local member_clear = def.member_clear_radius
 		or (community_tuning and community_tuning.MEMBER_CLEAR_RADIUS)
 		or 1.75
-
+  
+  if preplacefn then
+    preplacefn(cx, cz)
+  end
+  
 	local members = BuildCommunityMembers(def)
 	local count = #members
 	if count == 0 then
@@ -136,6 +141,7 @@ local function SpawnCommunityAt(cx, cz, def)
 		local x, z
 		local placed = false
 		for _ = 1, 8 do
+      print(prefab)
 			x, z = FindMemberPosition(cx, cz, radius, i, count)
 			if IsValidSpawnPoint(x, z, member_clear) then
 				placed = true
@@ -143,6 +149,7 @@ local function SpawnCommunityAt(cx, cz, def)
 			end
 		end
 		if not placed then
+      print(prefab)
 			x, z = FindMemberPosition(cx, cz, radius, i, count)
 			if not (IsSpawnableMountainTile(TheWorld.Map:GetTileAtPoint(x, 0, z))
 					and TheWorld.Map:IsPassableAtPoint(x, 0, z)) then
