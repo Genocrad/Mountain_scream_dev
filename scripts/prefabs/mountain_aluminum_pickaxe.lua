@@ -98,15 +98,6 @@ local function MineStalactite(doer, target)
 	end
 end
 
-local function IsInvalidTile(tile)
-  return tile == WORLD_TILES.VOID_TECHNICAL or
-  tile == WORLD_TILES.MS_MOUNTAIN_LOW_TECHNICAL or
-  tile == WORLD_TILES.MS_MOUNTAIN_LOW_2_TECHNICAL or
-  tile == WORLD_TILES.MS_MOUNTAIN_HIGH_TECHNICAL or
-  tile == WORLD_TILES.MS_PERMAFROST_TECHNICAL or 
-  (not tile == 1 and not TileGroupManager:IsLandTile(tile))
-end
-
 local function ReturnItemToWorld(proj, thrower, do_mine_at, keep_height)
 	local item = proj.item
 	proj.item = nil
@@ -120,14 +111,20 @@ local function ReturnItemToWorld(proj, thrower, do_mine_at, keep_height)
 		y = 0
 	end
 	item.Transform:SetPosition(x, y, z)
-	item:ReturnToScene()
-	-- So it does not fall into the void.
-	if IsInvalidTile(TheWorld.Map:GetTileAtPoint(x, 0, z)) then
-		LaunchAt(item, item, thrower, 10, 3, 3, 0)
-	end
-	if item.components.inventoryitem ~= nil then
-		item.components.inventoryitem:OnDropped(true)
-	end
+  
+  item:ReturnToScene()
+  
+  if y ~= 0 then
+    item.Physics:SetCollisionMask(
+      COLLISION.WORLD,
+      COLLISION.MS_CLOUDS
+    )
+    LaunchAt(item, item, thrower, math.max(1, 5 - y), math.max(y,3.5), 1)
+  end
+  -- Im leaving this out for now due to randomisation being a nuisance
+	--if item.components.inventoryitem ~= nil then
+	--	item.components.inventoryitem:OnDropped(true)
+	--end
 
 	if do_mine_at and thrower ~= nil and thrower:IsValid() then
 		MineAt(thrower, x, 0, z)

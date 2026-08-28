@@ -12,8 +12,7 @@ local function IsMsTile(tile)
          tile == WORLD_TILES.MS_MOUNTAIN_LOW_2 or
          tile == WORLD_TILES.MS_MOUNTAIN_HIGH or
          tile == WORLD_TILES.MS_PERMAFROST or
-         tile == WORLD_TILES.MS_SNOW or
-         tile == WORLD_TILES.ROCKY
+         tile == WORLD_TILES.MS_SNOW 
 end
 
 local function IsMsTechnicalTile(tile)
@@ -114,7 +113,7 @@ local function MakeTerraformer(name, tiles, tile_rarity, snow_randomseed, snow_r
           for i = -3, 3 do
             for j = -3, 3 do 
               local plug = SpawnPrefab("giant_plug_marker")
-              plug.Transform:SetPosition(posx+i*16.66*4, 0, posz+j*16.66*4)  
+              plug.Transform:SetPosition(posx+i*10*4, 0, posz+j*10*4)  
               local light = SpawnPrefab("light_fake_overworld")
               light.Transform:SetPosition(posx, 0, posz)  
             end
