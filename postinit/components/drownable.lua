@@ -69,8 +69,7 @@ function Drownable:OnFallInVoid(teleport_x, teleport_y, teleport_z)
       
       local level_to_x, level_to_z =  TheWorld.net.components.dungeonmapoverwatch:GetPointForLevel(level_in-1)
       if TileGroupManager:IsLandTile(TheWorld.Map:GetTileAtPoint(level_to_x - delta_x, 0, level_to_z - delta_z)) and not IsMsTechnicalTile(TheWorld.Map:GetTileAtPoint(level_to_x - delta_x, 0, level_to_z - delta_z)) then
-        c_announce("First Attempt, sir!" .. TheWorld.Map:GetTileAtPoint(level_to_x - delta_x, 0, level_to_z - delta_z))
-        self.dest_x, self.dest_y, self.dest_z = TheWorld.Map:GetTileCenterPoint(level_to_x - delta_x, 0, level_to_z - delta_z)
+       self.dest_x, self.dest_y, self.dest_z = TheWorld.Map:GetTileCenterPoint(level_to_x - delta_x, 0, level_to_z - delta_z)
       else
         for check_x = 0, 80 do -- Performance-wise would be better to make it go in steps of 4, but then it leads to some ugly results.
           for check_z = 0, 80  do
