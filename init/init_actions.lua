@@ -54,6 +54,15 @@ end
 ------------------------------------------------------------------------------------------------------------------------
 -- 铝镐对石钟乳/墙面矿石：专用「开采」→ 直线飞向目标命中高度
 
+local function IsInvalidTile(tile)
+  return tile == WORLD_TILES.VOID_TECHNICAL or
+  tile == WORLD_TILES.MS_MOUNTAIN_LOW_TECHNICAL or
+  tile == WORLD_TILES.MS_MOUNTAIN_LOW_2_TECHNICAL or
+  tile == WORLD_TILES.MS_MOUNTAIN_HIGH_TECHNICAL or
+  tile == WORLD_TILES.MS_PERMAFROST_TECHNICAL or 
+  (not tile == 1 and not TileGroupManager:IsLandTile(tile))
+end
+
 local MS_MINE_STALACTITE = Action({ priority = 10, distance = 10, mount_valid = true })
 MS_MINE_STALACTITE.id = "MS_MINE_STALACTITE"
 MS_MINE_STALACTITE.str = "Mine"
