@@ -141,7 +141,6 @@ local function SpawnCommunityAt(cx, cz, def)
 		local x, z
 		local placed = false
 		for _ = 1, 8 do
-      print(prefab)
 			x, z = FindMemberPosition(cx, cz, radius, i, count)
 			if IsValidSpawnPoint(x, z, member_clear) then
 				placed = true
@@ -149,7 +148,6 @@ local function SpawnCommunityAt(cx, cz, def)
 			end
 		end
 		if not placed then
-      print(prefab)
 			x, z = FindMemberPosition(cx, cz, radius, i, count)
 			if not (IsSpawnableMountainTile(TheWorld.Map:GetTileAtPoint(x, 0, z))
 					and TheWorld.Map:IsPassableAtPoint(x, 0, z)) then
