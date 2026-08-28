@@ -115,7 +115,7 @@ function DungeonWallSpawner:SpawnArenaTeleporter()
       for i = -3, 3 do
         for j = -3, 3 do 
           local plug = SpawnPrefab("giant_plug_marker")
-          plug.Transform:SetPosition(x + TUNING.MS_TERRAFORMER_OFFSET_X[8] * 4 + i*16.66*4, 0, z + TUNING.MS_TERRAFORMER_OFFSET_Y[8] * 4+j*16.66*4)  
+          plug.Transform:SetPosition(x + TUNING.MS_TERRAFORMER_OFFSET_X[8] * 4 + i*10*4, 0, z + TUNING.MS_TERRAFORMER_OFFSET_Y[8] * 4+j*10*4)  
         end
       end
       
@@ -149,7 +149,7 @@ function DungeonWallSpawner:SpawnArenaTeleporter()
   for i = -3, 3 do
     for j = -3, 3 do 
       local plug = SpawnPrefab("giant_plug_marker")
-      plug.Transform:SetPosition(center_x + TUNING.MS_TERRAFORMER_OFFSET_X[8] * 4 + TUNING.MS_TERRAFORMER_OFFSET_X[9] * 4 + i*16.66*4, 0, center_y + TUNING.MS_TERRAFORMER_OFFSET_Y[8] * 4 + TUNING.MS_TERRAFORMER_OFFSET_Y[9] * 4 + j*16.66*4)  
+      plug.Transform:SetPosition(center_x + TUNING.MS_TERRAFORMER_OFFSET_X[8] * 4 + TUNING.MS_TERRAFORMER_OFFSET_X[9] * 4 + i*10*4, 0, center_y + TUNING.MS_TERRAFORMER_OFFSET_Y[8] * 4 + TUNING.MS_TERRAFORMER_OFFSET_Y[9] * 4 + j*10*4)  
     end
   end
   local golem, platform = SpawnPrefab("mountain_golem_pillar"), SpawnPrefab("mountain_golem_platform")
