@@ -1,7 +1,7 @@
 local Drownable = require("components/drownable")
 local old_OnFallInVoid =  Drownable.OnFallInVoid
 local old_ShouldFallInVoid = Drownable.ShouldFallInVoid
-
+local old_Teleport = Drownable.Teleport
 
 local ENV = env
 GLOBAL.setfenv(1, GLOBAL)
@@ -16,7 +16,8 @@ local function IsMsTechnicalTile(tile)
          tile == WORLD_TILES.MS_MOUNTAIN_LOW_TECHNICAL or
          tile == WORLD_TILES.MS_MOUNTAIN_LOW_2_TECHNICAL or
          tile == WORLD_TILES.MS_MOUNTAIN_HIGH_TECHNICAL or
-         tile == WORLD_TILES.MS_PERMAFROST_TECHNICAL
+         tile == WORLD_TILES.MS_PERMAFROST_TECHNICAL or
+         tile == 3 -- Luigi: Sir, i have no idea how this tile is possible at the mountain, but whatever?
 end
   
 function Drownable:ShouldFallInVoid()
@@ -29,11 +30,24 @@ function Drownable:ShouldFallInVoid()
     old_ShouldFallInVoid(self)
 end
 
+function Drownable:Teleport()
+  if TheWorld.net.components.dungeonmapoverwatch and TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(self.src_x, self.src_y, self.src_z) then
+    local target_x, target_y, target_z = self.dest_x, self.dest_y, self.dest_z
+    if self.inst.Physics ~= nil then
+        self.inst.Physics:Teleport(target_x, target_y, target_z)
+    elseif self.inst.Transform ~= nil then
+        self.inst.Transform:SetPosition(target_x, target_y, target_z)
+    end
+  else
+    old_Teleport(self)
+  end
+end
+
 function Drownable:OnFallInVoid(teleport_x, teleport_y, teleport_z)
   
 	self.src_x, self.src_y, self.src_z = self.inst.Transform:GetWorldPosition()
   -- we still need this
-  if TheWorld:HasTag("mountain_scream_dungeons") then
+  if TheWorld.net.components.dungeonmapoverwatch and TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(self.src_x, self.src_y, self.src_z) then
     -- Find the closest one. 
     local min_length = 100000
     -- Level one in all fail safe scenarios
@@ -54,11 +68,12 @@ function Drownable:OnFallInVoid(teleport_x, teleport_y, teleport_z)
       local delta_x, delta_z = level_x - self.src_x, level_z - self.src_z
       
       local level_to_x, level_to_z =  TheWorld.net.components.dungeonmapoverwatch:GetPointForLevel(level_in-1)
-      if TileGroupManager:IsLandTile(TheWorld.Map:GetTileAtPoint(level_to_x - delta_x, 2, level_to_z - delta_z)) and not IsMsTechnicalTile(TheWorld.Map:GetTileAtPoint(level_to_x - delta_x, 2, level_to_z - delta_z)) then
-        self.dest_x, self.dest_y, self.dest_z = level_to_x - delta_x, 0, level_to_z - delta_z
+      if TileGroupManager:IsLandTile(TheWorld.Map:GetTileAtPoint(level_to_x - delta_x, 0, level_to_z - delta_z)) and not IsMsTechnicalTile(TheWorld.Map:GetTileAtPoint(level_to_x - delta_x, 0, level_to_z - delta_z)) then
+        c_announce("First Attempt, sir!" .. TheWorld.Map:GetTileAtPoint(level_to_x - delta_x, 0, level_to_z - delta_z))
+        self.dest_x, self.dest_y, self.dest_z = TheWorld.Map:GetTileCenterPoint(level_to_x - delta_x, 0, level_to_z - delta_z)
       else
-        for check_x = 0, 80, 4 do -- Performance-wise would be better to make it go in steps of 4, but then it leads to some ugly results.
-          for check_z = 0, 80, 4  do
+        for check_x = 0, 80 do -- Performance-wise would be better to make it go in steps of 4, but then it leads to some ugly results.
+          for check_z = 0, 80  do
             local check_tile = TheWorld.Map:GetTileAtPoint(level_to_x - delta_x + check_x, 0, level_to_z - delta_z + check_z)
             if not IsMsTechnicalTile(check_tile) and TileGroupManager:IsLandTile(check_tile) then
                self.dest_x, self.dest_y, self.dest_z = level_to_x - delta_x + check_x, 0, level_to_z - delta_z + check_z
