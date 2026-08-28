@@ -12,6 +12,57 @@ TUNING.MS_CAVES_START = 10
 
 TUNING.MS_TERRAFORMER_SIZE = {50, 35, 25, 22, 20, 20, 20, 20, 20, 20}
 
+local function IsPointClear(x, z, radius)
+	local ents = TheSim:FindEntities(x, 0, z, radius, nil, nil)
+	return ents == nil or #ents == 0
+end
+
+local function IsSpawnableMountainTile(tile)
+	return tile == WORLD_TILES.MS_MOUNTAIN_LOW
+		or tile == WORLD_TILES.MS_MOUNTAIN_LOW_2
+		or tile == WORLD_TILES.MS_MOUNTAIN_HIGH
+		or tile == WORLD_TILES.MS_PERMAFROST
+		or tile == WORLD_TILES.MS_SNOW
+end
+
+local randomstones = {
+  "mountain_snowpeak_stone_1",
+  "mountain_snowpeak_stone_2",
+  "mountain_snowpeak_stone_3",
+}
+
+local function preplacekiki(x,z) 
+  --Three variants: Pools only, Stone posts only, pools and posts
+  local variant = math.random(1,3)
+  print("VARIANT", variant)
+  if variant == 1 or variant == 3 then
+    for i = 1, math.random(2,3) do
+      local pool = SpawnPrefab("mountain_crater_pool")
+      local spawned
+      for _ = 1, 10 do
+        local x1, z1 = x + math.random() * 8, z + math.random() * 8
+        if IsPointClear(x1, z1, 3) and IsSpawnableMountainTile(TheWorld.Map:GetTileAtPoint(x1, 0, z1)) then
+          pool.Transform:SetPosition(x1,0,z1)
+          spawned = true
+        end
+      end
+      if not spawned then
+        pool:Remove()
+      end
+    end
+  end
+  if variant == 2 or variant == 3 then
+    local radius = 13 + math.random() * 6
+    for i = 1, 18 do
+      local x1, z1 = x + radius * math.sin(i*20), z + radius * math.cos(i*20)
+      if IsPointClear(x1, z1, 3) and IsSpawnableMountainTile(TheWorld.Map:GetTileAtPoint(x1, 0, z1)) then
+        local pool = SpawnPrefab(randomstones[math.random(1,3)])
+        pool.Transform:SetPosition(x1,0,z1)
+      end
+    end
+  end  
+end
+
 -- Runtime mountain-floor decoration (pseudo-Room distributeprefabs).
 -- mob_spawn_points stores ~1–5 candidates per tile; POINT_SAMPLE scales
 -- distributepercent down so effective density stays near vanilla rocky (~0.1/tile).
@@ -149,6 +200,7 @@ TUNING.MS_LEVEL_CONTENTS = {
 				mountain_plants_grass = 0.08,
 				mountain_bush = 1.0,
 				ms_giant_boulder_rock = 0.04,
+				ms_barricade_spawner_gravel = 0.1,
 			},
 		},
     	communities = {
@@ -185,6 +237,7 @@ TUNING.MS_LEVEL_CONTENTS = {
 				mountain_plants_grass = 0.08,
 				mountain_bush = 1.0,
 				ms_giant_boulder_rock = 0.04,
+				ms_barricade_spawner_gravel = 0.1,
 			},
 		},
     	communities = {
@@ -239,6 +292,7 @@ TUNING.MS_LEVEL_CONTENTS = {
 				cavein_boulder = 0.04,
 				ms_apple_tree_snow = 0.7,
 				ms_giant_boulder_snow = 0.08,
+				ms_barricade_spawner_snow = 0.1,
 			}
 		},
 		communities = {
@@ -247,9 +301,10 @@ TUNING.MS_LEVEL_CONTENTS = {
 				radius = 10,
         tile = WORLD_TILES.ROCKY,
         tileradius = 4,
+				preplacefn = preplacekiki,
 				members = {
 					{ prefab = "mountain_kiki_house", min = 3, max = 4 },
-					{ prefab = "mountain_crater_pool", min = 3, max = 4 },
+					--{ prefab = "mountain_crater_pool", min = 3, max = 4 },
           { prefab = "cavein_boulder", min = 5, max = 8 },
 				},
 			},
@@ -269,6 +324,7 @@ TUNING.MS_LEVEL_CONTENTS = {
 				cavein_boulder = 0.04,
 				ms_apple_tree_snow = 0.7,
 				ms_giant_boulder_snow = 0.08,
+				ms_barricade_spawner_snow = 0.1,
 			}
 		},
 		communities = {
@@ -277,9 +333,10 @@ TUNING.MS_LEVEL_CONTENTS = {
 				radius = 10,
         tile = WORLD_TILES.ROCKY,
         tileradius = 4,
+				preplacefn = preplacekiki,
 				members = {
 					{ prefab = "mountain_kiki_house", min = 3, max = 4 },
-					{ prefab = "mountain_crater_pool", min = 3, max = 4 },
+					--{ prefab = "mountain_crater_pool", min = 3, max = 4 },
           { prefab = "cavein_boulder", min = 5, max = 8 },
 				},
 			},
