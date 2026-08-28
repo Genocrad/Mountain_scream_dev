@@ -54,14 +54,25 @@ end
 ------------------------------------------------------------------------------------------------------------------------
 -- 铝镐对石钟乳/墙面矿石：专用「开采」→ 直线飞向目标命中高度
 
-local MS_MINE_STALACTITE = Action({ priority = 10, distance = 15, mount_valid = true })
+local MS_MINE_STALACTITE = Action({ priority = 10, distance = 10, mount_valid = true })
 MS_MINE_STALACTITE.id = "MS_MINE_STALACTITE"
 MS_MINE_STALACTITE.str = "Mine"
 MS_MINE_STALACTITE.fn = function(act)
 	if act.invobject ~= nil
 			and act.target ~= nil
-			and act.invobject.ThrowAtStalactite ~= nil then
-		return act.invobject:ThrowAtStalactite(act.doer, act.target)
+			and act.invobject.ThrowAtStalactite ~= nil 
+      and act.doer ~= nil then
+        -- check whether we have line of sight to this object
+        local x,y,z = act.target.Transform:GetWorldPosition()
+        local x1,y1,z1 = act.doer.Transform:GetWorldPosition()
+        
+        local throw_angle = (-act.target.Transform:GetRotation()-math.deg(math.atan2(z1-z, x1-x)))
+        throw_angle = throw_angle > -270 and throw_angle or 360 - throw_angle
+        if IsInvalidTile(TheWorld.Map:GetTileAtPoint((x+x1+x1+x1)/4, 0, (z+z1+z1+z1)/4)) and not (math.abs(throw_angle) < 70) then
+          return false
+        else
+          return act.invobject:ThrowAtStalactite(act.doer, act.target)
+        end
 	end
 	return false
 end
@@ -69,14 +80,25 @@ end
 AddAction(MS_MINE_STALACTITE)
 
 -- 铝斧左键投掷：墙面灌木 mountain_throw_target；结果期苹果树 ms_apple_harvestable
-local MS_THROW = Action({ priority = 10, distance = 15, mount_valid = true })
+local MS_THROW = Action({ priority = 10, distance = 10, mount_valid = true })
 MS_THROW.id = "MS_THROW"
 MS_THROW.str = "Throw"
 MS_THROW.fn = function(act)
 	if act.invobject ~= nil
 			and act.target ~= nil
-			and act.invobject.ThrowAtBush ~= nil then
-		return act.invobject:ThrowAtBush(act.doer, act.target)
+			and act.invobject.ThrowAtBush ~= nil 
+      and act.doer ~= nil then
+      -- check whether we have line of sight to this object
+        local x,y,z = act.target.Transform:GetWorldPosition()
+        local x1,y1,z1 = act.doer.Transform:GetWorldPosition()
+        
+        local throw_angle = (-act.target.Transform:GetRotation()-math.deg(math.atan2(z1-z, x1-x)))
+        throw_angle = throw_angle > -270 and throw_angle or 360 - throw_angle
+        if IsInvalidTile(TheWorld.Map:GetTileAtPoint((x+x1+x1+x1)/4, 0, (z+z1+z1+z1)/4)) and not (math.abs(throw_angle) < 70) then
+          return false
+        else
+          return act.invobject:ThrowAtBush(act.doer, act.target)
+        end
 	end
 	return false
 end
