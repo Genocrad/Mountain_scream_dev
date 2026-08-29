@@ -152,6 +152,7 @@ local MOUNTAIN_ITEMS = {
 	"ms_apple_pie",
 	"ms_caramel_apple",
 	"ms_poisoned_apple",
+  "ms_geode_ore",
 }
 for _, v in ipairs(MOUNTAIN_ITEMS) do
 	RegisterInventoryItemAtlas(MOUNTAIN_ITEMS_ATLAS, v..".tex")

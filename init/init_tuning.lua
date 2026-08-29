@@ -67,7 +67,7 @@ end
 -- mob_spawn_points stores ~1–5 candidates per tile; POINT_SAMPLE scales
 -- distributepercent down so effective density stays near vanilla rocky (~0.1/tile).
 TUNING.MS_CONTENT_POINT_SAMPLE = 1 / 3
-TUNING.MS_CONTENT_CLEAR_RADIUS = 1.25
+TUNING.MS_CONTENT_CLEAR_RADIUS = 2
 TUNING.MS_LEVEL_CONTENTS = {
 	-- Level 1–2: MS_MOUNTAIN_LOW / LOW_2 (green foothills)
 	[1] = {
@@ -374,6 +374,9 @@ TUNING.MS_LEVEL_WALL_CONTENTS = {
 			ms_wall_stone = 0.4,
 			ms_wall_bush = 1.0,
 		},  
+    cavedistributeprefabs = {
+			ms_wall_stone = 1.0,
+		},  
   },
   [4] = {
     distributepercent = 0.2,
@@ -387,6 +390,9 @@ TUNING.MS_LEVEL_WALL_CONTENTS = {
 		distributeprefabs = {
 			ms_wall_stone = 1.0,
 			ms_wall_bush = 1.0,
+		},  
+    cavedistributeprefabs = {
+			ms_wall_stone = 1.0,
 		},  
   },
   [6] = {

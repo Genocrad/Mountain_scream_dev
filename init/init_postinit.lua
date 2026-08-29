@@ -6,6 +6,8 @@ modimport("postinit/prefabs/caves")
 modimport("postinit/stategraphs/wilson")
 modimport("postinit/stategraphs/wilson_client")
 
+
+modimport("postinit/components/builder")
 modimport("postinit/components/camera")
 modimport("postinit/components/drownable")
 modimport("postinit/components/stewer")
