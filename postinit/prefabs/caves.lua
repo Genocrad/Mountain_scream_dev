@@ -40,7 +40,7 @@ AddPrefabPostInit("cave", function(inst)
         inst.Map:AddTileCollisionSet(
         COLLISION.LAND_OCEAN_LIMITS,
         TileGroups.MS_TECHNICAL, true,
-        TileGroups.MS_NON_CLOUDS, true,
+        TileGroups.MS_TECHNICAL, false,
         0.15, 64
     )
  if not TheNet:IsDedicated() then

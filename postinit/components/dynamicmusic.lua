@@ -36,7 +36,7 @@ AddPlayerPostInit(function(inst)
                 and "ms_sfx/ms_music/boss_music"
                 or "dontstarve/music/music_danger_winter",
                 "danger")
-              local _dangertask = inst:DoTaskInTime(10, StopDanger, true)
+              local _dangertask = player:DoTaskInTime(10, StopDanger, true)
 
               UpvalueHacker.SetUpvalue(TheWorld.event_listeners["enabledynamicmusic"][TheWorld][1], _dangertask, "StopDanger", "_dangertask")
               UpvalueHacker.SetUpvalue(TheWorld.event_listeners["enabledynamicmusic"][TheWorld][1], nil, "StopDanger", "_triggeredlevel")
@@ -54,12 +54,12 @@ AddPlayerPostInit(function(inst)
           local BUSYTHEMES = UpvalueHacker.GetUpvalue(inst.event_listeners["buildsuccess"][TheWorld][1], "BUSYTHEMES")
           BUSYTHEMES.MOUNTAINS = GetTableSize(BUSYTHEMES)
           local function StartBusy(player, ...)
-            local _isenabled = UpvalueHacker.GetUpvalue(inst.event_listeners["buildsuccess"][TheWorld][1], "_isenabled")
+            local _isenabled = UpvalueHacker.GetUpvalue(player.event_listeners["buildsuccess"][TheWorld][1], "_isenabled")
             if player.map_level_current and player.map_level_current < TUNING.MS_CAVES_START and _isenabled then
-              local _busytask = UpvalueHacker.GetUpvalue(inst.event_listeners["buildsuccess"][TheWorld][1], "_busytask")
-              local _busytheme = UpvalueHacker.GetUpvalue(inst.event_listeners["buildsuccess"][TheWorld][1], "_busytheme")
-              local _extendtime = UpvalueHacker.GetUpvalue(inst.event_listeners["buildsuccess"][TheWorld][1], "_extendtime")
-              local _dangertask = UpvalueHacker.GetUpvalue(inst.event_listeners["buildsuccess"][TheWorld][1], "_dangertask")
+              local _busytask = UpvalueHacker.GetUpvalue(player.event_listeners["buildsuccess"][TheWorld][1], "_busytask")
+              local _busytheme = UpvalueHacker.GetUpvalue(player.event_listeners["buildsuccess"][TheWorld][1], "_busytheme")
+              local _extendtime = UpvalueHacker.GetUpvalue(player.event_listeners["buildsuccess"][TheWorld][1], "_extendtime")
+              local _dangertask = UpvalueHacker.GetUpvalue(player.event_listeners["buildsuccess"][TheWorld][1], "_dangertask")
               if not (TheWorld.state.iscaveday or TheWorld.state.iscavedusk) then
                 return
               elseif _busytask ~= nil then

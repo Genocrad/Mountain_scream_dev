@@ -18,7 +18,7 @@ end
 
 local function IsUsingMSDoorDirty(inst)
     if TheNet:IsDedicated() then return end
-    inst:DoTaskInTime(1, function(inst)
+   
     local x,y,z = ThePlayer.Transform:GetWorldPosition() 
     if TheWorld.net.components.dungeonmapoverwatch and TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(x,y,z) ~= nil and TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(x,y,z) >= TUNING.MS_CAVES_START then  
         TheCamera.target = findnearestfloor(inst) and findnearestfloor(inst) or TheFocalPoint
@@ -33,7 +33,6 @@ local function IsUsingMSDoorDirty(inst)
       TheCamera.targetoffset.y = 0
       TheCamera.controllable = true
     end
-  end)
 end
 
 local function CheckMountainLevel(inst)
@@ -45,6 +44,8 @@ local function CheckMountainLevel(inst)
         TheWorld:PushEvent("wavemanager_on")
       end
       if level < 10 and TheCamera.target ~= TheFocalPoint then
+        IsUsingMSDoorDirty(inst)
+      else
         IsUsingMSDoorDirty(inst)
       end
     elseif level== nil and TheWorld.wavemanager_on == true then
@@ -78,7 +79,7 @@ AddPlayerPostInit(function(inst)
       -- Not changearea, as it needs a node, and our artificial islands do not have it...
       inst:DoTaskInTime(0, CheckMountainLevel) 
       inst:DoPeriodicTask(0.3, function(inst) CheckMountainLevel(inst) end)
-      end
+    end  
     end)
   end
 end)
