@@ -398,8 +398,12 @@ function DungeonContentSpawner:SpawnOnWallEntities(level)
   local spawned = 0
   for _, point in ipairs(points) do
     local x, y, z, angle = point.x, point.y, point.z, point.angle
+    local distributeprefabs = contents.distributeprefabs
+    if IsSpawnableCaveTile(map:GetTileAtPoint(x, 0, z)) then
+      distributeprefabs = contents.cavedistributeprefabs
+    end
     if math.random()< chance then
-      local prefab = PickPrefab(contents.distributeprefabs)
+      local prefab = PickPrefab(distributeprefabs)
       local ent = SpawnPrefab(prefab)
       ent.Transform:SetPosition(x, y, z)
       ent.Transform:SetRotation(angle)

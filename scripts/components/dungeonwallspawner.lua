@@ -505,7 +505,7 @@ local layour_door_coords = {
 --Luigi: about 30 points should be enough. Also, this does not work for non-convex shapes, if that ever comes up.
 local function addmobpointsforcaves(level,x,y,r,l,d,u,floor_type)
   for i=1, 30 do
-    local point = {math.random() * 26 - 13, -math.random() * 20}
+    local point = {math.random() * 24 - 12, -math.random() * 20}
     local valid = true
     for j=1, #type_to_points[floor_type]-1 do
       if math2d.LineIntersectsLine(type_to_points[floor_type][j][1], type_to_points[floor_type][j][2], type_to_points[floor_type][j+1][1], type_to_points[floor_type][j+1][2],
