@@ -46,9 +46,11 @@ local function TemperatureChange(inst, data)
   local temp = string.match(imagename, "melt") and "melt" or (string.match(imagename, "hot") and "hot" or (string.match(imagename, "warm") and "warm" or nil))
     if temp == "hot" and cur_temp <= TUNING.MS_SMELT_TEMP[inst.prefab] / 2 then
       inst:RefreshImage()
+      inst.Light:SetRadius(0)
     end
     if temp == nil and cur_temp >= TUNING.MS_SMELT_TEMP[inst.prefab] / 2 then
       inst:RefreshImage()
+      inst.Light:SetRadius(1.5)
     end
   end
 

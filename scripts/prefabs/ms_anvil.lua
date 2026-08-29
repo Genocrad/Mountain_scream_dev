@@ -4,7 +4,35 @@ local assets =
 }
     
     
---
+--should not come up, but ill leave it just in case
+
+local function TossDecorItem(inst)
+    local item = inst.components.furnituredecortaker:TakeItem()
+    if item then
+        inst.components.lootdropper:FlingItem(item)
+    end
+end
+
+local function onhammeredmaster(inst, worker)
+    if inst.components.furnituredecortaker ~= nil then
+      TossDecorItem(inst)
+    end
+    inst.components.lootdropper:DropLoot()
+    local fx = SpawnPrefab("collapse_small")
+    fx.Transform:SetPosition(inst.Transform:GetWorldPosition())
+    fx:SetMaterial("metal")
+    inst.down_helper:Remove()
+    inst.right_helper:Remove()
+    inst.left_helper:Remove()
+    inst:Remove()
+end
+
+local function onhammered(inst, worker)
+  if inst.master then
+    onhammeredmaster(inst.master, worker)
+  end
+end
+
 local function AbleToAcceptDecor(inst, item, giver)
   return (item ~= nil) and item:HasTag("ms_ingot") and item.components.temperature and item.components.temperature:GetCurrent() >= TUNING.MS_SMELT_TEMP[item.prefab] * 2/3 
 end
@@ -30,6 +58,12 @@ local function OnDecorTaken(inst, item)
     if item then
         if item.Physics then item.Physics:SetActive(true) end
         if item.Follower then item.Follower:StopFollowing() end
+    end
+    inst.ingot = nil
+    if inst.left_helper then
+      inst.left_helper.ingot = nil
+      inst.right_helper.ingot = nil
+      inst.down_helper.ingot = nil
     end
 end
 
@@ -69,8 +103,8 @@ local function fn_helper()
 
   inst:AddComponent("workable")
   inst.components.workable:SetWorkAction(ACTIONS.HAMMER)
-  inst.components.workable:SetWorkLeft(20000000)
-  
+  inst.components.workable:SetWorkLeft(10)
+  inst.components.workable:SetOnFinishCallback(onhammered)
   if inst.master and inst.master.ingot then
     inst.ingot = inst.master.ingot
   end
@@ -86,6 +120,7 @@ end
 local function onhitleft(inst, attacker)
   inst.SoundEmitter:PlaySound("daywalker/pillar/pickaxe_hit_unbreakable")
   if inst.ingot then
+    inst.components.workable:SetWorkLeft(10)
     if inst.master then 
       if not inst.master.AnimState:IsCurrentAnimation("center_hit_sparkle") then
         inst.master.AnimState:PlayAnimation("center_hit")
@@ -106,6 +141,7 @@ local function onhitleft(inst, attacker)
 local function onhitright(inst, attacker)
   inst.SoundEmitter:PlaySound("daywalker/pillar/pickaxe_hit_unbreakable")
   if inst.ingot then
+    inst.components.workable:SetWorkLeft(10)
     if inst.master then 
       if not inst.master.AnimState:IsCurrentAnimation("center_hit_sparkle") then
         inst.master.AnimState:PlayAnimation("center_hit")
@@ -126,6 +162,7 @@ local function onhitright(inst, attacker)
 local function onhit(inst, attacker)
   inst.SoundEmitter:PlaySound("daywalker/pillar/pickaxe_hit_unbreakable")
   if inst.ingot then
+    inst.components.workable:SetWorkLeft(10)
     if inst.master then 
       if not inst.master.AnimState:IsCurrentAnimation("center_hit_sparkle") then
         inst.master.AnimState:PlayAnimation("center_hit")
@@ -146,6 +183,7 @@ local function onhit(inst, attacker)
 local function onhitdown(inst, attacker)
   inst.SoundEmitter:PlaySound("daywalker/pillar/pickaxe_hit_unbreakable")
   if inst.ingot then
+    inst.components.workable:SetWorkLeft(10)
     if inst.master then 
       if not inst.master.AnimState:IsCurrentAnimation("center_hit_sparkle") then
         inst.master.AnimState:PlayAnimation("center_hit")
@@ -160,7 +198,7 @@ local function onhitdown(inst, attacker)
       inst.ingot:PushEvent("onforged", "_down")
     end
   end
-  
+
 local function fn()
   local inst = CreateEntity()
 
@@ -191,13 +229,16 @@ local function fn()
 
   inst:AddComponent("workable")
   inst.components.workable:SetWorkAction(ACTIONS.HAMMER)
-  inst.components.workable:SetWorkLeft(2000000)
+  inst.components.workable:SetWorkLeft(10)
   inst.components.workable:SetOnWorkCallback(onhit)
-
+  inst.components.workable:SetOnFinishCallback(onhammeredmaster)
+  
   inst:AddComponent("furnituredecortaker")
   inst.components.furnituredecortaker.abletoaccepttest = AbleToAcceptDecor
   inst.components.furnituredecortaker.ondecorgiven = OnDecorGiven
   inst.components.furnituredecortaker.ondecortaken = OnDecorTaken
+  
+  inst:AddComponent("lootdropper")
   
   inst:DoTaskInTime(0, function(inst)
     local mx, my, mz = inst.Transform:GetWorldPosition()

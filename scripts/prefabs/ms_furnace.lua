@@ -173,6 +173,8 @@ local function OnDecorGiven(inst, item, giver)
     if not item then return end
     inst.SoundEmitter:PlaySound("wintersfeast2019/winters_feast/table/food")
     inst:AddTag("burnt") -- A hack to disable stewer functional without doing a shit ton of work
+    inst.AnimState:SetManualBB(0, 0, 0, 0)   
+    item.AnimState:SetFinalOffset(20)
     if item.Physics then item.Physics:SetActive(false) end
     if item.Follower then item.Follower:FollowSymbol(inst.GUID, "swap_food") end
 end
@@ -184,6 +186,11 @@ local function OnDecorTaken(inst, item)
         if item.Follower then item.Follower:StopFollowing() end
     end
     inst:RemoveTag("burnt")
+    item.AnimState:SetFinalOffset(0)
+    inst.AnimState:SetManualBB(0, -300, 600, 500)   
+    if inst.components.container ~= nil then
+      inst.components.container.canbeopened = true
+    end
 end
 
 -- Save/load
