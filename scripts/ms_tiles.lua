@@ -62,6 +62,7 @@ TileManager.AddTile(
         walksound="dontstarve/movement/walk_dirt",
         snowsound="dontstarve/movement/run_ice",
         mudsound="dontstarve/movement/run_mud",
+        cannotbedug = true,
     }
 )
 
@@ -76,6 +77,7 @@ TileManager.AddTile(
         walksound="dontstarve/movement/walk_dirt",
         snowsound="dontstarve/movement/run_ice",
         mudsound="dontstarve/movement/run_mud",
+        cannotbedug = true,
     }
 )
 
@@ -90,6 +92,7 @@ TileManager.AddTile(
         walksound="dontstarve/movement/walk_dirt",
         snowsound="dontstarve/movement/run_ice",
         mudsound="dontstarve/movement/run_mud",
+        cannotbedug = true,
     }
 )
 
@@ -104,6 +107,7 @@ TileManager.AddTile(
         walksound="dontstarve/movement/walk_dirt",
         snowsound="dontstarve/movement/run_ice",
         mudsound="dontstarve/movement/run_mud",
+        cannotbedug = true,
     }
 )
 
@@ -118,6 +122,7 @@ TileManager.AddTile(
         walksound="dontstarve/movement/walk_dirt",
         snowsound="dontstarve/movement/run_ice",
         mudsound="dontstarve/movement/run_mud",
+        cannotbedug = true,
     }
 )
 
@@ -180,6 +185,7 @@ TileManager.AddTile(
         walksound="dontstarve/movement/walk_marsh",
         snowsound="dontstarve/movement/run_ice",
         mudsound = "dontstarve/movement/run_mud",
+        cannotbedug = true,
     }
 
 )
