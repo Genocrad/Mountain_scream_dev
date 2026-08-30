@@ -747,7 +747,7 @@ TUNING.MS_GEODE_ORE = {
 -- Chances for inside of ms_giant_boulder
 
 TUNING.MS_GIANT_BOULDER = {
-  WORK_LEFT = 500,
+  WORK_LEFT = 300,
   VARIANTS = {
     empty = 2,
     metals = 2,
