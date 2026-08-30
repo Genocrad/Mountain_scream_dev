@@ -4,6 +4,20 @@ TOOLACTIONS.TOSS = true
 COLLISION.MS_CLOUDS = 32768
 FALLOFF_IDS.CLOUDS_FALLOFF = 5
 
+TUNING.MS_LEVEL_TO_TEMP = {
+  [2] = {delta = 10, max = 70, min = -20}, -- caves are colder then surface, so a higher temperature to be closer to surface. 
+  [3] = {delta = 0, max = 70, min = -20},
+  [4] = {delta = -10, max = 40, min = -50},
+  [5] = {delta = -10, max = 40, min = -50},
+  [6] = {delta = -20, max = 30, min = -50},
+  [7] = {delta = -30, max = 0, min = -50},
+  [8] = {delta = -30, max = 0, min = -50},
+  [9] = {delta = -30, max = 0, min = -50},
+  [10] = {delta = 0, max = 70, min = -50}, -- caves should match caves
+  [11] = {delta = 0, max = 70, min = -50},
+  [12] = {delta = 0, max = 70, min = -50},
+}
+
 -- terraformer offsets: index 0 unused conceptually; values for levels 1..
 TUNING.MS_TERRAFORMER_OFFSET_X = {0, 140, 140, 140, 140, 0,     0,    0,  0,   0,    -140,   -140,  -140}
 TUNING.MS_TERRAFORMER_OFFSET_Y = {0, 0,   0,   0,   0,   140  , 140 , 70, 70,  140,  0,       0,    0}
@@ -465,6 +479,9 @@ TUNING.MS_ANVIL_MINIMAL_HITS = 3
 
 --------------------------------------------------------
 -- XK: creatures / tools / foods
+
+TUNING.MS_FALL_DAMAGE = 60
+ 
 -- mountain_top（山顶插旗）
 TUNING.MOUNTAIN_TOP = {
 	FLAG_SANITY = 50,           -- 插旗即时理智
