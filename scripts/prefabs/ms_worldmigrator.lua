@@ -13,7 +13,7 @@ local function OnWork(inst, worker, workleft)
       inst.MiniMapEntity:SetIcon("minimap_migrator.tex")
     end
     inst.AnimState:PlayAnimation(
-      (workleft <= 0 and "idle") or
+      (workleft <= 0 and (inst.components.worldmigrator._status == 1 and "idle_off" or "idle")) or
       (workleft < TUNING.ROCKS_MINE / 4 and "idle_1/4") or
       (workleft < TUNING.ROCKS_MINE * 2 / 4 and "idle_2/4") or
       (workleft < TUNING.ROCKS_MINE * 3 / 4 and "idle_3/4") or
@@ -69,6 +69,9 @@ local function MakeWM(name, up)
 
     inst.OnSave = function(inst, data) if inst.broken then data.broken = true end end
     inst.OnLoad = function(inst, data) if data ~= nil and data.broken then inst.components.lootdropper:SetLoot({}) inst.components.workable:SetWorkLeft(-1) inst.components.workable:WorkedBy_Internal(TheWorld, 1) end end
+    
+    inst:ListenForEvent("migration_unavailable", function(inst)  if inst.components.workable and inst.components.workable.workleft < 1 then inst.AnimState:PlayAnimation("idle_off") end end)
+    inst:ListenForEvent("migration_available", function(inst) if inst.components.workable and inst.components.workable.workleft < 1 then inst.AnimState:PlayAnimation("idle") end end)
     return inst
   end
   return Prefab(name, fn, assets)
