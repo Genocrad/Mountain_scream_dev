@@ -45,9 +45,12 @@ function MapWidget:OnUpdate(dt)
       return 
     end
     
-
+    
      
     if GLOBAL.ThePlayer.map_level_shown ~= nil then
+      if not  GLOBAL.TheCamera.saved_camera_rotation then
+        GLOBAL.TheCamera.saved_camera_rotation = GLOBAL.TheCamera:GetHeadingTarget()
+      end
       GLOBAL.TheWorld:PushEvent("hideallplugs")
       if GLOBAL.ThePlayer.map_level_shown > TUNING.MS_CAVES_START then
         GLOBAL.TheCamera.heading = 270
@@ -55,10 +58,11 @@ function MapWidget:OnUpdate(dt)
         self.mapscreen.cloudsoverlay:Disable()
       else
         self.mapscreen.cloudsoverlay:Enable()
-      if GLOBAL.TheCamera.saved_camera_rotation then
-        GLOBAL.TheCamera:SetHeadingTarget(GLOBAL.TheCamera.saved_camera_rotation)
-        GLOBAL.TheCamera.heading = GLOBAL.TheCamera.saved_camera_rotation
-      end
+        if GLOBAL.TheCamera.saved_camera_rotation then
+          GLOBAL.TheCamera:SetHeadingTarget(GLOBAL.TheCamera.saved_camera_rotation)
+          GLOBAL.TheCamera.heading = GLOBAL.TheCamera.saved_camera_rotation
+           GLOBAL.TheCamera.saved_camera_rotation = nil
+        end
       end
     end
     
@@ -69,7 +73,7 @@ function MapWidget:OnUpdate(dt)
      
      
     self.minimap:Zoom(1.5 - self.minimap:GetZoom())
-    GLOBAL.TheCamera.controllable = false
+    --GLOBAL.TheCamera.controllable = false
     
     GLOBAL.ThePlayer.HUD.controls:FocusMapOnWorldPosition(TheFrontEnd:GetActiveScreen(), x*0.66 + playerx*0.33, y*0.66 + playerz*0.33)
   else
