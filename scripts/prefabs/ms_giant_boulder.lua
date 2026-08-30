@@ -35,9 +35,9 @@ local function OnWork(inst, worker, workleft)
     end
 		local anim = 
             (workleft <= TUNING.MS_GIANT_BOULDER.WORK_PER_DROP[inst.oretype] and inst.biome .. "_ore" .. typetonumber[inst.oretype]) or
-            (workleft < TUNING.MS_GIANT_BOULDER.WORK_LEFT / 4 and inst.biome .. "_crack3") or
-            (workleft < TUNING.MS_GIANT_BOULDER.WORK_LEFT / 2 and inst.biome .. "_crack2") or
-            (workleft < TUNING.MS_GIANT_BOULDER.WORK_LEFT * 3 / 4 and inst.biome .. "_crack1") or
+            (workleft < TUNING.MS_GIANT_BOULDER.WORK_LEFT / 3 and inst.biome .. "_crack3") or
+            (workleft < TUNING.MS_GIANT_BOULDER.WORK_LEFT *2 / 3 and inst.biome .. "_crack2") or
+            (workleft < TUNING.MS_GIANT_BOULDER.WORK_LEFT + TUNING.MS_GIANT_BOULDER.WORK_PER_DROP[inst.oretype]  and inst.biome .. "_crack1") or
             inst.biome .. "_crack0"
     
     if workleft < TUNING.MS_GIANT_BOULDER.WORK_PER_DROP[inst.oretype] then
