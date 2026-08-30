@@ -56,6 +56,16 @@ local function common_fn()
     return inst
 end
 
+local function UpdateTemp(inst)
+  local x,y,z = inst.Transform:GetWorldPosition()
+  if TheWorld.net.components.dungeonmapoverwatch then
+    local level = TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(x,y,z)
+      if level then
+        inst.components.temperatureoverrider:SetTemperature(math.clamp(TheWorld.state.temperature - TUNING.MS_LEVEL_TO_TEMP[level].delta, TUNING.MS_LEVEL_TO_TEMP[level].max, TUNING.MS_LEVEL_TO_TEMP[level].min))
+      end
+  end
+end
+
 local function fn()
     local inst = CreateEntity()
 
@@ -85,6 +95,13 @@ local function fn()
         return inst
     end
     
+    inst:AddComponent("temperatureoverrider")
+    inst.components.temperatureoverrider:SetRadius(60)
+    inst.components.temperatureoverrider:SetTemperature(0)
+    inst.components.temperatureoverrider:Enable()
+    
+    inst:DoTaskInTime(0, UpdateTemp)
+    inst:WatchWorldState("OnPhase", UpdateTemp)
     return inst
 end
 
