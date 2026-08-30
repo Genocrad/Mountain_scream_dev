@@ -62,7 +62,7 @@ local states =
 		tags = { "busy" },
 
 		onenter = function(inst)
-			-- inst.SoundEmitter:PlaySound("dontstarve_DLC003/creatures/enemy/weevole/death")
+      inst.SoundEmitter:PlaySound("ms_sfx/ms_fx/bug_death")
 			inst.AnimState:PlayAnimation("death")
 			inst.AnimState:PushAnimation("dead")
 			inst.Physics:Stop()
@@ -99,9 +99,9 @@ local states =
 
 		timeline =
 		{
-			-- TimeEvent(0 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve_DLC003/creatures/enemy/weevole/walk") end),
-			-- TimeEvent(3 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve_DLC003/creatures/enemy/weevole/walk") end),
-			-- TimeEvent(6 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve_DLC003/creatures/enemy/weevole/walk") end),
+      TimeEvent(0 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("ms_sfx/ms_fx/bug_footstep") end),
+      TimeEvent(3 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("ms_sfx/ms_fx/bug_footstep") end),
+      TimeEvent(6 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("ms_sfx/ms_fx/bug_footstep") end),
 		},
 
 		events =
@@ -128,7 +128,7 @@ local states =
 
 		timeline =
 		{
-			-- TimeEvent(10 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve_DLC003/creatures/enemy/weevole/idle") end),
+			TimeEvent(10 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("ms_sfx/ms_fx/bug_hurt") end),
 		},
 
 		events =
@@ -175,9 +175,9 @@ local states =
 
 		timeline =
 		{
-			-- TimeEvent(5 * FRAMES, function(inst)
-			-- 	inst.SoundEmitter:PlaySound("dontstarve_DLC003/creatures/enemy/weevole/burrow", "move")
-			-- end),
+      TimeEvent(5 * FRAMES, function(inst)
+      inst.SoundEmitter:PlaySound("ms_sfx/ms_fx/bug_burrow", "move")
+      end),
 			TimeEvent(9 * FRAMES, function(inst)
 				inst.DynamicShadow:Enable(false)
 				inst.sg:AddStateTag("invisible")
@@ -192,7 +192,7 @@ local states =
 		},
 
 		onexit = function(inst)
-			-- inst.SoundEmitter:KillSound("move")
+			 inst.SoundEmitter:KillSound("move")
 		end,
 	},
 
@@ -201,7 +201,7 @@ local states =
 		tags = { "busy", "invisible" },
 
 		onenter = function(inst)
-			-- inst.SoundEmitter:PlaySound("dontstarve_DLC003/creatures/enemy/weevole/burrow", "move")
+			inst.SoundEmitter:PlaySound("ms_sfx/ms_fx/bug_burrow", "move")
 			inst.Physics:Stop()
 			inst.AnimState:PlayAnimation("unburrow")
 			inst.AnimState:SetDeltaTimeMultiplier(GetRandomWithVariance(.9, .2))
@@ -212,7 +212,7 @@ local states =
 		end,
 
 		onexit = function(inst)
-			-- inst.SoundEmitter:KillSound("move")
+			 inst.SoundEmitter:KillSound("move")
 			inst.AnimState:SetDeltaTimeMultiplier(1)
 			inst.DynamicShadow:Enable(true)
 		end,
@@ -252,7 +252,7 @@ local states =
 
 		timeline =
 		{
-			-- TimeEvent(8 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve_DLC003/creatures/enemy/weevole/taunt") end),
+      TimeEvent(8 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("ms_sfx/ms_fx/bug_taunt") end),
 		},
 
 		events =
@@ -312,7 +312,7 @@ local states =
 
 		timeline =
 		{
-			-- TimeEvent(8 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("dontstarve_DLC003/creatures/enemy/weevole/attack") end),
+			TimeEvent(8 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("ms_sfx/ms_fx/bug_attack") end),
 			TimeEvent(25 * FRAMES, function(inst)
 				inst.components.combat:DoAttack(inst.sg.statemem.target)
 			end),
@@ -353,13 +353,13 @@ local states =
 
 		timeline =
 		{
-			-- TimeEvent(7 * FRAMES, function(inst)
-			-- 	inst.SoundEmitter:PlaySound("dontstarve_DLC003/creatures/enemy/weevole/fly_LP", "buzz")
-			-- end),
-			-- TimeEvent(17 * FRAMES, function(inst)
-			-- 	inst.SoundEmitter:KillSound("buzz")
-			-- 	inst.SoundEmitter:PlaySound("dontstarve_DLC003/creatures/enemy/weevole/idle")
-			-- end),
+			TimeEvent(7 * FRAMES, function(inst)
+			 	inst.SoundEmitter:PlaySound("ms_sfx/ms_fx/bug_fly", "buzz")
+			 end),
+			 TimeEvent(17 * FRAMES, function(inst)
+				inst.SoundEmitter:KillSound("buzz")
+			 	inst.SoundEmitter:PlaySound("ms_sfx/ms_fx/bug_hurt")
+			 end),
 			TimeEvent(11 * FRAMES, function(inst)
 				inst.Physics:SetMotorVelOverride(20, 0, 0)
 			end),
@@ -385,7 +385,7 @@ local states =
 		tags = { "busy" },
 
 		onenter = function(inst)
-			-- inst.SoundEmitter:PlaySound("dontstarve_DLC003/creatures/enemy/weevole/hit")
+      inst.SoundEmitter:PlaySound("ms_sfx/ms_fx/bug_hurt")
 			inst.AnimState:PlayAnimation("hit")
 			inst.Physics:Stop()
 		end,
