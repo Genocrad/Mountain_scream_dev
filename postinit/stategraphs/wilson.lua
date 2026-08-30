@@ -1,5 +1,5 @@
 local AddStategraphState = AddStategraphState
-
+local AddStategraphPostInit = AddStategraphPostInit
 local ENV = env
 GLOBAL.setfenv(1, GLOBAL)
 
@@ -248,3 +248,20 @@ AddStategraphState("wilson",
     end,
   }
 )
+
+AddStategraphPostInit("wilson", function(sg)
+  for k, v in pairs(sg.states["abyss_drop"].timeline) do
+    if v.time == 0.5 then 
+      local old_fn = v.fn
+      v.fn = function(inst)
+        old_fn(inst)
+        local x,y,z = inst.Transform:GetWorldPosition()
+        if TheWorld.net.components.dungeonmapoverwatch and TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(x,y,z) then
+          if inst.components.health then
+            inst.components.health:DoDelta(-TUNING.MS_FALL_DAMAGE, false, "falling", true, nil, true)
+          end
+        end
+      end
+    end
+  end
+end)
