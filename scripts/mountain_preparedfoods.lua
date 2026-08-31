@@ -7,10 +7,14 @@ end
 
 local foods =
 {
-	-- 龙卷风星酪：2 雪山冰激凌 + 2 蜂蜜
+	-- 龙卷风星酪：1 乳制品 + 1 雪山冰激凌 + 1 冰 + 1 蜂蜜
+	-- mountain_icecream 自带 dairy=1，故另需乳制品时要求 dairy >= 2
 	mountain_tornado_sorbet = {
 		test = function(cooker, names, tags)
-			return (names.mountain_icecream or 0) >= 2 and (names.honey or 0) >= 2
+			return (names.mountain_icecream or 0) >= 1
+				and (names.ice or 0) >= 1
+				and (names.honey or 0) >= 1
+				and tags.dairy ~= nil and tags.dairy >= 2
 		end,
 		priority = 20, -- 高于原版冰激凌(10)，避免被抢先匹配
 		overridebuild = "mountain_foods",
@@ -24,7 +28,7 @@ local foods =
 		cooktime = 2,
 		floater = {"small", 0.15, 0.8},
 		tags = {"icebox_valid"},
-		card_def = {ingredients = {{"mountain_icecream", 2}, {"honey", 2}} },
+		card_def = {ingredients = {{"goatmilk", 1}, {"mountain_icecream", 1}, {"ice", 1}, {"honey", 1}} },
 		cookbook_tex = "mountain_tornado_sorbet.tex",
 		cookbook_atlas = "images/inventoryimages/mountain_items.xml",
 		prefabs = { "buff_mountain_tornado_sorbet" },
