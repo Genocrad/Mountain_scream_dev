@@ -43,6 +43,8 @@ local function ApplyFlaggedState(inst, planter_name, instant)
 
 	EnableSanityAura(inst)
 
+	inst.MiniMapEntity:SetIcon("mountain_top_occupied.tex")
+
 	inst:RemoveEventCallback("animover", OnSetFlagAnimOver)
 	if instant then
 		inst.AnimState:PlayAnimation("idle_flag", true)
@@ -94,12 +96,15 @@ local function fn()
 	inst.entity:AddAnimState()
 	inst.entity:AddSoundEmitter()
 	inst.entity:AddNetwork()
+	inst.entity:AddMiniMapEntity()
 
 	MakeObstaclePhysics(inst, 1.5)
 
 	inst.AnimState:SetBank("mountain_top")
 	inst.AnimState:SetBuild("mountain_top")
 	inst.AnimState:PlayAnimation("no_flag")
+
+	inst.MiniMapEntity:SetIcon("mountain_top.tex")
 
 	inst:AddTag("structure")
 	inst:AddTag("constructionsite")
