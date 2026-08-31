@@ -62,13 +62,15 @@ end
 
 AddPlayerPostInit(function(inst)
   -- To cancel stuff we did in MakeCharacterPhysics, as it does not have a name or prefab at loading. (?)
-  inst.Physics:SetCollisionMask(
-      COLLISION.WORLD,
-      COLLISION.OBSTACLES,
-      COLLISION.SMALLOBSTACLES,
-      COLLISION.CHARACTERS,
-      COLLISION.GIANTS
-    )
+  if not enable_collision_for_player then
+    inst.Physics:SetCollisionMask(
+        COLLISION.WORLD,
+        COLLISION.OBSTACLES,
+        COLLISION.SMALLOBSTACLES,
+        COLLISION.CHARACTERS,
+        COLLISION.GIANTS
+      )
+  end
   inst._isusingmsdoor = net_ushortint(inst.GUID, "inst._isusingmsdoor", "isusingmsdoordirty")
   inst._isusingmsdoor:set(2)
   if not TheNet:IsDedicated() then
