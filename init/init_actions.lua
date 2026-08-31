@@ -114,9 +114,25 @@ end
 
 AddAction(MS_THROW)
 
+------------------------------------------------------------------------------------------------------------------------
+-- mountain_kiki：拍打成熟苹果树掉果（不砍倒）
+
+local MS_KNOCK_APPLE = Action({ priority = 1, distance = 1.75, mount_valid = true })
+MS_KNOCK_APPLE.id = "MS_KNOCK_APPLE"
+MS_KNOCK_APPLE.str = "Knock"
+MS_KNOCK_APPLE.fn = function(act)
+	if act.target ~= nil and act.target:IsValid() and act.target.HarvestApples ~= nil then
+		return act.target:HarvestApples(act.doer) == true
+	end
+	return false
+end
+
+AddAction(MS_KNOCK_APPLE)
+
 local is_chinese = locale == "zh" or locale == "zht" or locale == "zhr"
 STRINGS.ACTIONS.MS_MINE_STALACTITE = is_chinese and "开采" or "Mine"
 STRINGS.ACTIONS.MS_THROW = is_chinese and "投掷" or "Throw"
+STRINGS.ACTIONS.MS_KNOCK_APPLE = is_chinese and "拍打" or "Knock"
 
 AddComponentAction("EQUIPPED", "aoetargeting", function(inst, doer, target, actions, right)
 	if right or target == nil then

@@ -22,6 +22,15 @@ local PICKUP_ONEOF_TAGS = { "_inventoryitem", "pickable", "readyforharvest" }
 
 local POOL_TAGS = { "mountain_crater_pool" }
 
+local APPLE_TREE_MUST_TAGS = { "ms_apple_harvestable" }
+local APPLE_TREE_CANT_TAGS = { "stump", "burnt", "INLIMBO", "fire" }
+
+local APPLE_PICKUP_PREFABS =
+{
+	ms_apple = true,
+	ms_big_apple = true,
+}
+
 local MountainKikiBrain = Class(Brain, function(self, inst)
 	Brain._ctor(self, inst)
 end)
@@ -56,7 +65,6 @@ end
 
 local function EatFoodAction(inst)
 	if IsBathing(inst) or
-			math.random() < .75 or
 			inst.sg:HasStateTag("busy") or
 			inst.components.combat:HasTarget() or
 			(
@@ -78,6 +86,32 @@ local function EatFoodAction(inst)
 		nil,
 		NO_PICKUP_TAGS,
 		PICKUP_ONEOF_TAGS)
+
+	-- 地上苹果：优先捡起（绕过下方 75% 随机，方便拍完立刻拿走再吃）
+	for _, item in ipairs(ents) do
+		if APPLE_PICKUP_PREFABS[item.prefab] and
+				item.components.inventoryitem ~= nil and
+				item.components.inventoryitem.canbepickedup and
+				inst.components.eater:CanEat(item) and
+				item:IsOnValidGround() then
+			return BufferedAction(inst, item, ACTIONS.PICKUP)
+		end
+	end
+
+	if math.random() < .75 then
+		return
+	end
+
+	-- 拍打成熟苹果树掉果（不砍倒）
+	if inst.components.timer == nil
+			or not inst.components.timer:TimerExists("kiki_knock_apple") then
+		local range = TUNING.MOUNTAIN_KIKI.KNOCK_APPLE_RANGE or SEE_ITEM_DISTANCE
+		for _, tree in ipairs(TheSim:FindEntities(x, y, z, range, APPLE_TREE_MUST_TAGS, APPLE_TREE_CANT_TAGS)) do
+			if tree.HarvestApples ~= nil then
+				return BufferedAction(inst, tree, ACTIONS.MS_KNOCK_APPLE)
+			end
+		end
+	end
 
 	for _, item in ipairs(ents) do
 		if item:GetTimeAlive() > 8 and

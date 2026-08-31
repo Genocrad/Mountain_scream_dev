@@ -250,6 +250,7 @@ local actionhandlers =
 	ActionHandler(ACTIONS.ATTACK, "throw"),
 	ActionHandler(ACTIONS.EAT, "eat"),
 	ActionHandler(ACTIONS.SOAKIN, "soakin_pre"),
+	ActionHandler(ACTIONS.MS_KNOCK_APPLE, "knock_apple"),
 }
 
 local events =
@@ -422,6 +423,34 @@ local states =
 				local waittime = 2 * FRAMES
 				for i = 0, 11 do
 					inst:DoTaskInTime((i * waittime), play_chest_pound)
+				end
+			end),
+		},
+		events =
+		{
+			EventHandler("animover", go_to_idle),
+		},
+	},
+
+	State{
+		name = "knock_apple",
+		tags = { "attack", "busy", "canrotate" },
+		onenter = function(inst)
+			inst.components.locomotor:Stop()
+			local ba = inst:GetBufferedAction()
+			if ba ~= nil and ba.target ~= nil and ba.target:IsValid() then
+				inst:ForceFacePoint(ba.target.Transform:GetWorldPosition())
+			end
+			inst.AnimState:PlayAnimation("atk")
+		end,
+		timeline =
+		{
+			TimeEvent(17 * FRAMES, function(inst)
+				inst:PerformBufferedAction()
+				inst.SoundEmitter:PlaySound("dontstarve/creatures/monkey"..inst.soundtype.."/attack")
+				if inst.components.timer ~= nil then
+					inst.components.timer:StopTimer("kiki_knock_apple")
+					inst.components.timer:StartTimer("kiki_knock_apple", TUNING.MOUNTAIN_KIKI.KNOCK_APPLE_COOLDOWN)
 				end
 			end),
 		},

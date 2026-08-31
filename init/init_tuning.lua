@@ -495,6 +495,8 @@ TUNING.MOUNTAIN_KIKI = {
 	BATH_CHANCE = 0.4,      -- 满足条件时尝试泡澡的概率
 	BATH_DEST_RADIUS_MULT = 0.35, -- 泡澡落点：相对官方 dest 向温泉中心收缩（0=池心，1=官方落点）
 	DEFAULT_AMMO_COUNT = 4, -- 出生时携带的通用弹药数量
+	KNOCK_APPLE_RANGE = 10,     -- 寻找成熟苹果树的距离
+	KNOCK_APPLE_COOLDOWN = 12,  -- 个人拍树冷却（秒），防空跑
 }
 
 TUNING.MOUNTAIN_FALCON_BASE = {
