@@ -39,11 +39,24 @@ local function IsSpawnableMountainTile(tile)
 		or tile == WORLD_TILES.MS_SNOW
 end
 
-local randomstones = {
-  "mountain_snowpeak_stone_1",
-  "mountain_snowpeak_stone_2",
-  "mountain_snowpeak_stone_3",
+-- Group name in distributeprefabs → real numbered prefabs (equal random pick).
+TUNING.MS_VARIANT_GROUPS = {
+	mountain_green_stone = { "mountain_green_stone_1", "mountain_green_stone_2", "mountain_green_stone_3" },
+	mountain_plants_bush = { "mountain_plants_bush_1", "mountain_plants_bush_2", "mountain_plants_bush_3" },
+	mountain_cold_rock = { "mountain_cold_rock_1", "mountain_cold_rock_2", "mountain_cold_rock_3" },
+	mountain_stalagmite = { "mountain_stalagmite_1", "mountain_stalagmite_2", "mountain_stalagmite_3" },
+	mountain_cockroach_nest = { "mountain_cockroach_nest_1", "mountain_cockroach_nest_2", "mountain_cockroach_nest_3" },
+	mountain_stalactite = { "mountain_stalactite_1", "mountain_stalactite_2", "mountain_stalactite_3" },
+	mountain_snowpeak_stone = { "mountain_snowpeak_stone_1", "mountain_snowpeak_stone_2", "mountain_snowpeak_stone_3" },
 }
+
+local function ResolveVariantPrefab(name)
+	local variants = TUNING.MS_VARIANT_GROUPS[name]
+	if variants ~= nil and #variants > 0 then
+		return variants[math.random(#variants)]
+	end
+	return name
+end
 
 local function preplacekiki(x,z) 
   --Three variants: Pools only, Stone posts only, pools and posts
@@ -70,7 +83,7 @@ local function preplacekiki(x,z)
     for i = 1, 18 do
       local x1, z1 = x + radius * math.sin(i*20), z + radius * math.cos(i*20)
       if IsPointClear(x1, z1, 3) and IsSpawnableMountainTile(TheWorld.Map:GetTileAtPoint(x1, 0, z1)) then
-        local pool = SpawnPrefab(randomstones[math.random(1,3)])
+        local pool = SpawnPrefab(ResolveVariantPrefab("mountain_snowpeak_stone"))
         pool.Transform:SetPosition(x1,0,z1)
       end
     end
@@ -88,9 +101,7 @@ TUNING.MS_LEVEL_CONTENTS = {
 		distributepercent = 0.14,
 		distributeprefabs = {
 			any = {
-				mountain_green_stone_1 = 0.5,
-				mountain_green_stone_2 = 0.5,
-				mountain_green_stone_3 = 0.5,
+				mountain_green_stone = 1.5,
 				mountain_plants_grass = 0.25,
 				mountain_plants_branches = 0.08,
 			},
@@ -102,14 +113,11 @@ TUNING.MS_LEVEL_CONTENTS = {
 				ms_giant_boulder_grass = 0.01,
 			},
 			ms_mountain_low_2 = {
-				mountain_plants_bush_1 = 0.30,
-				mountain_plants_bush_2 = 0.15,
-				mountain_plants_bush_3 = 0.1,
+				mountain_plants_bush = 0.55,
 				mountain_plants_tree = 0.1,
-				mountain_plants_flower_1 = 0.1,
-				mountain_plants_flower_2 = 0.1,
-				mountain_plants_flower_3 = 0.1,
+				mountain_plants_flower = 0.3,
 				mountain_bush = 0.1,
+				mountain_plants_pomegranate = 0.2,
 			},
 			
 			},
@@ -121,9 +129,7 @@ TUNING.MS_LEVEL_CONTENTS = {
 		distributepercent = 0.12,
 		distributeprefabs = {
 			any = {
-				mountain_green_stone_1 = 0.5,
-				mountain_green_stone_2 = 0.5,
-				mountain_green_stone_3 = 0.5,
+				mountain_green_stone = 1.5,
 				mountain_plants_grass = 0.20,
 				mountain_plants_branches = 0.06,
 			},
@@ -135,14 +141,11 @@ TUNING.MS_LEVEL_CONTENTS = {
 				ms_giant_boulder_grass = 0.01,
 			},
 			ms_mountain_low_2 = {
-				mountain_plants_bush_1 = 0.30,
-				mountain_plants_bush_2 = 0.15,
-				mountain_plants_bush_3 = 0.1,
+				mountain_plants_bush = 0.55,
 				mountain_plants_tree = 0.1,
-				mountain_plants_flower_1 = 0.1,
-				mountain_plants_flower_2 = 0.1,
-				mountain_plants_flower_3 = 0.1,
+				mountain_plants_flower = 0.3,
 				mountain_bush = 0.1,
+				mountain_plants_pomegranate = 0.2,
 			},
 		},
 		herds = {
@@ -158,9 +161,7 @@ TUNING.MS_LEVEL_CONTENTS = {
 				ms_copper_rock = 0.08,
 				ms_alu_rock = 0.08,
 				ms_coal_rock = 0.08,
-				mountain_cold_rock_1 = 1.0,
-				mountain_cold_rock_2 = 1.0,
-				mountain_cold_rock_3 = 1.0,
+				mountain_cold_rock = 3.0,
 				mountain_gravel_pile = 1.0,
 				mountain_plants_grass = 0.08,
 				mountain_bush = 1.0,
@@ -176,15 +177,9 @@ TUNING.MS_LEVEL_CONTENTS = {
 		cave = {
 			distributepercent = 0.22,
 			distributeprefabs = {
-				mountain_stalagmite_1 = 1.0,
-				mountain_stalagmite_2 = 1.0,
-				mountain_stalagmite_3 = 1.0,
-				mountain_cockroach_nest_1 = 0.7,
-				mountain_cockroach_nest_2 = 0.7,
-				mountain_cockroach_nest_3 = 0.7,
-				mountain_stalactite_1 = 1.0,
-				mountain_stalactite_2 = 1.0,
-				mountain_stalactite_3 = 1.0,
+				mountain_stalagmite = 3.0,
+				mountain_cockroach_nest = 2.1,
+				mountain_stalactite = 3.0,
 				mountain_gravel_pile = 1.0,
 				mushtree_small = 1.0,
 				ms_geode_rock = 0.6,
@@ -203,9 +198,7 @@ TUNING.MS_LEVEL_CONTENTS = {
 				rock2 = 0.5,
 				rock_flintless = 0.5,
 				mountain_snowpile = 1.0,
-				mountain_cold_rock_1 = 1.0,
-				mountain_cold_rock_2 = 1.0,
-				mountain_cold_rock_3 = 1.0,
+				mountain_cold_rock = 3.0,
 				rock_ice = 1.0,
 				mountain_gravel_pile = 1.0,
 				ms_copper_rock = 0.1,
@@ -240,9 +233,7 @@ TUNING.MS_LEVEL_CONTENTS = {
 				rock2 = 0.5,
 				rock_flintless = 0.5,
 				mountain_snowpile = 1.0,
-				mountain_cold_rock_1 = 1.0,
-				mountain_cold_rock_2 = 1.0,
-				mountain_cold_rock_3 = 1.0,
+				mountain_cold_rock = 3.0,
 				rock_ice = 1.0,
 				ms_copper_rock = 0.1,
 				ms_alu_rock = 0.1,
@@ -272,15 +263,9 @@ TUNING.MS_LEVEL_CONTENTS = {
 		cave = {
 			distributepercent = 0.22,
 			distributeprefabs = {
-				mountain_stalagmite_1 = 1.0,
-				mountain_stalagmite_2 = 1.0,
-				mountain_stalagmite_3 = 1.0,
-				mountain_cockroach_nest_1 = 0.7,
-				mountain_cockroach_nest_2 = 0.7,
-				mountain_cockroach_nest_3 = 0.7,
-				mountain_stalactite_1 = 1.0,
-				mountain_stalactite_2 = 1.0,
-				mountain_stalactite_3 = 1.0,
+				mountain_stalagmite = 3.0,
+				mountain_cockroach_nest = 2.1,
+				mountain_stalactite = 3.0,
 				ms_copper_rock = 1,
 				ms_alu_rock = 1,
 				ms_coal_rock = 1,
@@ -300,9 +285,7 @@ TUNING.MS_LEVEL_CONTENTS = {
 				rock_ice = 1.0,
 				mountain_bush = 1.0,
 				mandrake_planted = 0.04,
-				mountain_snowpeak_stone_1 = 1.0,
-				mountain_snowpeak_stone_2 = 1.0,
-				mountain_snowpeak_stone_3 = 1.0,
+				mountain_snowpeak_stone = 3.0,
 				cavein_boulder = 0.04,
 				ms_apple_tree_snow = 0.7,
 				ms_giant_boulder_snow = 0.08,
@@ -332,9 +315,7 @@ TUNING.MS_LEVEL_CONTENTS = {
 				rock_ice = 1.0,
 				mountain_bush = 1.0,
 				mandrake_planted = 0.04,
-				mountain_snowpeak_stone_1 = 1.0,
-				mountain_snowpeak_stone_2 = 1.0,
-				mountain_snowpeak_stone_3 = 1.0,
+				mountain_snowpeak_stone = 3.0,
 				cavein_boulder = 0.04,
 				ms_apple_tree_snow = 0.7,
 				ms_giant_boulder_snow = 0.08,

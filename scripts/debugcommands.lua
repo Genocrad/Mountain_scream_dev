@@ -27,9 +27,7 @@ function d_spawn_plants()
 		"mountain_plants_tree",
 		"mountain_plants_grass",
 		"mountain_plants_branches",
-		"mountain_plants_flower_1",
-		"mountain_plants_flower_2",
-		"mountain_plants_flower_3",
+		"mountain_plants_flower",
 	}
 	local pos = ConsoleWorldPosition()
 	local x, y, z = pos.x, pos.y, pos.z

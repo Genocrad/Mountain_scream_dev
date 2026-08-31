@@ -4,11 +4,27 @@ local assets =
 }
 
 local FLOWER_SANITY = 10
+local FLOWER_NAMES = { "flower_1", "flower_2", "flower_3", "flower_4", "flower_5", "flower_6", "flower_7" }
 
 local function OnPickedFlower(inst, picker)
 	if picker ~= nil and picker.components.sanity ~= nil then
 		picker.components.sanity:DoDelta(FLOWER_SANITY)
 	end
+end
+
+local function SetFlowerType(inst, name)
+	if inst.animname == nil or (name ~= nil and inst.animname ~= name) then
+		inst.animname = name or FLOWER_NAMES[math.random(#FLOWER_NAMES)]
+		inst.AnimState:PlayAnimation(inst.animname)
+	end
+end
+
+local function FlowerOnSave(inst, data)
+	data.anim = inst.animname
+end
+
+local function FlowerOnLoad(inst, data)
+	SetFlowerType(inst, data ~= nil and data.anim or nil)
 end
 
 local function MakePlant(def)
@@ -25,6 +41,10 @@ local function MakePlant(def)
 		inst.AnimState:SetRayTestOnBB(true)
 
 		inst:AddTag("plant")
+
+		if def.nameoverride ~= nil then
+			inst:SetPrefabNameOverride(def.nameoverride)
+		end
 
 		if def.tags ~= nil then
 			for _, tag in ipairs(def.tags) do
@@ -59,6 +79,56 @@ local function MakePlant(def)
 	return Prefab(def.name, fn, assets, { def.product })
 end
 
+local function MakeFlower()
+	local function fn()
+		local inst = CreateEntity()
+
+		inst.entity:AddTransform()
+		inst.entity:AddAnimState()
+		inst.entity:AddNetwork()
+
+		inst.AnimState:SetBank("mountain_plants")
+		inst.AnimState:SetBuild("mountain_plants")
+		inst.AnimState:SetRayTestOnBB(true)
+		inst.scrapbook_anim = "flower_1"
+
+		inst:AddTag("plant")
+		inst:AddTag("flower")
+		inst:AddTag("cattoy")
+
+		inst.entity:SetPristine()
+
+		if not TheWorld.ismastersim then
+			return inst
+		end
+
+		inst:AddComponent("inspectable")
+
+		inst:AddComponent("pickable")
+		inst.components.pickable.picksound = "dontstarve/wilson/pickup_plants"
+		inst.components.pickable:SetUp("petals", nil, 1)
+		inst.components.pickable.remove_when_picked = true
+		inst.components.pickable.quickpick = true
+		inst.components.pickable.onpickedfn = OnPickedFlower
+
+		MakeSmallBurnable(inst)
+		MakeSmallPropagator(inst)
+		MakeHauntableIgnite(inst)
+
+		-- Fresh spawn: pick a variant now. World load: wait for OnLoad.
+		if not POPULATING then
+			SetFlowerType(inst)
+		end
+
+		inst.OnSave = FlowerOnSave
+		inst.OnLoad = FlowerOnLoad
+
+		return inst
+	end
+
+	return Prefab("mountain_plants_flower", fn, assets, { "petals" })
+end
+
 local PLANTS =
 {
 	{
@@ -67,6 +137,7 @@ local PLANTS =
 		product = "twigs",
 		num = 1,
 		picksound = "dontstarve/wilson/harvest_sticks",
+		nameoverride = "mountain_plants_bush",
 	},
 	{
 		name = "mountain_plants_bush_2",
@@ -74,6 +145,7 @@ local PLANTS =
 		product = "twigs",
 		num = 2,
 		picksound = "dontstarve/wilson/harvest_sticks",
+		nameoverride = "mountain_plants_bush",
 	},
 	{
 		name = "mountain_plants_bush_3",
@@ -81,6 +153,7 @@ local PLANTS =
 		product = "twigs",
 		num = 4,
 		picksound = "dontstarve/wilson/harvest_sticks",
+		nameoverride = "mountain_plants_bush",
 	},
 	{
 		name = "mountain_plants_tree",
@@ -105,69 +178,6 @@ local PLANTS =
 		picksound = "dontstarve/wilson/harvest_sticks",
 	},
 	{
-		name = "mountain_plants_flower_1",
-		anim = "flower_1",
-		product = "petals",
-		num = 1,
-		tags = { "flower", "cattoy" },
-		quickpick = true,
-		onpickedfn = OnPickedFlower,
-	},
-	{
-		name = "mountain_plants_flower_2",
-		anim = "flower_2",
-		product = "petals",
-		num = 1,
-		tags = { "flower", "cattoy" },
-		quickpick = true,
-		onpickedfn = OnPickedFlower,
-	},
-	{
-		name = "mountain_plants_flower_3",
-		anim = "flower_3",
-		product = "petals",
-		num = 1,
-		tags = { "flower", "cattoy" },
-		quickpick = true,
-		onpickedfn = OnPickedFlower,
-	},
-	{
-		name = "mountain_plants_flower_4",
-		anim = "flower_4",
-		product = "petals",
-		num = 1,
-		tags = { "flower", "cattoy" },
-		quickpick = true,
-		onpickedfn = OnPickedFlower,
-	},
-	{
-		name = "mountain_plants_flower_5",
-		anim = "flower_5",
-		product = "petals",
-		num = 1,
-		tags = { "flower", "cattoy" },
-		quickpick = true,
-		onpickedfn = OnPickedFlower,
-	},
-	{
-		name = "mountain_plants_flower_6",
-		anim = "flower_6",
-		product = "petals",
-		num = 1,
-		tags = { "flower", "cattoy" },
-		quickpick = true,
-		onpickedfn = OnPickedFlower,
-	},
-	{
-		name = "mountain_plants_flower_7",
-		anim = "flower_7",
-		product = "petals",
-		num = 1,
-		tags = { "flower", "cattoy" },
-		quickpick = true,
-		onpickedfn = OnPickedFlower,
-	},
-	{
 		name = "mountain_plants_pomegranate",
 		anim = "pomegranate",
 		product = "pomegranate",
@@ -176,7 +186,7 @@ local PLANTS =
 	},
 }
 
-local prefabs = {}
+local prefabs = { MakeFlower() }
 for _, def in ipairs(PLANTS) do
 	table.insert(prefabs, MakePlant(def))
 end

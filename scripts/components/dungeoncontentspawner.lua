@@ -15,6 +15,15 @@ local function IsSpawnableCaveTile(tile)
 	return tile == WORLD_TILES.MS_CAVE_FLOOR
 end
 
+-- Tuning may list a group name (e.g. mountain_green_stone); resolve to a real _1..n prefab.
+local function ResolveVariantPrefab(name)
+	local variants = TUNING.MS_VARIANT_GROUPS ~= nil and TUNING.MS_VARIANT_GROUPS[name] or nil
+	if variants ~= nil and #variants > 0 then
+		return variants[math.random(#variants)]
+	end
+	return name
+end
+
 local function PickPrefab(weights)
 	local total = 0
 	for _, weight in pairs(weights) do
@@ -28,7 +37,7 @@ local function PickPrefab(weights)
 	for prefab, weight in pairs(weights) do
 		rnd = rnd - weight
 		if rnd <= 0 then
-			return prefab
+			return ResolveVariantPrefab(prefab)
 		end
 	end
 end
