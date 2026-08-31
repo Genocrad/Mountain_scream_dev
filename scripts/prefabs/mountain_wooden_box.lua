@@ -85,21 +85,24 @@ local function DropBoxLoot(inst)
 	end
 end
 
-local function OnWorked(inst, worker, workleft)
+local WORK_LEFT = 1
+
+local function OnWorked(inst, worker, workleft, workdone)
 	worker.SoundEmitter:PlaySound("dontstarve/wilson/use_axe_tree")
+
+	local num_opened = math.clamp(math.ceil(workdone / WORK_LEFT), 1, inst.components.stackable:StackSize())
+	for _ = 1, num_opened do
+		DropBoxLoot(inst)
+	end
+
+	local top = inst.components.stackable:Get(num_opened)
+	top:Remove()
 end
 
-local function OnFinished(inst, worker)
-	local x, y, z = inst.Transform:GetWorldPosition()
-	DropBoxLoot(inst)
-
-	-- local fx = SpawnPrefab("collapse_small")
-	-- if fx ~= nil then
-	-- 	fx.Transform:SetPosition(x, y, z)
-	-- 	fx:SetMaterial("wood")
-	-- end
-	-- inst.SoundEmitter:PlaySound("dontstarve/wilson/use_axe_tree")
-	inst:Remove()
+local function OnStackSizeChanged(inst, data)
+	if data ~= nil and data.stacksize ~= nil and inst.components.workable ~= nil then
+		inst.components.workable:SetWorkLeft(data.stacksize * WORK_LEFT)
+	end
 end
 
 local function fn()
@@ -133,13 +136,17 @@ local function fn()
 	inst.components.inventoryitem.atlasname = MS_ITEMS_ATLAS
 	inst.components.inventoryitem.imagename = "mountain_wooden_box"
 
+	inst:AddComponent("stackable")
+	inst.components.stackable.maxsize = TUNING.STACK_SIZE_SMALLITEM
+
 	inst:AddComponent("lootdropper")
 
 	inst:AddComponent("workable")
 	inst.components.workable:SetWorkAction(ACTIONS.CHOP)
-	inst.components.workable:SetWorkLeft(1)
+	inst.components.workable:SetWorkLeft(WORK_LEFT * inst.components.stackable.stacksize)
 	inst.components.workable:SetOnWorkCallback(OnWorked)
-	inst.components.workable:SetOnFinishCallback(OnFinished)
+
+	inst:ListenForEvent("stacksizechange", OnStackSizeChanged)
 
 	MakeHauntableLaunch(inst)
 

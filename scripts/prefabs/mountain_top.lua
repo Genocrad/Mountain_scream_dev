@@ -105,6 +105,7 @@ local function fn()
 	inst.AnimState:PlayAnimation("no_flag")
 
 	inst.MiniMapEntity:SetIcon("mountain_top.tex")
+	inst.MiniMapEntity:SetPriority(10)
 
 	inst:AddTag("structure")
 	inst:AddTag("constructionsite")
