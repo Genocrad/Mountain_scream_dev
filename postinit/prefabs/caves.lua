@@ -43,6 +43,12 @@ AddPrefabPostInit("cave", function(inst)
         TileGroups.MS_TECHNICAL, false,
         0.15, 64
     )
+    inst.Map:AddTileCollisionSet(
+        COLLISION.SMALLOBSTACLES,
+        TileGroups.MS_TECHNICAL, true,
+        TileGroups.MS_TECHNICAL, false,
+        0.4, 64
+    )
  if not TheNet:IsDedicated() then
   inst.entity:AddWaveComponent()
     inst.WaveComponent:SetWaveParams(13.5, 2.5, 0)    			-- wave texture u repeat, forward distance between waves
