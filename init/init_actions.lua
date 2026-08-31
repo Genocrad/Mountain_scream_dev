@@ -77,7 +77,7 @@ MS_MINE_STALACTITE.fn = function(act)
         
         local throw_angle = (-act.target.Transform:GetRotation()-math.deg(math.atan2(z1-z, x1-x)))
         throw_angle = throw_angle > -270 and throw_angle or 360 - throw_angle
-        if IsInvalidTile(TheWorld.Map:GetTileAtPoint((x+x1+x1+x1)/4, 0, (z+z1+z1+z1)/4)) and not (math.abs(throw_angle) < 70) then
+        if IsInvalidTile(TheWorld.Map:GetTileAtPoint((x+x1+x1+x1)/4, 0, (z+z1+z1+z1)/4)) and not (math.abs(throw_angle) < 90) then
           return false
         else
           return act.invobject:ThrowAtStalactite(act.doer, act.target)
@@ -103,7 +103,7 @@ MS_THROW.fn = function(act)
         
         local throw_angle = (-act.target.Transform:GetRotation()-math.deg(math.atan2(z1-z, x1-x)))
         throw_angle = throw_angle > -270 and throw_angle or 360 - throw_angle
-        if IsInvalidTile(TheWorld.Map:GetTileAtPoint((x+x1+x1+x1)/4, 0, (z+z1+z1+z1)/4)) and not (math.abs(throw_angle) < 70) then
+        if IsInvalidTile(TheWorld.Map:GetTileAtPoint((x+x1+x1+x1)/4, 0, (z+z1+z1+z1)/4)) and not (math.abs(throw_angle) < 90) then
           return false
         else
           return act.invobject:ThrowAtBush(act.doer, act.target)
