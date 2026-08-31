@@ -238,6 +238,7 @@ local function pickaxe_fn()
 	inst:AddTag("throw_line")
 	inst:AddTag("nopunch")
 	inst:AddTag("weapon")
+	inst:AddTag("ms_aluminum_tool")
 	inst:AddTag("ms_aluminum_pickaxe")
 
 	local floater_swap_data = { sym_build = "mountain_aluminum_pickaxe", sym_name = "swap_aluminum_pickaxe" }

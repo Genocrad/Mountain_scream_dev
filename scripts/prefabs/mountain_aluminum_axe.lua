@@ -272,6 +272,7 @@ local function axe_fn()
 	inst:AddTag("throw_line")
 	inst:AddTag("nopunch")
 	inst:AddTag("weapon")
+	inst:AddTag("ms_aluminum_tool")
 	inst:AddTag("ms_aluminum_axe")
 
 	local floater_swap_data = { sym_build = "mountain_aluminum_axe", sym_name = "swap_aluminum_axe" }

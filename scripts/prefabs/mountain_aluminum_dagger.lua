@@ -141,6 +141,7 @@ local function dagger_fn()
 	inst:AddTag("throw_line")
 	inst:AddTag("nopunch")
 	inst:AddTag("weapon")
+	inst:AddTag("ms_aluminum_tool")
 
 	local floater_swap_data = { sym_build = "mountain_aluminum_dagger", sym_name = "swap_aluminum_dagger" }
 	MakeInventoryFloatable(inst, "small", 0.05, { 1.2, 0.75, 1.2 }, true, -11, floater_swap_data)

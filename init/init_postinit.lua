@@ -1,6 +1,7 @@
 modimport("postinit/standartcomponents")
 
 modimport("postinit/prefabs/player_common")
+modimport("postinit/prefabs/wortox")
 modimport("postinit/prefabs/caves")
 
 modimport("postinit/stategraphs/wilson")

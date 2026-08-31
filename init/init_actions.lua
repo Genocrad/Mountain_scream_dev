@@ -23,27 +23,6 @@ COMPONENT_ACTIONS["SCENE"]["teleporter"] = function(inst, doer, actions, right, 
 	end
 end
 
--- Fix for "Wortox sits down instead of teleporting with alu stuff"
-local function IsNotBlocked(pt)
-    return TheWorld.Map:IsPassableAtPoint(pt:Get()) and not TheWorld.Map:IsGroundTargetBlocked(pt)
-end
-
-local old_aoespell = COMPONENT_ACTIONS["POINT"]["aoespell"]
-COMPONENT_ACTIONS["POINT"]["aoespell"] = function(inst, doer, pos, actions, right, target, ...)
-  if inst.components.reticule then
-    table.insert(actions, ACTIONS.CASTAOE)
-  end
-  if not right and TheWorld.ismastersim and #actions == 1 then
-    table.insert(actions, ACTIONS.CASTAOE)
-  end
-  if right and doer.prefab == "wortox" and IsNotBlocked(pos) then
-    
-		return
-	else
-		old_aoespell(inst, doer, pos, actions, right, target, ...)
-	end
-end
-
 AddStategraphActionHandler("wilson", ActionHandler(ACTIONS.MS_USE_DOOR, "ms_door_use_pre"))
 AddStategraphActionHandler("wilson_client", ActionHandler(ACTIONS.MS_USE_DOOR, "ms_door_use_pre"))
 
