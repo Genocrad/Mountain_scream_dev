@@ -38,9 +38,11 @@ local CONFIG_TEXT = {
         game = { ch = "游戏设置", en = "Game Settings" },    },
     labels = {
         language = { ch = "游戏语言", en = "Game Language" },
+        enable_collision_for_player = { ch = "游戏语言", en = "Enable edge collision for players" },
     },
     hovers = {
         language = { ch = "设置游戏内的语言", en = "Sets the in-game language." },
+        enable_collision_for_player = { ch = "", en = "Prevents falling from the mountain" },
     },
 }
 local CONFIG_SCHEMA = {
@@ -48,6 +50,10 @@ local CONFIG_SCHEMA = {
     { type = "setting", name = "language", default = { ch = "ch", en = "en" }, options = {
         { data = "en", text = { ch = "英文", es = "Ingles", en = "English" } },
         { data = "ch", text = { ch = "中文", es = "Chino", en = "Chinese" } },
+    }},
+    { type = "setting", name = "enable_collision_for_player", default = false, options = {
+        { data = false, text = { ch = "", es = "", en = "Disable" } },
+        { data = true, text = { ch = "", es = "", en = "Enable" } },
     }},
 }
 local function build_configuration_options(lang)

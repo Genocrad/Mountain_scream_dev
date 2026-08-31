@@ -1,4 +1,4 @@
-
+GLOBAL.enable_collision_for_player = GetModConfigData("enable_collision_for_player")
 GLOBAL.MS_FOCALPOINT_FLOORS = {}
 GLOBAL.setmetatable(env, { __index = function(t, k) return GLOBAL.rawget(GLOBAL, k) end })
 
