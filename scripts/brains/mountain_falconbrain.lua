@@ -86,12 +86,13 @@ function MountainFalconBrain:OnStart()
 				TUNING.MOUNTAIN_FALCON.MAX_CHASE_DIST
 			)),
 
+		-- Cave shard clock (mountain floors); go home outside cave day.
 		WhileNode(function()
-				return not TheWorld.state.isday
+				return not TheWorld.state.iscaveday
 					and not self.inst._returning_home
 					and not self.inst._cross_flooring
 					and self.inst._pursuit_target == nil
-			end, "IsNight",
+			end, "IsCaveNight",
 			DoAction(self.inst, GoHomeAction)),
 
 		WhileNode(function() return ShouldLeash(self.inst) end, "PeaceLeash",

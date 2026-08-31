@@ -15,8 +15,8 @@ SetSharedLootTable("mountain_falcon_base",
 	{ "boneshard", 1.00 },
 })
 
--- ChildSpawner:CanSpawn() requires spawning == true. We keep auto free-roam off
--- (StopSpawning), and only flip spawning on while manually releasing guards.
+-- Manual SpawnChild works without spawning==true; this only restores the prior
+-- auto-roam flag after a night hit/death release (when StopSpawning is active).
 local function WithSpawningEnabled(spawner, fn)
 	local was_spawning = spawner.spawning
 	if not was_spawning then
@@ -25,6 +25,44 @@ local function WithSpawningEnabled(spawner, fn)
 	fn()
 	if not was_spawning then
 		spawner:StopSpawning()
+	end
+end
+
+local function StartSpawning(inst)
+	if inst.components.childspawner ~= nil then
+		inst.components.childspawner:StartSpawning()
+	end
+end
+
+local function StopSpawning(inst)
+	if inst.components.childspawner ~= nil then
+		inst.components.childspawner:StopSpawning()
+	end
+end
+
+local function ReturnChildren(inst)
+	if inst.components.childspawner == nil then
+		return
+	end
+	for child in pairs(inst.components.childspawner.childrenoutside) do
+		if child:IsValid() and child.RequestReturnHome ~= nil then
+			child:RequestReturnHome()
+		end
+	end
+end
+
+-- Mountain floors live on the cave shard; use cave clock, not surface isday/isnight.
+local function OnIsCaveDay(inst, iscaveday)
+	if iscaveday then
+		StartSpawning(inst)
+	else
+		StopSpawning(inst)
+	end
+end
+
+local function OnIsCaveNight(inst, iscavenight)
+	if iscavenight then
+		ReturnChildren(inst)
 	end
 end
 
@@ -79,6 +117,17 @@ local function OnEntitySleep(inst)
 	inst.SoundEmitter:KillSound("loop")
 end
 
+local function OnLoad(inst)
+	if TheWorld.state.iscaveday then
+		StartSpawning(inst)
+	else
+		StopSpawning(inst)
+		if TheWorld.state.iscavenight then
+			ReturnChildren(inst)
+		end
+	end
+end
+
 local function fn()
 	local inst = CreateEntity()
 
@@ -98,6 +147,7 @@ local function fn()
 
 	inst:AddTag("structure")
 	inst:AddTag("mountain_falcon_base")
+	inst:AddTag("cavedweller")
 
 	inst.entity:SetPristine()
 
@@ -121,7 +171,14 @@ local function fn()
 		childspawner:AddChildrenInside(to_fill)
 	end
 	childspawner:StartRegen()
-	childspawner:StopSpawning()
+
+	inst:WatchWorldState("iscaveday", OnIsCaveDay)
+	inst:WatchWorldState("iscavenight", OnIsCaveNight)
+	if TheWorld.state.iscaveday then
+		StartSpawning(inst)
+	else
+		StopSpawning(inst)
+	end
 
 	inst:AddComponent("combat")
 	inst.components.combat:SetOnHit(SpawnAllGuards)
@@ -133,6 +190,7 @@ local function fn()
 
 	inst.OnEntitySleep = OnEntitySleep
 	inst.OnEntityWake = OnEntityWake
+	inst.OnLoad = OnLoad
 
 	return inst
 end

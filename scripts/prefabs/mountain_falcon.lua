@@ -575,7 +575,7 @@ local function OnEntitySleep(inst)
 	DoReturn(inst)
 end
 
-local function OnStopDay(inst)
+local function OnStopCaveDay(inst)
 	if inst:IsAsleep() and not IsActivelyPursuing(inst) then
 		DoReturn(inst)
 	end
@@ -670,7 +670,7 @@ local function fn()
 	inst:ListenForEvent("newcombattarget", OnNewCombatTarget)
 	inst:ListenForEvent("droppedtarget", OnDroppedTarget)
 
-	inst:WatchWorldState("stopday", OnStopDay)
+	inst:WatchWorldState("stopcaveday", OnStopCaveDay)
 	inst.OnEntitySleep = OnEntitySleep
 	inst.OnPreLoad = OnPreLoad
 
