@@ -14,14 +14,24 @@ end
 
 local function ToggleOnPhysics(inst)
     inst.sg.statemem.isphysicstoggle = nil
-	inst.Physics:SetCollisionMask(
-		COLLISION.WORLD,
-		COLLISION.OBSTACLES,
-		COLLISION.SMALLOBSTACLES,
-		COLLISION.CHARACTERS,
-		COLLISION.GIANTS,
-    COLLISION.MS_CLOUDS
-	)
+  if enable_collision_for_player then
+    inst.Physics:SetCollisionMask(
+      COLLISION.WORLD,
+      COLLISION.OBSTACLES,
+      COLLISION.SMALLOBSTACLES,
+      COLLISION.CHARACTERS,
+      COLLISION.GIANTS,
+      COLLISION.MS_CLOUDS
+    )
+  else
+    inst.Physics:SetCollisionMask(
+      COLLISION.WORLD,
+      COLLISION.OBSTACLES,
+      COLLISION.SMALLOBSTACLES,
+      COLLISION.CHARACTERS,
+      COLLISION.GIANTS
+    )
+  end
 end
 
 -- 竞技场传送：自写进出状态，直接生成雪特效（不碰官方 entertownportal）
