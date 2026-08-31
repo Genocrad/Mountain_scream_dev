@@ -22,11 +22,12 @@ local function OnWork(inst, worker, workleft)
   local pt = inst:GetPosition()
   local angle = inst.Transform:GetRotation()
   local item = SpawnPrefab("mountain_wooden_box")
-  item.Transform:SetPosition(pt.x + math.cos(angle)*2, pt.y, pt.z-math.sin(angle)*2)
+  item.Transform:SetPosition(pt.x + math.cos(angle)*3, pt.y, pt.z-math.sin(angle)*3)
   LaunchAt(item, item, worker, math.max(1, 5 - pt.y), math.max(pt.y,3.5), 1)
   item.Physics:SetCollisionMask(
-		COLLISION.WORLD,
-    COLLISION.MS_CLOUDS
+		COLLISION.GROUND,
+    COLLISION.MS_CLOUDS,
+    COLLISION.SMALLOBSTACLES
 	)
   inst.components.lootdropper:DropLoot(pt)
   inst:RemoveTag("mountain_throw_target")

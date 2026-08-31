@@ -115,11 +115,19 @@ local function ReturnItemToWorld(proj, thrower, do_mine_at, keep_height)
   item:ReturnToScene()
   
   if y ~= 0 then
-    item.Physics:SetCollisionMask(
-      COLLISION.WORLD,
-      COLLISION.MS_CLOUDS
-    )
+      item.Physics:SetCollisionMask(
+		COLLISION.GROUND,
+    COLLISION.MS_CLOUDS,
+    COLLISION.SMALLOBSTACLES
+	)
     LaunchAt(item, item, thrower, math.max(1, 5 - y), math.max(y,3.5), 1)
+  else
+    LaunchAt(item, item, thrower, 1, 0, 1)
+      item.Physics:SetCollisionMask(
+		COLLISION.GROUND,
+    COLLISION.MS_CLOUDS,
+    COLLISION.SMALLOBSTACLES
+	)
   end
   -- Im leaving this out for now due to randomisation being a nuisance
 	--if item.components.inventoryitem ~= nil then
@@ -180,6 +188,7 @@ local function SpellFn(inst, doer, pos)
 		* (doer.components.combat ~= nil and doer.components.combat.damagemultiplier or 1)
 	proj.components.aimedprojectile:Throw(doer, pos)
 
+  proj.Physics:SetCollisionCallback(function(inst) ReturnItemToWorld(inst, doer, false) inst:Remove() end)
 	return true
 end
 
@@ -214,7 +223,7 @@ local function ThrowAtStalactite(inst, doer, target)
 	proj.components.aimedprojectile:SetOnMissFn(OnMissStalactite)
 	proj.components.aimedprojectile:SetHitWorkAction(nil)
 	proj.components.aimedprojectile:Throw(doer, dest, { fly_3d = true, target = target })
-
+  proj.Physics:SetCollisionCallback(function(inst) ReturnItemToWorld(inst, doer, false) inst:Remove() end)
 	return true
 end
 
@@ -302,8 +311,13 @@ local function projectile_fn()
 	inst.entity:AddSoundEmitter()
 	inst.entity:AddNetwork()
 
-	MakeInventoryPhysics(inst)
-	RemovePhysicsColliders(inst)
+	MakeInventoryPhysics(inst, 1, 0.25)
+  inst.Physics:SetCollisionMask(
+		COLLISION.GROUND,
+		COLLISION.SMALLOBSTACLES
+	)
+  
+	--RemovePhysicsColliders(inst)
 
 	inst.AnimState:SetBank("mountain_aluminum_pickaxe")
 	inst.AnimState:SetBuild("mountain_aluminum_pickaxe")
@@ -318,7 +332,9 @@ local function projectile_fn()
 	if not TheWorld.ismastersim then
 		return inst
 	end
-
+  
+    
+  
 	inst.persists = false
 	inst.item = nil
 

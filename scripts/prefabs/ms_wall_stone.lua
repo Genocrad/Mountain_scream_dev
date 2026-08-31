@@ -11,12 +11,13 @@ local function OnWork(inst, worker, workleft)
     SpawnPrefab("rock_break_fx").Transform:SetPosition(pt.x, pt.y, pt.z)
     local angle = math.rad(inst.Transform:GetRotation())
     local item = SpawnPrefab("mountain_suspicious_ore")
-    item.Transform:SetPosition(pt.x + math.cos(angle)*2, pt.y, pt.z-math.sin(angle)*2)
+    item.Transform:SetPosition(pt.x + math.cos(angle)*3, pt.y, pt.z-math.sin(angle)*3)
     LaunchAt(item, item, worker, math.max(2, 5 - pt.y), math.max(pt.y,3.5), 1)
-    item.Physics:SetCollisionMask(
-      COLLISION.WORLD,
-      COLLISION.MS_CLOUDS
-    )
+  item.Physics:SetCollisionMask(
+		COLLISION.GROUND,
+    COLLISION.MS_CLOUDS,
+    COLLISION.SMALLOBSTACLES
+	)
     inst:Remove()
 end
 

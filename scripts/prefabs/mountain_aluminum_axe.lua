@@ -132,14 +132,22 @@ local function ReturnItemToWorld(proj, thrower, do_mine_at, keep_height)
   
 	item:ReturnToScene()
   
-  if y~=0 then
-    item.Physics:SetCollisionMask(
-      COLLISION.WORLD,
-      COLLISION.MS_CLOUDS
-    )
-    -- So it does not fall into the void.
-    LaunchAt(item, item, thrower, math.max(2, 5 - y), math.max(y,3.5), 1)
-  end
+    if y ~= 0 then
+      item.Physics:SetCollisionMask(
+		COLLISION.GROUND,
+    COLLISION.MS_CLOUDS,
+    COLLISION.SMALLOBSTACLES
+	)
+    LaunchAt(item, item, thrower, math.max(1, 5 - y), math.max(y,3.5), 1)
+  else
+    LaunchAt(item, item, thrower, 1, 0, 1)
+      item.Physics:SetCollisionMask(
+		COLLISION.GROUND,
+    COLLISION.MS_CLOUDS,
+    COLLISION.SMALLOBSTACLES
+	)
+end
+
 	if do_mine_at and thrower ~= nil and thrower:IsValid() then
 		ChopTreesAt(thrower, x, 0, z)
 	end
@@ -211,7 +219,7 @@ local function SpellFn(inst, doer, pos)
 	proj.components.aimedprojectile.damage = TUNING.AXE_DAMAGE
 		* (doer.components.combat ~= nil and doer.components.combat.damagemultiplier or 1)
 	proj.components.aimedprojectile:Throw(doer, pos)
-
+  proj.Physics:SetCollisionCallback(function(inst) ReturnItemToWorld(inst, doer, false) inst:Remove() end)
 	return true
 end
 
@@ -248,7 +256,7 @@ local function ThrowAtBush(inst, doer, target)
 	proj.components.aimedprojectile:SetOnMissFn(OnMiss)
 	proj.components.aimedprojectile:SetHitWorkAction(nil)
 	proj.components.aimedprojectile:Throw(doer, dest, { fly_3d = true, target = target })
-
+  proj.Physics:SetCollisionCallback(function(inst) ReturnItemToWorld(inst, doer, false) inst:Remove() end)
 	return true
 end
 
@@ -336,8 +344,12 @@ local function projectile_fn()
 	inst.entity:AddSoundEmitter()
 	inst.entity:AddNetwork()
 
-	MakeInventoryPhysics(inst)
-	RemovePhysicsColliders(inst)
+	MakeInventoryPhysics(inst, 1, 0.25)
+  inst.Physics:SetCollisionMask(
+		COLLISION.GROUND,
+		COLLISION.SMALLOBSTACLES
+	)
+  
 
 	inst.AnimState:SetBank("mountain_aluminum_axe")
 	inst.AnimState:SetBuild("mountain_aluminum_axe")
