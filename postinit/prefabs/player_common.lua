@@ -20,7 +20,7 @@ local function IsUsingMSDoorDirty(inst)
     if TheNet:IsDedicated() then return end
    
     local x,y,z = ThePlayer.Transform:GetWorldPosition() 
-    if TheWorld.net.components.dungeonmapoverwatch and TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(x,y,z) ~= nil and TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(x,y,z) >= TUNING.MS_CAVES_START then  
+    if TheWorld.net.components.dungeonmapoverwatch and TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(x,y,z) ~= nil and TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(x,y,z) > TUNING.MS_CAVES_START then  
         TheCamera.target = findnearestfloor(inst) and findnearestfloor(inst) or TheFocalPoint
         TheCamera.targetoffset.z = -12
         TheCamera.targetoffset.y = 2
