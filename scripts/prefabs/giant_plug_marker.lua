@@ -61,7 +61,7 @@ local function UpdateTemp(inst)
   if TheWorld.net.components.dungeonmapoverwatch then
     local level = TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(x,y,z)
       if level then
-        inst.components.temperatureoverrider:SetTemperature(math.clamp(TheWorld.state.temperature - TUNING.MS_LEVEL_TO_TEMP[level].delta, TUNING.MS_LEVEL_TO_TEMP[level].max, TUNING.MS_LEVEL_TO_TEMP[level].min))
+        inst.components.temperatureoverrider:SetTemperature(math.clamp(TheWorld.state.temperature - TUNING.MS_LEVEL_TO_TEMP[level].delta, TUNING.MS_LEVEL_TO_TEMP[level].min, TUNING.MS_LEVEL_TO_TEMP[level].max))
       end
   end
 end
