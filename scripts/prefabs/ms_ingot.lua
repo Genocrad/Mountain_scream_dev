@@ -101,6 +101,7 @@ local function OnForged(inst, direction)
         local mx, my, mz = inst.Transform:GetWorldPosition()
         local detail = SpawnPrefab("ms_" .. inst.ingot_group .. "_detail")
         detail.Transform:SetPosition(mx, my, mz)
+        detail.components.temperature:SetTemperature(inst.components.temperature:GetCurrent())
         inst:Remove()
       else
         local transform_into = math.random() < 0.33 and "_forward" or (math.random() > 0.5 and "_left" or "_right")
@@ -164,7 +165,7 @@ local function MakeIngot(name, recipe)
     
       inst.Light:SetFalloff(0.9)
       inst.Light:SetIntensity(.5)
-      inst.Light:SetRadius(0.2)
+      inst.Light:SetRadius(0)
       inst.Light:SetColour(209/255, 180/255, 30/255)
       inst.Light:Enable(false)
 
@@ -202,8 +203,6 @@ local function MakeIngot(name, recipe)
       
       inst:AddComponent("temperature")
       inst.components.temperature.current = TheWorld.state.temperature
-      inst.components.temperature.inherentinsulation = TUNING.INSULATION_MED
-      inst.components.temperature.inherentsummerinsulation = TUNING.INSULATION_MED
       inst.components.temperature.maxtemp = 3000
       inst.components.temperature.overheattemp = 4000
 

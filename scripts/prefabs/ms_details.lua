@@ -103,7 +103,7 @@ local function MakeDetail(name)
     
       inst.Light:SetFalloff(0.9)
       inst.Light:SetIntensity(.5)
-      inst.Light:SetRadius(1.5)
+      inst.Light:SetRadius(0)
       inst.Light:SetColour(169/255, 231/255, 245/255)
       inst.Light:Enable(false)
 
@@ -134,8 +134,6 @@ local function MakeDetail(name)
       
       inst:AddComponent("temperature")
       inst.components.temperature.current = TheWorld.state.temperature
-      inst.components.temperature.inherentinsulation = TUNING.INSULATION_MED
-      inst.components.temperature.inherentsummerinsulation = TUNING.INSULATION_MED
       inst.components.temperature.maxtemp = 3000
       inst.components.temperature.overheattemp = 4000
 
