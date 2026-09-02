@@ -21,7 +21,8 @@ local LOOT = { "smallmeat", "cave_banana" }
 
 SetSharedLootTable("mountain_kiki",
 {
-	{ "meat",   1.0 },
+	{ "meat",     1.00 },
+	{ "ms_apple", 0.15 },
 })
 
 local AMMO_PREFAB = "mountain_kiki_ammo1"
