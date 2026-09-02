@@ -1026,7 +1026,7 @@ TUNING.MOUNTAIN_GOLEM = {
 	},
 
 	HEALTH = 32000,              -- 最大生命
-	DAMAGE = 150,                -- 基础攻击伤害
+	DAMAGE = 300,                -- 基础攻击伤害
 	ATTACK_PERIOD = 3,           -- 攻击间隔（秒）
 	ATTACK_RANGE = 5,            -- 近战攻击距离
 	HIT_RECOVERY = 2,            -- 受击硬直间隔（秒）
