@@ -764,7 +764,7 @@ TUNING.MS_GIANT_BOULDER = {
     minerals = 6,
     coal = 12,
     thulecite = 24,
-    empty = -10,
+    empty = 10,
   }
 }
 
