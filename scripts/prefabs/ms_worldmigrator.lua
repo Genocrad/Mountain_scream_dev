@@ -3,6 +3,10 @@ local assets =
     Asset("ANIM", "anim/ms_worldmigrator.zip"),
 }
 
+local function SetOpenMinimapIcon(inst, off)
+    inst.MiniMapEntity:SetIcon(off and "minimap_migrator_off.tex" or "minimap_migrator.tex")
+end
+
 local function OnWork(inst, worker, workleft)
     if workleft <= 0 then
       local pt = inst:GetPosition()
@@ -10,7 +14,8 @@ local function OnWork(inst, worker, workleft)
       inst.components.lootdropper:DropLoot(pt)
       inst.components.worldmigrator:SetHideActions(false)
       inst.broken = true
-      inst.MiniMapEntity:SetIcon("minimap_migrator.tex")
+      local off = inst.components.worldmigrator._status == 1
+      SetOpenMinimapIcon(inst, off)
     end
     inst.AnimState:PlayAnimation(
       (workleft <= 0 and (inst.components.worldmigrator._status == 1 and "idle_off" or "idle")) or
@@ -70,8 +75,18 @@ local function MakeWM(name, up)
     inst.OnSave = function(inst, data) if inst.broken then data.broken = true end end
     inst.OnLoad = function(inst, data) if data ~= nil and data.broken then inst.components.lootdropper:SetLoot({}) inst.components.workable:SetWorkLeft(-1) inst.components.workable:WorkedBy_Internal(TheWorld, 1) end end
     
-    inst:ListenForEvent("migration_unavailable", function(inst)  if inst.components.workable and inst.components.workable.workleft < 1 then inst.AnimState:PlayAnimation("idle_off") end end)
-    inst:ListenForEvent("migration_available", function(inst) if inst.components.workable and inst.components.workable.workleft < 1 then inst.AnimState:PlayAnimation("idle") end end)
+    inst:ListenForEvent("migration_unavailable", function(inst)
+      if inst.components.workable and inst.components.workable.workleft < 1 then
+        inst.AnimState:PlayAnimation("idle_off")
+        SetOpenMinimapIcon(inst, true)
+      end
+    end)
+    inst:ListenForEvent("migration_available", function(inst)
+      if inst.components.workable and inst.components.workable.workleft < 1 then
+        inst.AnimState:PlayAnimation("idle")
+        SetOpenMinimapIcon(inst, false)
+      end
+    end)
     return inst
   end
   return Prefab(name, fn, assets)

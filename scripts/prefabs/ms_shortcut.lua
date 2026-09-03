@@ -14,6 +14,10 @@ local function OnActivate(inst, doer)
     end
 end
 
+local function SetShortcutMinimapIcon(inst, enabled)
+  inst.MiniMapEntity:SetIcon(enabled and "ms_shortcut.tex" or "ms_shortcut_off.tex")
+end
+
 local function OnCubeTaken(inst)
   local teleport_target = inst.components.teleporter:GetTarget()
   if teleport_target then
@@ -21,12 +25,12 @@ local function OnCubeTaken(inst)
     inst.components.workable:SetWorkable(false)
     inst.AnimState:PlayAnimation("idle")
     inst.components.teleporter:SetEnabled(false)
-    --inst.MiniMapEntity:SetIcon(repaired and "atrium_gate_fixed.png" or "atrium_gate.png")
+    SetShortcutMinimapIcon(inst, false)
     teleport_target.components.trader:Enable()
     teleport_target.components.workable:SetWorkable(false)
     teleport_target.AnimState:PlayAnimation("idle")
     teleport_target.components.teleporter:SetEnabled(false)
-    --inst.MiniMapEntity:SetIcon(repaired and "atrium_gate_fixed.png" or "atrium_gate.png")
+    SetShortcutMinimapIcon(teleport_target, false)
     if inst.cube_percent then
       local cube = SpawnPrefab("mountain_transformation_cube")
       cube.components.finiteuses:SetPercent(inst.cube_percent)
@@ -55,13 +59,14 @@ local function OnCubeGiven(inst, giver, item)
     inst.components.teleporter:SetEnabled(true)
     inst.cube_percent = item.components.finiteuses:GetPercent()
     inst.AnimState:PlayAnimation("idle_on")
+    SetShortcutMinimapIcon(inst, true)
     teleport_target.components.trader:Disable()
     teleport_target.components.workable:SetWorkable(true)
     teleport_target.components.teleporter:SetEnabled(true)
     teleport_target.cube_percent = item.components.finiteuses:GetPercent()
     teleport_target.AnimState:PlayAnimation("idle_on")
+    SetShortcutMinimapIcon(teleport_target, true)
   end
-    --inst.MiniMapEntity:SetIcon(repaired and "atrium_gate_fixed_active.png" or "atrium_gate_active.png")
     if giver ~= nil then
         inst.SoundEmitter:PlaySound("dontstarve/common/together/atrium_gate/key_in")
     end
@@ -126,7 +131,7 @@ local function fn()
   inst.AnimState:SetBuild("ms_shortcut")
   inst.AnimState:PlayAnimation("idle")  
 
-  inst.MiniMapEntity:SetIcon("minimap_ms_arenateleporter.tex")
+  inst.MiniMapEntity:SetIcon("ms_shortcut_off.tex")
 
   MakeObstaclePhysics(inst, 1)
   
