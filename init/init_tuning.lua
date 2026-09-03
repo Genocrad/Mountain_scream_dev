@@ -5,6 +5,7 @@ COLLISION.MS_CLOUDS = 32768
 FALLOFF_IDS.CLOUDS_FALLOFF = 5
 
 TUNING.MS_LEVEL_TO_TEMP = {
+  [1] = {delta = 0, max = 70, min = -20}, 
   [2] = {delta = 0, max = 70, min = -20}, -- caves are colder then surface, so a higher temperature to be closer to surface. 
   [3] = {delta = -5, max = 70, min = -20},
   [4] = {delta = -10, max = 40, min = -50},
