@@ -76,8 +76,10 @@ local function fn()
     inst.entity:SetCanSleep(false)
 
     inst:AddTag("NOBLOCK")
-
+    inst:AddTag("NOCLICK")
     inst.entity:SetPristine()
+    
+    inst:AddComponent("temperatureoverrider") 
     
     inst:DoTaskInTime(0, function(inst)
     inst.icon = SpawnPrefab("giant_plug_marker_local")
@@ -95,13 +97,14 @@ local function fn()
         return inst
     end
     
-    inst:AddComponent("temperatureoverrider")
+    
     inst.components.temperatureoverrider:SetRadius(60)
     inst.components.temperatureoverrider:SetTemperature(0)
     inst.components.temperatureoverrider:Enable()
     
     inst:DoTaskInTime(0, UpdateTemp)
     inst:WatchWorldState("OnPhase", UpdateTemp)
+    
     return inst
 end
 
