@@ -74,7 +74,7 @@ local function fn()
 	inst:AddComponent("inspectable")
 
 	inst:AddComponent("inventoryitem")
-	-- 暂无官方电羊角图标（模组 atlas 尚无专用图）
+	inst.components.inventoryitem.atlasname = MS_ITEMS_ATLAS
 	inst.components.inventoryitem.imagename = "mountain_goapaca_horn"
 
 	inst:AddComponent("equippable")
