@@ -91,8 +91,9 @@ AddGlobalClassPostConstruct("screens/mapscreen", "MapScreen", function(self, own
     self.mapcontrolsdungeon = self.bottomright_root:AddChild(MapControlsDungeon())
     self.cloudsoverlay = self.minimap:AddChild(MinimapCloudOverlay())
     self.cloudsoverlay:Disable()
-    GLOBAL.TheCamera.saved_camera_rotation = GLOBAL.TheCamera:GetHeadingTarget()
+    
     if GLOBAL.ThePlayer.map_level_shown ~= nil then
+      GLOBAL.TheCamera.saved_camera_rotation = GLOBAL.TheCamera:GetHeadingTarget()
       if GLOBAL.ThePlayer.map_level_shown > TUNING.MS_CAVES_START then
         GLOBAL.TheCamera.heading = 270
         GLOBAL.TheCamera:SetHeadingTarget(270)
