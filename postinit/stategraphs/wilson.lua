@@ -267,9 +267,12 @@ AddStategraphPostInit("wilson", function(sg)
         old_fn(inst)
         local x,y,z = inst.Transform:GetWorldPosition()
         if TheWorld.net.components.dungeonmapoverwatch and TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(x,y,z) then
-          if inst.components.health then
-            inst.components.health:DoDelta(-TUNING.MS_FALL_DAMAGE, false, "falling", true, nil, true)
-          end
+          inst:DoTaskInTime(0.029, function(inst)
+            if inst.components.health then
+              inst.components.health:DoDelta(-TUNING.MS_FALL_DAMAGE, false, "falling", true, nil, true)
+            end
+          inst.sg:GoToState("hit")
+          end)
         end
       end
     end
