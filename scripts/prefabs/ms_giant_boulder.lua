@@ -28,7 +28,7 @@ local function OnWork(inst, worker, workleft)
     if worker.workleft then
       workleft = worker.workleft
     end
-    if workleft < 1 then
+    if workleft < 1 and inst.oretype ~= "empty" then
       local item = SpawnPrefab(weighted_random_choice(TUNING.MS_GIANT_BOULDER.LOOTS[inst.oretype]))
       LaunchAt(item, inst, worker, 1, 3, 3, 0)
       inst.components.workable:SetWorkLeft(TUNING.MS_GIANT_BOULDER.WORK_PER_DROP[inst.oretype])
@@ -90,6 +90,7 @@ local function MakeRock(biome)
     MakeSnowCoveredPristine(inst)
 
     inst:AddTag("boulder")
+    inst:AddTag("ms_ignorespecialwork")
   
     inst.entity:SetPristine()
 
