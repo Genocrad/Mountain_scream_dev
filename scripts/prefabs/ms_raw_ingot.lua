@@ -39,10 +39,7 @@ local function destroy_and_spawn(inst)
   local mx, my, mz = inst.Transform:GetWorldPosition()
   local slag = SpawnPrefab("ms_slag")
   slag.Transform:SetPosition(mx, my, mz)
-  for k, v in pairs(inst.recipe_table) do
-    local part = SpawnPrefab(v)
-    part.Transform:SetPosition(mx+math.random(-1,1)*0.2, my, mz+math.random(-1,1)*0.2)
-  end
+  slag.recipe_table = inst.recipe_table
   inst:Remove()
 end
 

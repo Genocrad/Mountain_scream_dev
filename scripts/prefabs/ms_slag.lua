@@ -4,6 +4,34 @@ local assets =
 }
 
 --
+
+local function OnMined(inst)
+  
+    SpawnPrefab("rock_break_fx").Transform:SetPosition(inst.Transform:GetWorldPosition())
+
+    if inst.recipe_table then
+      for k, v in pairs(inst.recipe_table) do
+        local part = SpawnPrefab(v)
+        part.Transform:SetPosition(inst.Transform:GetWorldPosition())
+        part.components.inventoryitem:OnDropped(true)
+      end
+    end
+
+    inst:Remove()
+end
+
+local function OnSave(inst, data)
+	if inst.recipe_table then
+		data.recipe_table = inst.recipe_table
+  end
+end
+
+local function OnLoad(inst, data)
+	if data ~= nil and data.recipe_table then
+    inst.recipe_table = data.recipe_table
+  end
+end
+
 local function fn()
     local inst = CreateEntity()
 
@@ -38,6 +66,12 @@ local function fn()
 
     local stackable = inst:AddComponent("stackable")
     stackable.maxsize = TUNING.STACK_SIZE_MEDITEM
+    
+    inst:AddComponent("workable")
+    inst.components.workable:SetWorkAction(ACTIONS.MINE)
+    inst.components.workable:SetWorkLeft(3)
+    inst.components.workable:SetOnFinishCallback(OnMined)
+
     
     MakeHauntable(inst)
     
