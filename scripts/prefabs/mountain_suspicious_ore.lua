@@ -11,7 +11,7 @@ local prefabs =
 	"nitre",
 	"saltrock",
 	"cutstone",
-	"ancientfruit_gem",
+	"ms_geode_ore",
 	"fossil_piece",
 	"thulecite_pieces",
 	"goldnugget",
