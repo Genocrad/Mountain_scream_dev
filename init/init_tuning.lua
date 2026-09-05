@@ -349,43 +349,44 @@ TUNING.MS_LEVEL_CONTENTS = {
 		},
 	},
 }
+
 TUNING.MS_LEVEL_WALL_CONTENTS = {
   [1] = {
-    distributepercent = 0.2,
+    distributepercent = 0.15,
 		distributeprefabs = {
 			ms_wall_stone = 0.1,
-			ms_wall_bush = 1.0,
+			ms_wall_bush = 0.5,
 		},  
   },
   [2] = {
-    distributepercent = 0.2,
+    distributepercent =  0.15,
 		distributeprefabs = {
 			ms_wall_stone = 0.2,
-			ms_wall_bush = 1.0,
+			ms_wall_bush = 0.5,
 		},  
   },
   [3] = {
-    distributepercent = 0.2,
+    distributepercent =  0.15,
 		distributeprefabs = {
 			ms_wall_stone = 0.4,
-			ms_wall_bush = 1.0,
+			ms_wall_bush = 0.5,
 		},  
     cavedistributeprefabs = {
 			ms_wall_stone = 1.0,
 		},  
   },
   [4] = {
-    distributepercent = 0.2,
+    distributepercent =  0.15,
 		distributeprefabs = {
 			ms_wall_stone = 1.0,
-			ms_wall_bush = 1.0,
+			ms_wall_bush = 0.5,
 		},  
   },
   [5] = {
-    distributepercent = 0.2,
+    distributepercent = 0.15,
 		distributeprefabs = {
 			ms_wall_stone = 1.0,
-			ms_wall_bush = 1.0,
+			ms_wall_bush = 0.5,
 		},  
     cavedistributeprefabs = {
 			ms_wall_stone = 1.0,
