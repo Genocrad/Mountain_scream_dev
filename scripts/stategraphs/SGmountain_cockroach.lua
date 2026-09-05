@@ -99,9 +99,9 @@ local states =
 
 		timeline =
 		{
-      TimeEvent(0 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("ms_sfx/ms_fx/bug_footstep") end),
-      TimeEvent(3 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("ms_sfx/ms_fx/bug_footstep") end),
-      TimeEvent(6 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("ms_sfx/ms_fx/bug_footstep") end),
+      --TimeEvent(0 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("ms_sfx/ms_fx/bug_footstep") end),
+      --TimeEvent(3 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("ms_sfx/ms_fx/bug_footstep") end),
+      --TimeEvent(6 * FRAMES, function(inst) inst.SoundEmitter:PlaySound("ms_sfx/ms_fx/bug_footstep") end),
 		},
 
 		events =
