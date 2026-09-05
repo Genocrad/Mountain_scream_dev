@@ -38,7 +38,7 @@ AddPrefabPostInit("cave", function(inst)
         0, 64
     )
         inst.Map:AddTileCollisionSet(
-        COLLISION.LAND_OCEAN_LIMITS,
+        COLLISION.WORLD,
         TileGroups.MS_TECHNICAL, true,
         TileGroups.MS_TECHNICAL, false,
         0.15, 64
