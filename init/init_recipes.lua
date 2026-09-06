@@ -578,3 +578,11 @@ AddRecipe2("ms_golden_apple",
 	nil,
 	{ "RESTORATION" }
 )
+
+--Turfs
+AddRecipe2("turf_ms_brick", { Ingredient("cutstone", 1)}, TECH.TURFCRAFTING_TWO, {numtogive=4}, {"DECOR"})
+AddRecipe2("turf_ms_cave",  { Ingredient("rocks", 2)}, TECH.TURFCRAFTING_TWO, {numtogive=4}, {"DECOR"})
+AddRecipe2("turf_ms_snow",  { Ingredient("mountain_snowball", 2)}, TECH.TURFCRAFTING_TWO, {numtogive=4}, {"DECOR"})
+AddRecipe2("turf_ms_mountain_high", { Ingredient("flint", 2)}, TECH.TURFCRAFTING_TWO, {numtogive=4}, {"DECOR"})
+AddRecipe2("turf_ms_mountain_low", { Ingredient("cutgrass", 1), Ingredient("rocks", 1) }, TECH.TURFCRAFTING_TWO, {numtogive=4}, {"DECOR"})
+AddRecipe2("turf_ms_mountain_low_2", { Ingredient("cutgrass", 2)}, TECH.TURFCRAFTING_TWO, {numtogive=4}, {"DECOR"})
