@@ -26,6 +26,11 @@ local function OnWork(inst, worker, workleft)
     )
 end
 
+local function getstatus(inst)
+  if inst.AnimState:IsCurrentAnimation("idle") then return "ON" end
+  if inst.AnimState:IsCurrentAnimation("idle_off") then return "OFF" end
+  return "DEFAULT"
+end
 local function MakeWM(name, up)
   local function fn()
     local inst = CreateEntity()
@@ -54,7 +59,8 @@ local function MakeWM(name, up)
     local lootdropper = inst:AddComponent("lootdropper")
     lootdropper:SetLoot({ "rocks", "rocks", "flint", "flint", "flint" })
     
-
+    local inspectable = inst:AddComponent("inspectable")
+    inspectable.getstatus = getstatus
     local worldmigrator = inst:AddComponent("worldmigrator")
     
     if up == true then
