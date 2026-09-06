@@ -1,9 +1,11 @@
 modimport("postinit/standartcomponents")
+modimport("postinit/containers")
 
 modimport("postinit/prefabs/player_common")
 modimport("postinit/prefabs/wortox")
 modimport("postinit/prefabs/wolfgang")
 modimport("postinit/prefabs/caves")
+modimport("postinit/prefabs/goldnugget")
 
 modimport("postinit/stategraphs/wilson")
 modimport("postinit/stategraphs/wilson_client")
