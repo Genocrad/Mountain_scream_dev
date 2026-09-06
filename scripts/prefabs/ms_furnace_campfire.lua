@@ -57,6 +57,7 @@ end
 local HEAT_OUTPUTS = { 2, 5, 5, 10 }
 local function onfuelchange(newsection, oldsection, inst)
   if newsection <= 0 then
+    inst.components.burnable:Extinguish()
 		if inst.queued_charcoal then
 			SpawnPrefab("charcoal").Transform:SetPosition(inst.Transform:GetWorldPosition())
 			inst.queued_charcoal = nil
