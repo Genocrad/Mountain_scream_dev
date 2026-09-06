@@ -19,7 +19,8 @@ local function MakeOre(name)
     inst.AnimState:SetBuild("ms_ore")
     inst.AnimState:PlayAnimation("ms_" .. name .. "_ore")
 
-
+    inst:AddTag("ms_ore")
+    
     MakeInventoryFloatable(inst, "small", 0.2)
     
     
