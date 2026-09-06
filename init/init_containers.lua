@@ -31,7 +31,7 @@ params.ms_furnace =
 }
 
 function params.ms_furnace.itemtestfn(container, item, slot)
-	return cooking.IsCookingIngredient(item.prefab) and not container.inst:HasTag("hasfurnituredecoritem")
+	return cooking.IsCookingIngredient(item.prefab) and not container.inst:HasTag("hasfurnituredecoritem") and item:HasTag("ms_ore")
 end
 
 function params.ms_furnace.widget.buttoninfo.fn(inst, doer)
