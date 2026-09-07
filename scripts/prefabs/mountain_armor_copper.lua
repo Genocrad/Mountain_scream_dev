@@ -64,7 +64,7 @@ local function fn()
 	inst:AddComponent("inspectable")
 	inst:AddComponent("inventoryitem")
 	inst.components.inventoryitem.atlasname = MS_ITEMS_ATLAS
-	inst.components.inventoryitem.imagename = "mountain_armor_goldchest"
+	inst.components.inventoryitem.imagename = "mountain_armor_copper"
 
 	inst:AddComponent("armor")
 	inst.components.armor:InitCondition(

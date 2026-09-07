@@ -82,7 +82,7 @@ local function fn()
 	inst:AddComponent("inspectable")
 	inst:AddComponent("inventoryitem")
 	inst.components.inventoryitem.atlasname = MS_ITEMS_ATLAS
-	inst.components.inventoryitem.imagename = "mountain_helmet_iron"
+	inst.components.inventoryitem.imagename = "mountain_helmet_copper"
 
 	inst:AddComponent("tradable")
 
