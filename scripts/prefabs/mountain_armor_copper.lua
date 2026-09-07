@@ -1,3 +1,5 @@
+local BronzeRepair = require("ms_bronze_repair")
+
 local assets =
 {
 	Asset("ANIM", "anim/mountain_armor_goldchest.zip"),
@@ -77,6 +79,8 @@ local function fn()
 	inst.components.equippable.equipslot = EQUIPSLOTS.BODY
 	inst.components.equippable:SetOnEquip(onequip)
 	inst.components.equippable:SetOnUnequip(onunequip)
+
+	BronzeRepair.MakeBronzeRepairable(inst)
 
 	MakeHauntableLaunch(inst)
 

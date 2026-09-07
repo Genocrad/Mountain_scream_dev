@@ -1,3 +1,5 @@
+local BronzeRepair = require("ms_bronze_repair")
+
 local assets =
 {
     Asset("ANIM", "anim/ms_ingot.zip"),
@@ -140,6 +142,9 @@ local function MakeDetail(name)
       --
       MakeHauntable(inst)
 
+      if name == "bronze" then
+        BronzeRepair.MakeBronzeRepairKit(inst)
+      end
 
       inst:ListenForEvent("temperaturedelta", TemperatureChange)
       --

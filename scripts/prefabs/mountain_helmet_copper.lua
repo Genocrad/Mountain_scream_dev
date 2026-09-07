@@ -1,3 +1,5 @@
+local BronzeRepair = require("ms_bronze_repair")
+
 local assets =
 {
 	Asset("ANIM", "anim/mountain_helmet_iron.zip"),
@@ -100,6 +102,8 @@ local function fn()
 
 	inst:AddComponent("waterproofer")
 	inst.components.waterproofer:SetEffectiveness(TUNING.MOUNTAIN_HELMET_COPPER.WATERPROOFNESS)
+
+	BronzeRepair.MakeBronzeRepairable(inst)
 
 	MakeHauntableLaunch(inst)
 

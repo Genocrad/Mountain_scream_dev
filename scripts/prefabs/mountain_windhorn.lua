@@ -1,3 +1,5 @@
+local BronzeRepair = require("ms_bronze_repair")
+
 local assets =
 {
 	Asset("ANIM", "anim/mountain_windhorn.zip"),
@@ -107,6 +109,8 @@ local function fn()
 	inst.components.finiteuses:SetUses(TUNING.MOUNTAIN_WINDHORN.USES)
 	inst.components.finiteuses:SetOnFinished(inst.Remove)
 	inst.components.finiteuses:SetConsumption(ACTIONS.PLAY, 1)
+
+	BronzeRepair.MakeBronzeRepairable(inst)
 
 	MakeHauntableLaunch(inst)
 

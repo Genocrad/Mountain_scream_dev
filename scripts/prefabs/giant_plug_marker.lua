@@ -60,9 +60,10 @@ local function UpdateTemp(inst)
   local x,y,z = inst.Transform:GetWorldPosition()
   if TheWorld.net.components.dungeonmapoverwatch then
     local level = TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(x,y,z)
-      if level then
-        inst.components.temperatureoverrider:SetTemperature(math.clamp(TheWorld.state.temperature - TUNING.MS_LEVEL_TO_TEMP[level].delta, TUNING.MS_LEVEL_TO_TEMP[level].min, TUNING.MS_LEVEL_TO_TEMP[level].max))
-      end
+    local temp_cfg = level and TUNING.MS_LEVEL_TO_TEMP[level] or nil
+    if temp_cfg then
+      inst.components.temperatureoverrider:SetTemperature(math.clamp(TheWorld.state.temperature - temp_cfg.delta, temp_cfg.min, temp_cfg.max))
+    end
   end
 end
 
@@ -82,17 +83,21 @@ local function fn()
     inst:AddComponent("temperatureoverrider") 
     
     inst:DoTaskInTime(0, function(inst)
-    inst.icon = SpawnPrefab("giant_plug_marker_local")
-    inst.icon:TrackEntity(inst)
-    inst.icon.MiniMapEntity:SetIcon("ms_giant_plug.tex")
+      inst.icon = SpawnPrefab("giant_plug_marker_local")
+      inst.icon:TrackEntity(inst)
+      inst.icon.MiniMapEntity:SetIcon("ms_giant_plug.tex")
     end)
     inst:ListenForEvent("hideallplugs", function()
-      inst.icon.MiniMapEntity:SetIcon("invisible_plug.tex")
-		end, TheWorld)  
+      if inst.icon ~= nil then
+        inst.icon.MiniMapEntity:SetIcon("invisible_plug.tex")
+      end
+		end, TheWorld)
     inst:ListenForEvent("showallplugs", function()
-      inst.icon.MiniMapEntity:SetIcon("ms_giant_plug.tex")
-		end, TheWorld)  
-    
+      if inst.icon ~= nil then
+        inst.icon.MiniMapEntity:SetIcon("ms_giant_plug.tex")
+      end
+		end, TheWorld)
+
     if not TheWorld.ismastersim then
         return inst
     end
@@ -101,7 +106,7 @@ local function fn()
     inst.components.temperatureoverrider:SetRadius(60)
     inst.components.temperatureoverrider:SetTemperature(0)
     inst.components.temperatureoverrider:Enable()
-    
+
     inst:DoTaskInTime(0, UpdateTemp)
     inst:WatchWorldState("OnPhase", UpdateTemp)
     

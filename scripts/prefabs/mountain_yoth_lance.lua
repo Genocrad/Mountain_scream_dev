@@ -1,3 +1,5 @@
+local BronzeRepair = require("ms_bronze_repair")
+
 local assets =
 {
 	Asset("ANIM", "anim/mountain_yoth_lance.zip"),
@@ -101,6 +103,8 @@ local function fn()
 	local equippable = inst:AddComponent("equippable")
 	equippable:SetOnEquip(onequip)
 	equippable:SetOnUnequip(onunequip)
+
+	BronzeRepair.MakeBronzeRepairable(inst)
 
 	MakeHauntableLaunch(inst)
 

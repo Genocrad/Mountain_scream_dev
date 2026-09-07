@@ -1,3 +1,5 @@
+local BronzeRepair = require("ms_bronze_repair")
+
 local assets =
 {
 	Asset("ANIM", "anim/mountain_wathgrithr_shield.zip"),
@@ -199,6 +201,8 @@ local function fn()
 
 	inst:ListenForEvent("percentusedchange", UpdatePhaseStats)
 	UpdatePhaseStats(inst)
+
+	BronzeRepair.MakeBronzeRepairable(inst)
 
 	inst:AddComponent("equippable")
 	inst.components.equippable:SetOnEquip(OnEquip)

@@ -116,14 +116,14 @@ TUNING.MS_LEVEL_CONTENTS = {
 			ms_mountain_low_2 = {
 				mountain_plants_bush = 0.55,
 				mountain_plants_tree = 0.1,
-				mountain_plants_flower = 0.3,
+				mountain_plants_flower = 0.7,
 				mountain_bush = 0.1,
 				mountain_plants_pomegranate = 0.2,
 			},
 			
 			},
 		herds = {
-			{ prefab = "mountain_goat", size = 8, count = 1 },
+			{ prefab = "mountain_goat", size = 6, count = 1 },
 		},
 	},
 	[2] = {
@@ -144,13 +144,13 @@ TUNING.MS_LEVEL_CONTENTS = {
 			ms_mountain_low_2 = {
 				mountain_plants_bush = 0.55,
 				mountain_plants_tree = 0.1,
-				mountain_plants_flower = 0.3,
+				mountain_plants_flower = 0.7,
 				mountain_bush = 0.1,
 				mountain_plants_pomegranate = 0.2,
 			},
 		},
 		herds = {
-			{ prefab = "mountain_goat", size = 8, count = 1 },
+			{ prefab = "mountain_goat", size = 6, count = 1 },
 		},
 	},
 	[3] = {
@@ -457,6 +457,9 @@ TUNING.MS_SMELT_TEMP = {
     ms_slag = 1,
 }
 
+-- ms_bronze_detail 右键修复青铜装备：每次恢复的耐久比例
+TUNING.MS_BRONZE_REPAIR_PERCENT = 0.5
+FORGEMATERIALS.MS_BRONZE = "ms_bronze"
 
 TUNING.MS_ANVIL_MINIMAL_HITS = 3
 
