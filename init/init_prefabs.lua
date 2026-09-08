@@ -26,11 +26,14 @@ PrefabFiles = {
 	"ms_climbing_down",
 	"light_fake_overworld",
 	"ms_worldmigrator",
+	"ms_worldmigrator_up_scene",
 	"ms_turfs",
 	"ms_snow_turf",
 	"ms_cave_entrance",
 	"ms_arenateleporter",
   "ms_shortcut",
+  "ms_shortcut_scene",
+  "ms_twin_portal_scene",
   "giant_plug_marker",
 
 	--------------------------------------------------------
@@ -93,6 +96,7 @@ PrefabFiles = {
 	"mountain_wooden_box",
   "ms_wall_bush",
   "ms_wall_stone",
+  "ms_broken_pillar",
   "ms_ore_rocks",
   "ms_geode_ore",
   "hat_tinfoil",
