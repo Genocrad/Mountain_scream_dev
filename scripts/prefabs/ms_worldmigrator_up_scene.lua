@@ -8,10 +8,10 @@ local PILLAR_STAGES = { "full", "med", "short" }
 
 local PILLAR_OFFSETS =
 {
-	{  4,  4 },
-	{  4, -4 },
-	{ -4,  4 },
-	{ -4, -4 },
+	{  6,  6 },
+	{  6, -6 },
+	{ -6,  6 },
+	{ -6, -6 },
 }
 
 local function SpawnPillar(x, z)
