@@ -85,10 +85,7 @@ local function MakeTerraformer(name, tiles, tile_rarity, snow_randomseed, snow_r
         local centerx, centery = TheWorld.net.components.dungeonmapoverwatch:GetPointForLevel(level)
             
         local posx, posy, posz = inst.Transform:GetWorldPosition()
-        if inst.prefab ~= "terraformer_mountain_dungeon_level_1" then
-          local light = SpawnPrefab("light_fake_overworld")
-          light.Transform:SetPosition(posx, 0, posz)  
-        end
+
         inst.Transform:SetPosition(math.floor((centerx+posx+posx)/12)*4, posy, math.floor((centery+posz+posz)/12)*4)
 
         local posx, posy, posz = inst.Transform:GetWorldPosition()
@@ -114,8 +111,6 @@ local function MakeTerraformer(name, tiles, tile_rarity, snow_randomseed, snow_r
             for j = -3, 3 do 
               local plug = SpawnPrefab("giant_plug_marker")
               plug.Transform:SetPosition(posx+i*10*4, 0, posz+j*10*4)  
-              local light = SpawnPrefab("light_fake_overworld")
-              light.Transform:SetPosition(posx, 0, posz)  
             end
           end
         end
