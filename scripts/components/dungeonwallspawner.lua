@@ -41,9 +41,8 @@ function DungeonWallSpawner:SpawnMainEntrance()
     local x = center_x+math.random(-50, 50)*4
     local z = center_y+math.random(-50, 50)*4
     if IsMsTile(TheWorld.Map:GetTileAtPoint(x, 0, z)) then
-      local scene = SpawnPrefab("ms_worldmigrator_up_scene")
-      scene.Transform:SetPosition(x, 0, z)
-      self.exits[2] = scene:Build()
+      self.exits[2] = SpawnPrefab("ms_worldmigrator_up")
+      self.exits[2].Transform:SetPosition(x,0,z)
       success = true
     end
   end
@@ -59,9 +58,8 @@ function DungeonWallSpawner:SpawnMainEntrance()
     local x = center_x+math.random(-50, 50)*4
     local z = center_y+math.random(-50, 50)*4
     if IsMsTile(TheWorld.Map:GetTileAtPoint(x, 0, z)) then
-      local scene = SpawnPrefab("ms_shortcut_scene")
-      scene.Transform:SetPosition(x, 0, z)
-      self.shortcut = scene:Build()
+      self.shortcut = SpawnPrefab("ms_shortcut")
+      self.shortcut.Transform:SetPosition(x,0,z)
       success = true
     end
   end
@@ -107,11 +105,6 @@ function DungeonWallSpawner:SpawnArenaTeleporter()
         end
       end
       
-      -- Luigi: For some god forsaken reason, we need 2 lights for full brightness?
-      local light = SpawnPrefab("light_fake_overworld")
-      light.Transform:SetPosition(x + TUNING.MS_TERRAFORMER_OFFSET_X[8] * 4, 0, z + TUNING.MS_TERRAFORMER_OFFSET_Y[8] * 4) 
-      light = SpawnPrefab("light_fake_overworld")
-      light.Transform:SetPosition(x + TUNING.MS_TERRAFORMER_OFFSET_X[8] * 4, 0, z + TUNING.MS_TERRAFORMER_OFFSET_Y[8] * 4) 
       local top = SpawnPrefab("mountain_top")
       top.Transform:SetPosition(x + TUNING.MS_TERRAFORMER_OFFSET_X[8] * 4, 0, z + TUNING.MS_TERRAFORMER_OFFSET_Y[8] * 4) 
       for i = -3, 3 do
@@ -144,10 +137,6 @@ function DungeonWallSpawner:SpawnArenaTeleporter()
       TheWorld.net.components.dungeonmapoverwatch:AddSpawnPointsForTile(9, tile_x + i + TUNING.MS_TERRAFORMER_OFFSET_X[8] + TUNING.MS_TERRAFORMER_OFFSET_X[9], tile_z + j + TUNING.MS_TERRAFORMER_OFFSET_Y[8] + TUNING.MS_TERRAFORMER_OFFSET_Y[9])
     end
   end
-  local light = SpawnPrefab("light_fake_overworld")
-  light.Transform:SetPosition(center_x + TUNING.MS_TERRAFORMER_OFFSET_X[8] * 4 + TUNING.MS_TERRAFORMER_OFFSET_X[9] * 4, 0, center_y + TUNING.MS_TERRAFORMER_OFFSET_Y[8] * 4 + TUNING.MS_TERRAFORMER_OFFSET_Y[9] * 4)   
-  light = SpawnPrefab("light_fake_overworld")
-  light.Transform:SetPosition(center_x + TUNING.MS_TERRAFORMER_OFFSET_X[8] * 4 + TUNING.MS_TERRAFORMER_OFFSET_X[9] * 4, 0, center_y + TUNING.MS_TERRAFORMER_OFFSET_Y[8] * 4 + TUNING.MS_TERRAFORMER_OFFSET_Y[9] * 4)   
   for i = -3, 3 do
     for j = -3, 3 do 
       local plug = SpawnPrefab("giant_plug_marker")
@@ -158,7 +147,7 @@ function DungeonWallSpawner:SpawnArenaTeleporter()
   golem.Transform:SetPosition(center_x + TUNING.MS_TERRAFORMER_OFFSET_X[8] * 4 + TUNING.MS_TERRAFORMER_OFFSET_X[9] * 4 ,0, center_y + TUNING.MS_TERRAFORMER_OFFSET_Y[8] * 4 + TUNING.MS_TERRAFORMER_OFFSET_Y[9]*4)
   platform.Transform:SetPosition(center_x + TUNING.MS_TERRAFORMER_OFFSET_X[8] * 4 + TUNING.MS_TERRAFORMER_OFFSET_X[9] * 4 ,0, center_y + TUNING.MS_TERRAFORMER_OFFSET_Y[8] * 4 + TUNING.MS_TERRAFORMER_OFFSET_Y[9]*4)
   success = nil
-  -- Spawn arena teleporter + shortcut exit as one 4x2 / 2x4 brick scene.
+  -- Spawn the teleporter to and from arena. 
   attempts = 100
   while success ~= true and attempts >= 0 do
     local x = center_x+math.random(-200, 200)
@@ -167,21 +156,37 @@ function DungeonWallSpawner:SpawnArenaTeleporter()
     attempts = attempts - 1
     if attempts <= 0 then x,y,z = self.exits[8].Transform:GetWorldPosition() x = x + math.random(-32, 32) y = y + math.random(-32, 32) end
     if (TileGroupManager:IsLandTile(TheWorld.Map:GetTileAtPoint(x, 0, z)) and not IsMsTechnicalTile(TheWorld.Map:GetTileAtPoint(x, 0, z))) or attempts <= 0 then
-      local scene = SpawnPrefab("ms_twin_portal_scene")
-      scene.Transform:SetPosition(x, 0, z)
-      local teleporter, shortcut_exit = scene:Build()
-
+      local teleporter = SpawnPrefab("ms_arenateleporter")
       local exit = SpawnPrefab("ms_arenateleporter_exit")
       exit.Transform:SetPosition(center_x + TUNING.MS_TERRAFORMER_OFFSET_X[8] * 4 + TUNING.MS_TERRAFORMER_OFFSET_X[9] * 4 ,0, center_y + TUNING.MS_TERRAFORMER_OFFSET_Y[8] * 4 + TUNING.MS_TERRAFORMER_OFFSET_Y[9]*4 - 12)
+      local tilex, tilez = TheWorld.Map:GetTileXYAtPoint(x,0,z)
+      TheWorld.Map:SetTile(tile_x, tilez, WORLD_TILES.MS_PERMAFROST)
+      teleporter.Transform:SetPosition(x,0,z)
       exit:SetExitTarget(teleporter)
       teleporter:SetExitTarget(exit)
-
-      self.shortcut:SetExitTarget(shortcut_exit)
-      shortcut_exit:SetExitTarget(self.shortcut)
-
       success = true
       self:SanityCheck(teleporter, self.exits[8])
-      self:SanityCheck(shortcut_exit, self.exits[8])
+    end
+  end
+  success = nil
+  attempts = 100
+  while success ~= true and attempts >= 0 do
+    local x = center_x+math.random(-200, 200)
+    local y
+    local z = center_y+math.random(-200, 200)
+    attempts = attempts - 1
+
+    if attempts <= 0 then x,y,z = self.exits[8].Transform:GetWorldPosition() x = x + math.random(-32, 32) y = y + math.random(-32, 32) end
+    if (TileGroupManager:IsLandTile(TheWorld.Map:GetTileAtPoint(x, 0, z)) and not IsMsTechnicalTile(TheWorld.Map:GetTileAtPoint(x, 0, z))) or attempts <= 0 then
+    
+      local teleporter = SpawnPrefab("ms_shortcut_exit")
+      local tilex, tilez = TheWorld.Map:GetTileXYAtPoint(x,0,z)
+      TheWorld.Map:SetTile(tile_x, tilez, WORLD_TILES.MS_PERMAFROST)
+      teleporter.Transform:SetPosition(x,0,z)
+      self.shortcut:SetExitTarget(teleporter)
+      teleporter:SetExitTarget(self.shortcut)
+      success = true
+      self:SanityCheck(teleporter, self.exits[8])
     end
   end
 end
@@ -516,16 +521,17 @@ local function addmobpointsforcaves(level,x,y,r,l,d,u,floor_type)
       local min_x, max_x = math.min(type_to_points[floor_type][wall][1], type_to_points[floor_type][wall+1][1]), math.max(type_to_points[floor_type][wall][1], type_to_points[floor_type][wall+1][1])
       local min_y, max_y = math.min(type_to_points[floor_type][wall][2], type_to_points[floor_type][wall+1][2]), math.max(type_to_points[floor_type][wall][2], type_to_points[floor_type][wall+1][2])
       local point_x = math.random(min_x, max_x)
-      local point_y = -(point_x * (max_y - min_y))/(max_x - min_x)
+      local point_y = -((point_x-min_x) * (max_y - min_y))/(max_x - min_x)
       local angle = 90
       
       if min_y == max_y then
         point_y = min_y
-      elseif min_y == type_to_points[floor_type][wall][2] then
+      elseif point_x > 0 then
         angle = 135
       else
         angle = 45
       end
+      print("x", min_x, max_x, min_y, max_y, point_x, point_y, angle)
        TheWorld.net.components.dungeonmapoverwatch:AddPointForWall(level, x + point_x, y + math.max(point_y-1, -20), angle)
     else -- Now handle the case where wall is o. the z axis
       local min_x, max_x = math.min(type_to_points[floor_type][wall][1], type_to_points[floor_type][wall+1][1]), math.max(type_to_points[floor_type][wall][1], type_to_points[floor_type][wall+1][1])

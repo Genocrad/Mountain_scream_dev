@@ -16,16 +16,16 @@ local light_params =
     day =
     {
         radius = 50,
-        intensity = .85,
+        intensity = 0.99,
         falloff = 0.8,
         colour = { 255 / 255, 230 / 255, 158 / 255 },
-        time = 2,
+        time = 10,
     },
 
     dusk =
     {
         radius = 50,
-        intensity = .85,
+        intensity = .99,
         falloff = 0.8,
         colour = { 150 / 255, 150 / 255, 150 / 255 },
         time = 4,
@@ -43,7 +43,7 @@ local light_params =
     fullmoon =
     {
         radius = 50,
-        intensity = .85,
+        intensity = .99,
         falloff = 0.8,
         colour = { 84 / 255, 122 / 255, 156 / 255},
         time = 4,
@@ -104,6 +104,7 @@ local function OnUpdateLight(inst, dt)
         inst._lighttask:Cancel()
         inst._lighttask = nil
     end
+    
     lerpparams(inst._currentlight, inst._startlight, inst._endlight, inst._endlight.time > 0 and inst._currentlight.time / inst._endlight.time or 1)
     pushparams(inst, inst._currentlight)
 end
@@ -173,6 +174,32 @@ local function onspawned(inst, child)
     child:PushEvent("fly_back")
 end
 
+local function UpdatePosition(inst)
+  if inst._target == nil then
+    inst:Remove()
+    
+  else
+	local x, y, z = inst._target.Transform:GetWorldPosition()
+  if x ~= nil then
+    if inst._x ~= x or inst._z ~= z then
+        inst._x = x
+        inst._z = z
+        inst.Transform:SetPosition(x, 0, z)
+    end
+    if TheWorld.net.components.dungeonmapoverwatch then
+      local level = TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(x,y,z)
+      if level and level <= TUNING.MS_CAVES_START then
+        inst.Light:Enable(true)
+      else
+        inst.Light:Enable(false)
+      end
+    end
+  else
+    inst:Remove()
+  end
+  end
+end
+
 local function common_fn()
     local inst = CreateEntity()
 
@@ -188,11 +215,10 @@ local function common_fn()
     inst:AddTag("sinkhole")
     inst:AddTag("batdestination")
 
-    inst.Light:EnableClientModulation(true)
-    --inst.entity:SetCanSleep(false)
+    inst.persists = false
       
     inst.widthscale = 3
-    inst._endlight = light_params.day
+    inst._endlight = light_params.night
     inst._startlight = {}
     inst._currentlight = {}
     copyparams(inst._startlight, inst._endlight)
@@ -211,7 +237,9 @@ local function common_fn()
         return inst
     end
     inst.widthscale = 500
-    inst.entity:SetCanSleep(false)
+    
+    inst:AddComponent("updatelooper")
+    inst.components.updatelooper:AddOnUpdateFn(UpdatePosition)
 
     return inst
 end

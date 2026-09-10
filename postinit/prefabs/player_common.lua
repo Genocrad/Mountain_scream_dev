@@ -84,4 +84,12 @@ AddPlayerPostInit(function(inst)
     end  
     end)
   end
+  if TheWorld.ismastersim then
+    inst.fake_light = SpawnPrefab("light_fake_overworld")
+    inst.fake_light._target = inst   
+    -- Otherwise not intensive enough. No, internsity > 1 does not fix this.
+    inst.fake_light2 = SpawnPrefab("light_fake_overworld")
+    inst.fake_light2._target = inst  
+  end
+
 end)
