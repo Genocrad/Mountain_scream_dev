@@ -122,10 +122,11 @@ local function fn()
   inst.entity:AddMiniMapEntity()
   inst.entity:AddNetwork()
 
-  inst:AddTag("groundhole")
   inst:AddTag("blocker")
-  inst:AddTag("vault_teleporter")
-
+  -- 与懒人塔一致：ACTIONS.TELEPORT（触摸），非 JUMPIN
+  inst:AddTag("townportal")
+  -- 走自定义 ms_entertownportal / ms_exittownportal_pre（雪特效）
+  inst:AddTag("ms_snow_teleport")
 
   inst.AnimState:SetBank("ms_shortcut")
   inst.AnimState:SetBuild("ms_shortcut")
@@ -150,10 +151,11 @@ local function fn()
 
   local teleporter = inst:AddComponent("teleporter")
   teleporter.onActivate = OnActivate
-  teleporter.overrideteleportarrivestate = "idle"
   teleporter.offset = 3
   teleporter.saveenabled = true
-  --teleporter:SetSelfManaged(lobbyexit)
+  -- 与懒人塔一致：进出走 townportal 节奏
+  teleporter.travelcameratime = 2.9
+  teleporter.travelarrivetime = 2.8
   teleporter:SetEnabled(false)
  
   inst.SetExitTarget = SetExitTarget

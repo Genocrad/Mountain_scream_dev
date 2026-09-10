@@ -67,9 +67,9 @@ local function MakeTeleporter(name, common_postinitfn, master_postinitfn, prefab
 		inst.entity:AddMiniMapEntity()
 		inst.entity:AddNetwork()
 
-		inst:AddTag("groundhole")
 		inst:AddTag("blocker")
-		inst:AddTag("vault_teleporter")
+		-- 与懒人塔一致：ACTIONS.TELEPORT（触摸），非 JUMPIN
+		inst:AddTag("townportal")
 		-- 走自定义 ms_entertownportal / ms_exittownportal_pre（雪特效）
 		inst:AddTag("ms_snow_teleport")
 
