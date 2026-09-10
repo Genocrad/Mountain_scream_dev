@@ -49,20 +49,18 @@ function Drownable:OnFallInVoid(teleport_x, teleport_y, teleport_z)
   -- we still need this
   if TheWorld.net.components.dungeonmapoverwatch and TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(self.src_x, self.src_y, self.src_z) then
     -- Find the closest one. 
-    local min_length = 100000
     -- Level one in all fail safe scenarios
-    local level_in = 2 
+    local level_in = TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(self.src_x, self.src_y, self.src_z) 
     
-    for i = 2, 8 do 
-      local level_x, level_z = TheWorld.net.components.dungeonmapoverwatch:GetPointForLevel(i)
-      if self.inst:GetDistanceSqToPoint(level_x, 0, level_z) < min_length then 
-        level_in = i
-        min_length = self.inst:GetDistanceSqToPoint(level_x, 0, level_z)
-      end
-    end
-  
+
     if level_in == 2 then
       self.dest_x, self.dest_y, self.dest_z = TheWorld.ms_worldmigrator.Transform:GetWorldPosition()
+      self.dest_x = self.dest_x + 1.5;
+      self.dest_z = self.dest_z + 1.5;
+    elseif level_in == 10 then
+      self.dest_x, self.dest_y, self.dest_z = TheWorld.ms_arenateleporter.Transform:GetWorldPosition()
+      self.dest_x = self.dest_x + 1.5;
+      self.dest_z = self.dest_z + 1.5;
     else
       local level_x, level_z =  TheWorld.net.components.dungeonmapoverwatch:GetPointForLevel(level_in)
       local delta_x, delta_z = level_x - self.src_x, level_z - self.src_z
