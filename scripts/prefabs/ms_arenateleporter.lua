@@ -169,6 +169,7 @@ end
 return MakeTeleporter("ms_arenateleporter", nil, function(inst)
 		inst.OnSave = OnSave
 		inst.OnLoad = OnLoad
+		TheWorld.ms_arenateleporter = inst
 	end),
 	MakeTeleporter("ms_arenateleporter_exit", function(inst)
 		inst.AnimState:SetBank("ms_arenateleporter_exit")
