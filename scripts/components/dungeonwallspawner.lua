@@ -41,8 +41,9 @@ function DungeonWallSpawner:SpawnMainEntrance()
     local x = center_x+math.random(-50, 50)*4
     local z = center_y+math.random(-50, 50)*4
     if IsMsTile(TheWorld.Map:GetTileAtPoint(x, 0, z)) then
-      self.exits[2] = SpawnPrefab("ms_worldmigrator_up")
-      self.exits[2].Transform:SetPosition(x,0,z)
+      local scene = SpawnPrefab("ms_worldmigrator_up_scene")
+      scene.Transform:SetPosition(x, 0, z)
+      self.exits[2] = scene:Build()
       success = true
     end
   end
@@ -58,8 +59,9 @@ function DungeonWallSpawner:SpawnMainEntrance()
     local x = center_x+math.random(-50, 50)*4
     local z = center_y+math.random(-50, 50)*4
     if IsMsTile(TheWorld.Map:GetTileAtPoint(x, 0, z)) then
-      self.shortcut = SpawnPrefab("ms_shortcut")
-      self.shortcut.Transform:SetPosition(x,0,z)
+      local scene = SpawnPrefab("ms_shortcut_scene")
+      scene.Transform:SetPosition(x, 0, z)
+      self.shortcut = scene:Build()
       success = true
     end
   end
@@ -147,7 +149,7 @@ function DungeonWallSpawner:SpawnArenaTeleporter()
   golem.Transform:SetPosition(center_x + TUNING.MS_TERRAFORMER_OFFSET_X[8] * 4 + TUNING.MS_TERRAFORMER_OFFSET_X[9] * 4 ,0, center_y + TUNING.MS_TERRAFORMER_OFFSET_Y[8] * 4 + TUNING.MS_TERRAFORMER_OFFSET_Y[9]*4)
   platform.Transform:SetPosition(center_x + TUNING.MS_TERRAFORMER_OFFSET_X[8] * 4 + TUNING.MS_TERRAFORMER_OFFSET_X[9] * 4 ,0, center_y + TUNING.MS_TERRAFORMER_OFFSET_Y[8] * 4 + TUNING.MS_TERRAFORMER_OFFSET_Y[9]*4)
   success = nil
-  -- Spawn the teleporter to and from arena. 
+  -- Spawn arena teleporter + shortcut exit as one 4x2 / 2x4 brick scene.
   attempts = 100
   while success ~= true and attempts >= 0 do
     local x = center_x+math.random(-200, 200)
@@ -156,37 +158,21 @@ function DungeonWallSpawner:SpawnArenaTeleporter()
     attempts = attempts - 1
     if attempts <= 0 then x,y,z = self.exits[8].Transform:GetWorldPosition() x = x + math.random(-32, 32) y = y + math.random(-32, 32) end
     if (TileGroupManager:IsLandTile(TheWorld.Map:GetTileAtPoint(x, 0, z)) and not IsMsTechnicalTile(TheWorld.Map:GetTileAtPoint(x, 0, z))) or attempts <= 0 then
-      local teleporter = SpawnPrefab("ms_arenateleporter")
+      local scene = SpawnPrefab("ms_twin_portal_scene")
+      scene.Transform:SetPosition(x, 0, z)
+      local teleporter, shortcut_exit = scene:Build()
+
       local exit = SpawnPrefab("ms_arenateleporter_exit")
       exit.Transform:SetPosition(center_x + TUNING.MS_TERRAFORMER_OFFSET_X[8] * 4 + TUNING.MS_TERRAFORMER_OFFSET_X[9] * 4 ,0, center_y + TUNING.MS_TERRAFORMER_OFFSET_Y[8] * 4 + TUNING.MS_TERRAFORMER_OFFSET_Y[9]*4 - 12)
-      local tilex, tilez = TheWorld.Map:GetTileXYAtPoint(x,0,z)
-      TheWorld.Map:SetTile(tile_x, tilez, WORLD_TILES.MS_PERMAFROST)
-      teleporter.Transform:SetPosition(x,0,z)
       exit:SetExitTarget(teleporter)
       teleporter:SetExitTarget(exit)
-      success = true
-      self:SanityCheck(teleporter, self.exits[8])
-    end
-  end
-  success = nil
-  attempts = 100
-  while success ~= true and attempts >= 0 do
-    local x = center_x+math.random(-200, 200)
-    local y
-    local z = center_y+math.random(-200, 200)
-    attempts = attempts - 1
 
-    if attempts <= 0 then x,y,z = self.exits[8].Transform:GetWorldPosition() x = x + math.random(-32, 32) y = y + math.random(-32, 32) end
-    if (TileGroupManager:IsLandTile(TheWorld.Map:GetTileAtPoint(x, 0, z)) and not IsMsTechnicalTile(TheWorld.Map:GetTileAtPoint(x, 0, z))) or attempts <= 0 then
-    
-      local teleporter = SpawnPrefab("ms_shortcut_exit")
-      local tilex, tilez = TheWorld.Map:GetTileXYAtPoint(x,0,z)
-      TheWorld.Map:SetTile(tile_x, tilez, WORLD_TILES.MS_PERMAFROST)
-      teleporter.Transform:SetPosition(x,0,z)
-      self.shortcut:SetExitTarget(teleporter)
-      teleporter:SetExitTarget(self.shortcut)
+      self.shortcut:SetExitTarget(shortcut_exit)
+      shortcut_exit:SetExitTarget(self.shortcut)
+
       success = true
       self:SanityCheck(teleporter, self.exits[8])
+      self:SanityCheck(shortcut_exit, self.exits[8])
     end
   end
 end
@@ -224,6 +210,8 @@ local function spawn_5x5_area(self, level, x,y, wall, normal_tile, technical_til
   end
   self.exits[level+1] = SpawnPrefab("ms_climbing_down")
   self.exits[level+1].Transform:SetPosition(x + TUNING.MS_TERRAFORMER_OFFSET_X[level] * 4 + random_x * 4, 0, y + TUNING.MS_TERRAFORMER_OFFSET_Y[level] * 4 + random_y * 4)
+  -- Pad center is technical; small nudge onto the outer land ring.
+  self.exits[level+1].components.teleporter.teleport_offset = { x = 0, y = 0, z = 3 }
   self.entrances[level]:SetExitTarget(self.exits[level+1])
   self.exits[level+1]:SetExitTarget(self.entrances[level])
 end
@@ -400,15 +388,16 @@ function DungeonWallSpawner:SpawnWallsAroundPoint(level, wall, size, normal_tile
             if not spawned then
               last_entrance_x, last_entrance_y, last_exit_x, last_exit_y, last_r, last_l, last_d, last_u = center_x+x*4 + (r * 4 - l *4) * 0.05, center_y+y*4 + (d*4 - u *4) * 0.05,
                                                                                                            center_x+x*4 + l - r + TUNING.MS_TERRAFORMER_OFFSET_X[level]*4,
-                                                                                                           center_y+y*4 + u - d +  TUNING.MS_TERRAFORMER_OFFSET_Y[level]*4,
+                                                                                                           center_y+y*4 + u - d + TUNING.MS_TERRAFORMER_OFFSET_Y[level]*4,
                                                                                                            r, l, d, u
               if math.random() < self.exits[level]:GetDistanceSqToPoint(center_x+x*4, 0, center_y+y*4)/(TUNING.MS_TERRAFORMER_SIZE[level] * TUNING.MS_TERRAFORMER_SIZE[level] * 16 * 10) then
                 self.entrances[level] = SpawnPrefab("ms_climbing")
                 self.entrances[level].Transform:SetPosition(center_x+x*4 + (r * 4 - l *4) * 0.05, 0, center_y+y*4 + (d*4 - u *4) * 0.05)
-                self.entrances[level].components.teleporter.teleport_offset = {x = (r * 4 - l *4), y = 0, z = (d*4 - u *4) }
                 self.entrances[level].Transform:SetRotation((r==1 or l==1) and 90 or 0)
                 self.exits[level+1] = SpawnPrefab("ms_climbing_down")
-                self.exits[level+1].Transform:SetPosition(center_x+x*4 + l - r + TUNING.MS_TERRAFORMER_OFFSET_X[level]*4, 0, center_y+y*4 + u - d +  TUNING.MS_TERRAFORMER_OFFSET_Y[level]*4)
+                self.exits[level+1].Transform:SetPosition(center_x+x*4 + l - r + TUNING.MS_TERRAFORMER_OFFSET_X[level]*4, 0, center_y+y*4 + u - d + TUNING.MS_TERRAFORMER_OFFSET_Y[level]*4)
+                -- Down only: land outside the mountain (same side as the ladder face).
+                self.exits[level+1].components.teleporter.teleport_offset = {x = (r - l) * 4, y = 0, z = (d - u) * 4 }
                 self.entrances[level]:SetExitTarget(self.exits[level+1])
                 self.exits[level+1]:SetExitTarget(self.entrances[level])
                 spawned = true
@@ -463,17 +452,15 @@ function DungeonWallSpawner:SpawnWallsAroundPoint(level, wall, size, normal_tile
        print("EXTREME SPAWN 0 ",  level, last_entrance_x, last_entrance_y, last_exit_x, last_exit_y, last_r, last_l, last_d, last_u)
       self.entrances[level] = SpawnPrefab("ms_climbing")
       self.entrances[level].Transform:SetPosition(last_entrance_x, 0, last_entrance_y+1.1)
-      self.entrances[level].components.teleporter.teleport_offset = {x = 0, y = 0, z = -3 }
       spawn_5x5_area(self, level, last_entrance_x, last_entrance_y-4, wall, normal_tile, technical_tile)
     else
        print("EXTREME SPAWN", "level", level, "ex", last_entrance_x, "ey", last_entrance_y, "ox", last_exit_x, "oy", last_exit_y, "r", last_r, "l" ,last_l, "d", last_d, "u", last_u)
       self.entrances[level] = SpawnPrefab("ms_climbing")
       self.entrances[level].Transform:SetPosition(last_entrance_x, 0, last_entrance_y)
-      self.entrances[level].Transform:SetPosition(last_entrance_x, 0, last_entrance_y )
-      self.entrances[level].components.teleporter.teleport_offset = {x = (last_r * 4 - last_l *4), y = 0, z = (last_d*4 - last_u *4) }
       self.entrances[level].Transform:SetRotation((last_r == 1 or last_l == 1) and 90 or 0)
       self.exits[level+1] = SpawnPrefab("ms_climbing_down")
       self.exits[level+1].Transform:SetPosition(last_exit_x, 0, last_exit_y)
+      self.exits[level+1].components.teleporter.teleport_offset = {x = (last_r - last_l) * 4, y = 0, z = (last_d - last_u) * 4 }
       self.entrances[level]:SetExitTarget(self.exits[level+1])
       self.exits[level+1]:SetExitTarget(self.entrances[level])
     end

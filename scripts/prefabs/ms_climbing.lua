@@ -38,21 +38,31 @@ end
 
 local function OnSave(inst, data)
 	if inst.components.teleporter.targetTeleporter then
-		data.target_x, data.target_y, data.target_z =  inst.components.teleporter.targetTeleporter.Transform:GetWorldPosition()
-    data.teleport_offset =  inst.components.teleporter.teleport_offset
+		data.target_x, data.target_y, data.target_z = inst.components.teleporter.targetTeleporter.Transform:GetWorldPosition()
+		local exit = inst.components.teleporter.targetTeleporter
+		if exit.components.teleporter ~= nil then
+			data.exit_teleport_offset = exit.components.teleporter.teleport_offset
+		end
+		-- Legacy: older worlds stored the wall normal on the climbing prefab.
+		if data.exit_teleport_offset == nil then
+			data.teleport_offset = inst.components.teleporter.teleport_offset
+		end
 	end
 end
 
 local function OnLoad(inst, data)
+	local exit
 	if data ~= nil and data.target_x then
-    local exit = SpawnPrefab("ms_climbing_down")
-    exit.Transform:SetPosition(data.target_x, data.target_y, data.target_z)
-    exit:SetExitTarget(inst)
-    inst:SetExitTarget(exit)
+		exit = SpawnPrefab("ms_climbing_down")
+		exit.Transform:SetPosition(data.target_x, data.target_y, data.target_z)
+		exit:SetExitTarget(inst)
+		inst:SetExitTarget(exit)
 	end
-  if data ~= nil and data.teleport_offset then
-    inst.components.teleporter.teleport_offset = data.teleport_offset
-  end
+	-- No fixed offset when climbing up — paved upper landing + vanilla offset is better.
+	inst.components.teleporter.teleport_offset = nil
+	if exit ~= nil and exit.components.teleporter ~= nil and data ~= nil then
+		exit.components.teleporter.teleport_offset = data.exit_teleport_offset or data.teleport_offset
+	end
 end
 
 
