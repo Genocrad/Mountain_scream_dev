@@ -80,6 +80,14 @@ local function clientimagechange(inst)
   inst.replica.inventoryitem:SetAtlas("images/inventoryimages/inventoryimages_ingots.xml")
 end
 
+local function getstatus(inst)
+  local imagename = (inst.components.inventoryitem ~= nil and inst.components.inventoryitem.imagename) or inst.prefab
+  if string.find(imagename, "hot", 1, true) or string.find(imagename, "melt", 1, true) then
+    return "HOT"
+  end
+  return "GENERIC"
+end
+
 --
 local function MakeDetail(name)
   local function fn()
@@ -125,6 +133,7 @@ local function MakeDetail(name)
 
       --
       local inspectable = inst:AddComponent("inspectable")
+      inspectable.getstatus = getstatus
 
       --
       local inventoryitem = inst:AddComponent("inventoryitem")

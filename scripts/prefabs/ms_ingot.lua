@@ -115,6 +115,18 @@ local function clientimagechange(inst)
   inst.replica.inventoryitem:SetAtlas("images/inventoryimages/inventoryimages_ingots.xml")
 end
 
+local function getstatus(inst)
+  local imagename = (inst.components.inventoryitem ~= nil and inst.components.inventoryitem.imagename) or inst.prefab
+  if string.find(imagename, "melt", 1, true) then
+    return "MELT"
+  elseif string.find(imagename, "hot", 1, true) then
+    return "HOT"
+  elseif string.find(imagename, "warm", 1, true) then
+    return "WARM"
+  end
+  return "GENERIC"
+end
+
 -- SAVE/LOAD
 
 local function OnSave(inst)
@@ -189,6 +201,7 @@ local function MakeIngot(name, recipe)
       furnituredecor.ontakeofffurniture = function(inst)  local stackable = inst:AddComponent("stackable") stackable.maxsize = TUNING.STACK_SIZE_LARGEITEM end
       --
       local inspectable = inst:AddComponent("inspectable")
+      inspectable.getstatus = getstatus
 
       --
       local inventoryitem = inst:AddComponent("inventoryitem")

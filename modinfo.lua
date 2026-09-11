@@ -10,8 +10,8 @@ if MS_LANGUAGE == 'ch' then
     description = "..."
 end
 
-author = "luigi.m.mario; 你要帮帮威吊"
-version = "1.1"
+author = "Milanjorim, luigi.m.mario, 你要帮帮威吊"
+version = "1.0.0"
 forumthread = "/"
 
 icon_atlas = "images/modicon.xml"
@@ -47,9 +47,10 @@ local CONFIG_TEXT = {
 }
 local CONFIG_SCHEMA = {
     { type = "section", key = "game" },
-    { type = "setting", name = "language", default = { ch = "ch", en = "en" }, options = {
+    { type = "setting", name = "language", default = { ch = "ch", en = "en", ru = "ru" }, options = {
         { data = "en", text = { ch = "英文", es = "Ingles", en = "English" } },
         { data = "ch", text = { ch = "中文", es = "Chino", en = "Chinese" } },
+        { data = "ru", text = { ch = "俄文", es = "Ruso", en = "Russian" } },
     }},
     { type = "setting", name = "enable_collision_for_player", default = false, options = {
         { data = false, text = { ch = "", es = "", en = "Disable" } },

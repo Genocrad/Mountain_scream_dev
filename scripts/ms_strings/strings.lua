@@ -4,6 +4,9 @@
 -- Ore / ingots / forging
 local ______________NAMES = STRINGS.NAMES
 
+STRINGS.UI.CRAFTING_FILTERS.MOUNTAIN_SCIENCE = "Mountain Science"
+STRINGS.UI.CRAFTING.MOUNTAIN_CUBE = "Not enough cube\ndurability"
+
 ______________NAMES.MS_COPPER_ORE = "Copper Ore"
 ______________NAMES.MS_ALU_ORE = "Aluminium Ore"
 ______________NAMES.MS_COAL = "Black Coal"
@@ -11,6 +14,14 @@ ______________NAMES.MS_COPPER_INGOT = "Copper Ingot"
 ______________NAMES.MS_ALU_INGOT = "Aluminium Ingot"
 ______________NAMES.MS_BRONZE_INGOT = "Bronze Ingot"
 ______________NAMES.MS_GOLD_INGOT = "Gold Ingot"
+______________NAMES.MS_COPPER_INGOT_FORMLESS = "Formless Copper Ingot"
+______________NAMES.MS_ALU_INGOT_FORMLESS = "Formless Aluminium Ingot"
+______________NAMES.MS_BRONZE_INGOT_FORMLESS = "Formless Bronze Ingot"
+______________NAMES.MS_GOLD_INGOT_FORMLESS = "Formless Gold Ingot"
+______________NAMES.MS_COPPER_DETAIL = "Copper Detail"
+______________NAMES.MS_ALU_DETAIL = "Aluminium Detail"
+______________NAMES.MS_BRONZE_DETAIL = "Bronze Detail"
+______________NAMES.MS_GOLD_DETAIL = "Gold Detail"
 ______________NAMES.MS_SLAG = "Slag"
 ______________NAMES.MS_FURNACE = "Furnace"
 ______________NAMES.MS_FURNACE_CAMPFIRE = "Furnace"
@@ -102,14 +113,29 @@ ______________NAMES.MOUNTAIN_GRAVEL_PILE = "Gravel Pile"
 ______________NAMES.MS_BROKEN_PILLAR = "Destroyed Column"
 ______________NAMES.MOUNTAIN_TRANSFORMATION_CUBE = "Transformation Cube"
 ______________NAMES.MOUNTAIN_WOODEN_BOX = "Wooden Box"
-
--- Mountain content
+______________NAMES.HAT_TINFOIL = "Tinfoil Hat"
+______________NAMES.MS_GEODE_ORE = "Geode Ore"
+______________NAMES.MS_ALU_ROCK = "Aluminium Rock"
+______________NAMES.MS_COAL_ROCK = "Coal Rock"
+______________NAMES.MS_COPPER_ROCK = "Copper Rock"
+______________NAMES.MS_GEODE_ROCK = "Geode Rock"
+______________NAMES.MS_GIANT_BOULDER_GRASS = "Giant Boulder"
+______________NAMES.MS_GIANT_BOULDER_ROCK = "Giant Boulder"
+______________NAMES.MS_GIANT_BOULDER_SNOW = "Giant Boulder"
+______________NAMES.TURF_MS_SNOW = "Snow Turf"
+______________NAMES.TURF_MS_BRICK = "Brick Turf"
+______________NAMES.TURF_MS_CAVE = "Cave Turf"
+______________NAMES.TURF_MS_MOUNTAIN_LOW = "Lowland Mountain Turf"
+______________NAMES.TURF_MS_MOUNTAIN_LOW_2 = "Lowland Mountain Turf"
+______________NAMES.TURF_MS_MOUNTAIN_HIGH = "Highland Mountain Turf"
+______________NAMES.TURF_MS_PERMAFROST = "Permafrost Turf"
+______________NAMES.MOUNTAIN_PLANTS_POMEGRANATE = "Pomegranate"
 ______________NAMES.MOUNTAIN_TOP = "Mountain Top"
+
 STRINGS.MOUNTAIN_TOP = {
 	NAMED_FMT = "%s's Mountain Top",
 	GENERIC_DESC = "A mountain top ripe for planting a flag.",
 	FLAGGED_DESC = "This flag was planted by {name}.",
 }
 
-STRINGS.UI.CRAFTING_FILTERS.MOUNTAIN_SCIENCE = "Mountain Science"
-STRINGS.UI.CRAFTING.MOUNTAIN_CUBE = "Not enough cube\ndurability"
+

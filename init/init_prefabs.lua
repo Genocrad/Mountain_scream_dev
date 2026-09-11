@@ -2,7 +2,6 @@ PrefabFiles = {
 	--------------------------------------------------------
 	-- A: dungeon / forging / world systems
 	"terraformers_mountain_dungeon",
-	"ms_ice_goat",
 	"gas_mountain_sediment",
 	"gas_mountain_wall",
 	"ms_mountain_wall",

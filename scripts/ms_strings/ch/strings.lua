@@ -4,6 +4,9 @@
 -- Ore / ingots / forging
 local ______________NAMES = STRINGS.NAMES
 
+STRINGS.UI.CRAFTING_FILTERS.MOUNTAIN_SCIENCE = "山啸"
+STRINGS.UI.CRAFTING.MOUNTAIN_CUBE = "合成魔方\n耐久不足"
+
 ______________NAMES.MS_COPPER_ORE = "铜矿"
 ______________NAMES.MS_ALU_ORE = "铝矿"
 ______________NAMES.MS_COAL = "黑煤"
@@ -11,6 +14,14 @@ ______________NAMES.MS_COPPER_INGOT = "铜锭"
 ______________NAMES.MS_ALU_INGOT = "铝锭"
 ______________NAMES.MS_BRONZE_INGOT = "青铜锭"
 ______________NAMES.MS_GOLD_INGOT = "金锭"
+______________NAMES.MS_COPPER_INGOT_FORMLESS = "未定形铜锭"
+______________NAMES.MS_ALU_INGOT_FORMLESS = "未定形铝锭"
+______________NAMES.MS_BRONZE_INGOT_FORMLESS = "未定形青铜锭"
+______________NAMES.MS_GOLD_INGOT_FORMLESS = "未定形金锭"
+______________NAMES.MS_COPPER_DETAIL = "铜零件"
+______________NAMES.MS_ALU_DETAIL = "铝零件"
+______________NAMES.MS_BRONZE_DETAIL = "青铜零件"
+______________NAMES.MS_GOLD_DETAIL = "金零件"
 ______________NAMES.MS_SLAG = "炉渣"
 ______________NAMES.MS_FURNACE = "熔炉"
 ______________NAMES.MS_FURNACE_CAMPFIRE = "炉火"
@@ -102,14 +113,29 @@ ______________NAMES.MOUNTAIN_GRAVEL_PILE = "碎石堆"
 ______________NAMES.MS_BROKEN_PILLAR = "被摧毁的柱子"
 ______________NAMES.MOUNTAIN_TRANSFORMATION_CUBE = "合成魔方"
 ______________NAMES.MOUNTAIN_WOODEN_BOX = "木果"
-
--- Mountain content
+______________NAMES.HAT_TINFOIL = "锡纸帽"
+______________NAMES.MS_GEODE_ORE = "晶洞矿"
+______________NAMES.MS_ALU_ROCK = "铝矿岩"
+______________NAMES.MS_COAL_ROCK = "煤矿岩"
+______________NAMES.MS_COPPER_ROCK = "铜矿岩"
+______________NAMES.MS_GEODE_ROCK = "晶洞矿岩"
+______________NAMES.MS_GIANT_BOULDER_GRASS = "巨石"
+______________NAMES.MS_GIANT_BOULDER_ROCK = "巨石"
+______________NAMES.MS_GIANT_BOULDER_SNOW = "巨石"
+______________NAMES.TURF_MS_SNOW = "雪地地皮"
+______________NAMES.TURF_MS_BRICK = "石面地皮"
+______________NAMES.TURF_MS_CAVE = "石洞地皮"
+______________NAMES.TURF_MS_MOUNTAIN_LOW = "低山地皮"
+______________NAMES.TURF_MS_MOUNTAIN_LOW_2 = "山地地皮"
+______________NAMES.TURF_MS_MOUNTAIN_HIGH = "高山地皮"
+______________NAMES.TURF_MS_PERMAFROST = "冻土地皮"
+______________NAMES.MOUNTAIN_PLANTS_POMEGRANATE = "石榴"
 ______________NAMES.MOUNTAIN_TOP = "山顶"
+
 STRINGS.MOUNTAIN_TOP = {
 	NAMED_FMT = "%s的山顶",
 	GENERIC_DESC = "一座适合插旗的山顶。",
 	FLAGGED_DESC = "这面旗帜是{name}插上的。",
 }
 
-STRINGS.UI.CRAFTING_FILTERS.MOUNTAIN_SCIENCE = "山啸"
-STRINGS.UI.CRAFTING.MOUNTAIN_CUBE = "合成魔方\n耐久不足"
+
