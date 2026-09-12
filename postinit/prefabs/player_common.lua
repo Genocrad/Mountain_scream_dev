@@ -84,7 +84,7 @@ AddPlayerPostInit(function(inst)
     end  
     end)
   end
-  if TheWorld.ismastersim then
+  if TheWorld.ismastersim and  TheWorld:HasTag("mountain_scream_dungeons") then
     inst.fake_light = SpawnPrefab("light_fake_overworld")
     inst.fake_light._target = inst   
     -- Otherwise not intensive enough. No, internsity > 1 does not fix this.
