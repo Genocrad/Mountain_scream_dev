@@ -46,6 +46,7 @@ end
 local function OnTimerDone(inst)
   inst.AnimState:PlayAnimation("idle_full")
   inst.components.workable:SetWorkLeft(1)
+  inst.components.workable:SetWorkable(false)
   inst:AddTag("mountain_throw_target")
 end
 
