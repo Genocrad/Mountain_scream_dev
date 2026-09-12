@@ -33,7 +33,7 @@ local light_params =
 
     night =
     {
-        radius = 0,
+        radius = 50,
         intensity = 0,
         falloff = 0.3,
         colour = { 0, 0, 0 },
@@ -209,6 +209,8 @@ local function common_fn()
     inst.entity:AddLight()
     inst.entity:AddNetwork()
 
+    inst.Light:EnableClientModulation(true)
+    
     inst:AddTag("NOCLICK")
     inst:AddTag("FX")
     inst:AddTag("daylight")
