@@ -729,8 +729,8 @@ TUNING.MOUNTAIN_SUSPICIOUS_ORE = {
 	WORK_LEFT = 1,
 	-- 档位权重；敲开时固定掉 1 rocks，再按权重抽 1 项（档内均分）
 	LOOT_TIERS = {
-		{ weight = 50,    items = { "ancientfruit_gem", "goldnugget", "ms_copper_ore", "ms_alu_ore", "ms_coal" } },
-		{ weight = 40,    items = { "fossil_piece", "thulecite_pieces", "goldnugget", "marble", "flint", "ice", "nitre", "saltrock", "cutstone" } },
+		{ weight = 60,    items = { "ms_geode_ore", "goldnugget", "ms_copper_ore", "ms_alu_ore", "ms_coal" } },
+		{ weight = 30,    items = { "fossil_piece", "thulecite_pieces", "goldnugget", "marble", "flint", "ice", "nitre", "saltrock", "cutstone" } },
 		{ weight = 10,    items = { "thulecite", "dreadstone", "heatrock" } },
 		{ weight = 1,     items = { "ancienttree_seed" } },
 		{ weight = 0.01,  items = { "trinket_4" } },
