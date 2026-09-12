@@ -17,6 +17,8 @@ TUNING.MS_LEVEL_TO_TEMP = {
   [10] = {delta = 0, max = 70, min = -50}, -- caves should match caves
   [11] = {delta = 0, max = 70, min = -50},
   [12] = {delta = 0, max = 70, min = -50},
+  [13] = {delta = 0, max = 70, min = -50},
+  [14] = {delta = 0, max = 70, min = -50},
 }
 
 -- terraformer offsets: index 0 unused conceptually; values for levels 1..
