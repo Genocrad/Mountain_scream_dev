@@ -182,6 +182,9 @@ function DungeonMapOverwatch:GetNearestLevel(x,y,z)
   if best_level ~= nil and best_min_x < 200 and best_min_z < 200 then
     return best_level
   end
+  if best_level == 2 and best_min_x < 250 and best_min_z < 250 then
+    return best_level
+  end
   return nil
 end
 
