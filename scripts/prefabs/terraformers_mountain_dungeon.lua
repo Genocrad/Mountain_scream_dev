@@ -195,14 +195,7 @@ local function MakeTerraformer(name, tiles, tile_rarity, snow_randomseed, snow_r
                 if inst.prefab == "terraformer_mountain_dungeon_level_1" then
                   local deltax, deltay = TheWorld.net.components.dungeonmapoverwatch:GetTileDiffForLevel(1)
                   SetTileOrNoiseOrNoise(tiles, tile_rarity, x-deltax+70,y-deltay+70, snow_randomseed, snow_rarity, level)
-                  for i=1, 60 do 
-                    thistile = TheWorld.Map:GetTile(x+i,y)
-
-                    if IsMsTile(thistile) then
-                      TheWorld.Map:SetTile(x+i,y,WORLD_TILES.VOID_TECHNICAL)
-                      SetTileOrNoiseOrNoise(tiles, tile_rarity, x-deltax+70+i,y-deltay+70, snow_randomseed, snow_rarity, level)
-                    end
-                  end
+          
                 else
                   SetTileOrNoiseOrNoise(tiles, tile_rarity, x+spawn_offset_x,y+spawn_offset_y, snow_randomseed, snow_rarity, level)
                 end
