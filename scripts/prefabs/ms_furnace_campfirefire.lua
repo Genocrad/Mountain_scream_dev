@@ -74,7 +74,7 @@ end
     inst.components.heater:SetHeatRadiusCutoff(0.2)
     --inst.components.heater.heatrate = 200
     inst:AddComponent("temperatureoverrider")
-    inst.components.temperatureoverrider:SetRadius(2)
+    inst.components.temperatureoverrider:SetRadius(1)
     inst.components.temperatureoverrider:SetTemperature(450)
     inst.components.temperatureoverrider:Enable()
     
