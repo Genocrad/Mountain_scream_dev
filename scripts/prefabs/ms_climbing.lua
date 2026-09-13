@@ -76,6 +76,7 @@ local function fn()
     inst.entity:AddMiniMapEntity()
       
     MakeObstaclePhysics(inst, 3)
+    inst.Physics:SetActive(false)
     
     inst.AnimState:SetBank("ms_climbing")
     inst.AnimState:SetBuild("ms_climbing")

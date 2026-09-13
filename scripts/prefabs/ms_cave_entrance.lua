@@ -90,7 +90,7 @@ local function fn()
 
   inst.Transform:SetEightFaced()
   MakeObstaclePhysics(inst, 1)
-  
+  inst.Physics:SetActive(false)
   inst:SetDeploySmartRadius(3)
   if common_postinitfn ~= nil then
     common_postinitfn(inst)

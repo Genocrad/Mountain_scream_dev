@@ -75,6 +75,7 @@ local function MakeWM(name, up)
       workable:SetWorkLeft(TUNING.ROCKS_MINE)
       workable:SetOnWorkCallback(OnWork)
       inst.MiniMapEntity:SetIcon("minimap_migrator_full.tex")
+      TheWorld.ms_worldmigrator_down = inst
     end
     worldmigrator:SetID("mountain_scream")
 
