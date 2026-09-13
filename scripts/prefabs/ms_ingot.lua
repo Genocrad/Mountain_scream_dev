@@ -115,6 +115,24 @@ local function clientimagechange(inst)
   inst.replica.inventoryitem:SetAtlas("images/inventoryimages/inventoryimages_ingots.xml")
 end
 
+local function CanStackWithFn(inst, item)
+  local imagename
+  local imagename1
+-- We can not use temperature, as it needs to be client-side
+  if inst.components.inventoryitem then
+    imagename =  inst.components.inventoryitem.imagename 
+    imagename1 =  item.components.inventoryitem.imagename 
+  elseif item.replica.inventoryitem then
+    imagename =  inst.replica.inventoryitem:GetImage()
+    imagename1 =  item.replica.inventoryitem:GetImage()
+  end  
+
+  if imagename == imagename1 then
+   return true
+  end
+   return false
+end
+
 local function getstatus(inst)
   local imagename = (inst.components.inventoryitem ~= nil and inst.components.inventoryitem.imagename) or inst.prefab
   if string.find(imagename, "melt", 1, true) then
@@ -167,7 +185,7 @@ local function MakeIngot(name, recipe)
       inst:AddTag("furnituredecor")
 
       inst:AddTag("ms_ingot")
-
+      inst:AddTag("ms_temperature_states")
       inst:AddTag("ms_ignorenormalinsulation")
     
     
@@ -181,6 +199,8 @@ local function MakeIngot(name, recipe)
       
       
       MakeInventoryFloatable(inst, "small", 0.2)
+      
+      inst.stackable_CanStackWithFn = CanStackWithFn
       
       inst:ListenForEvent("imagechange", clientimagechange)
       
@@ -205,6 +225,8 @@ local function MakeIngot(name, recipe)
 
       --
       local inventoryitem = inst:AddComponent("inventoryitem")
+      local imagename = "ms_" .. name .. "_ingot" -- Luigi: Why do you need to only have the cash number on client(((((
+      inventoryitem:ChangeImageName(imagename)
       
       local stackable = inst:AddComponent("stackable")
       stackable.maxsize = TUNING.STACK_SIZE_LARGEITEM
@@ -233,6 +255,7 @@ local function MakeIngot(name, recipe)
       
       inst.ingot_group = name
       inst.recipe_table = recipe
+      
       return inst
   end
   return Prefab("ms_" .. name .. "_ingot", fn, assets)

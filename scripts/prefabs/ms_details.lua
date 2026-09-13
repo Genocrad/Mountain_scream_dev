@@ -73,7 +73,23 @@ local function OnUpdateLight(inst, radius, intensity, falloff)
 	end
 end
 
+local function CanStackWithFn(inst, item)
+  local imagename
+  local imagename1
+-- We can not use temperature, as it needs to be client-side
+  if inst.components.inventoryitem then
+    imagename =  inst.components.inventoryitem.imagename 
+    imagename1 =  item.components.inventoryitem.imagename 
+  elseif item.replica.inventoryitem then
+    imagename =  inst.replica.inventoryitem:GetImage()
+    imagename1 =  item.replica.inventoryitem:GetImage()
+  end  
 
+  if imagename == imagename1 then
+   return true
+  end
+   return false
+end
 
 
 local function clientimagechange(inst)
@@ -108,7 +124,7 @@ local function MakeDetail(name)
 
       
       inst:AddTag("ms_ignorenormalinsulation")
-    
+      inst:AddTag("ms_temperature_states")
     
     
       inst.Light:SetFalloff(0.9)
@@ -118,6 +134,8 @@ local function MakeDetail(name)
       inst.Light:Enable(false)
 
       inst.ingot_group = name
+      
+      inst.stackable_CanStackWithFn = CanStackWithFn
       
       MakeInventoryFloatable(inst, "small", 0.2)
       
@@ -137,6 +155,8 @@ local function MakeDetail(name)
 
       --
       local inventoryitem = inst:AddComponent("inventoryitem")
+      local imagename = "ms_" .. name .. "_detail" -- Luigi: Why do you need to only have the cash number on client(((((
+      inventoryitem:ChangeImageName(imagename)
       
       local stackable = inst:AddComponent("stackable")
       stackable.maxsize = TUNING.STACK_SIZE_LARGEITEM
