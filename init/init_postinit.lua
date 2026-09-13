@@ -22,6 +22,7 @@ modimport("postinit/components/teleporter")
 modimport("postinit/components/savedrotation")
 modimport("postinit/components/dynamicmusic")
 modimport("postinit/components/hounded")
+modimport("postinit/components/stackable")
 
 modimport("postinit/widgets/mapwidget")
 modimport("postinit/widgets/uiclock")
