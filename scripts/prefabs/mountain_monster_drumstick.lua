@@ -1,15 +1,20 @@
+local RACK_BUILD = "mountain_monster_drumstick"
+local DRIED_RACK_BUILD = "meat_rack_food" -- 官方 monstermeat_dried 挂架 build
+
 local assets =
 {
 	Asset("ANIM", "anim/mountain_monster_drumstick.zip"),
+	-- Asset("ANIM", "anim/ms_meat_rack_foods.zip"),
 }
 
 local prefabs =
 {
 	"mountain_monster_drumstick_cooked",
+	"monstermeat_dried",
 	"spoiled_food",
 }
 
-local function common(anim, tags, cookable)
+local function common(anim, tags, dryable, cookable)
 	local inst = CreateEntity()
 
 	inst.entity:AddTransform()
@@ -30,6 +35,13 @@ local function common(anim, tags, cookable)
 		for i, v in ipairs(tags) do
 			inst:AddTag(v)
 		end
+	end
+
+	if dryable ~= nil then
+		if dryable.product then
+			inst:AddTag("dryable")
+		end
+		inst:AddTag("lureplant_bait")
 	end
 
 	if cookable ~= nil then
@@ -66,6 +78,14 @@ local function common(anim, tags, cookable)
 	inst.components.perishable:StartPerishing()
 	inst.components.perishable.onperishreplacement = "spoiled_food"
 
+	if dryable ~= nil and dryable.product ~= nil then
+		inst:AddComponent("dryable")
+		inst.components.dryable:SetProduct(dryable.product)
+		inst.components.dryable:SetDryTime(dryable.time)
+		inst.components.dryable:SetBuildFile(dryable.build)
+		inst.components.dryable:SetDriedBuildFile(dryable.dried_build)
+	end
+
 	if cookable ~= nil then
 		inst:AddComponent("cookable")
 		inst.components.cookable.product = cookable.product
@@ -77,7 +97,17 @@ local function common(anim, tags, cookable)
 end
 
 local function raw_fn()
-	local inst = common("raw", { "rawmeat" }, { product = "mountain_monster_drumstick_cooked" })
+	local inst = common(
+		"raw",
+		{ "rawmeat" },
+		{
+			product = "monstermeat_dried",
+			time = TUNING.DRY_FAST,
+			build = RACK_BUILD, -- 挂架用符号 mountain_monster_drumstick
+			dried_build = DRIED_RACK_BUILD, -- 晒干后用官方 monstermeat_dried 符号
+		},
+		{ product = "mountain_monster_drumstick_cooked" }
+	)
 
 	if not TheWorld.ismastersim then
 		return inst
