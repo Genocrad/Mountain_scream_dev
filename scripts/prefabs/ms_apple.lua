@@ -267,13 +267,24 @@ local function GoldenAppleBuff_OnAttached(inst, target)
 	inst.healtask = inst:DoPeriodicTask(1, GoldenApple_HealTick, nil, target)
 end
 
+local function GoldenApple_Say(target, strid)
+	if target ~= nil and target:IsValid() and target.components.talker ~= nil then
+		target.components.talker:Say(GetString(target, strid))
+	end
+end
+
 local function GoldenAppleBuff_OnDetached(inst, target)
 	if inst.healtask ~= nil then
 		inst.healtask:Cancel()
 		inst.healtask = nil
 	end
-	if target ~= nil and target:IsValid() and target.components.health ~= nil then
-		target.components.health.externalabsorbmodifiers:RemoveModifier(inst, "ms_golden_apple")
+	if target ~= nil and target:IsValid() then
+		if target.components.health ~= nil then
+			target.components.health.externalabsorbmodifiers:RemoveModifier(inst, "ms_golden_apple")
+		end
+		if target.components.health == nil or not target.components.health:IsDead() then
+			GoldenApple_Say(target, "MS_GOLDEN_APPLE_BUFF_END")
+		end
 	end
 	inst:Remove()
 end
@@ -325,6 +336,7 @@ end
 local function OnEatenGoldenApple(inst, eater)
 	if eater ~= nil and eater.components.debuffable ~= nil and eater:HasTag("player") then
 		eater:AddDebuff("buff_ms_golden_apple", "buff_ms_golden_apple")
+		GoldenApple_Say(eater, "MS_GOLDEN_APPLE_BUFF_START")
 	end
 end
 

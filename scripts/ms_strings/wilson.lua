@@ -2,13 +2,14 @@
 -- Wilson / GENERIC character examines (English default)
 
 local ___________________________DESCRIBE = STRINGS.CHARACTERS.GENERIC.DESCRIBE
+local ___________________________ANNOUNCE = STRINGS.CHARACTERS.GENERIC
 
 -- Forging: ingots share temperature statuses (GENERIC / WARM / HOT / MELT)
 local MS_INGOT_DESC = {
-	GENERIC = "A solid metal ingot. Ready for science... or forging.",
-	WARM = "I still can forge it.",
-	HOT = "It bends so well! Surely, result of my superior technic.",
-	MELT = "It's soft as butter!",
+	GENERIC = "A solid metal ingot.",
+	WARM = "I still can't forge it.",
+	HOT = "It’s ready to be forged.",
+	MELT = "#It's as soft as warm butter!",
 }
 ___________________________DESCRIBE.MS_COPPER_INGOT = MS_INGOT_DESC
 ___________________________DESCRIBE.MS_ALU_INGOT = MS_INGOT_DESC
@@ -17,8 +18,8 @@ ___________________________DESCRIBE.MS_GOLD_INGOT = MS_INGOT_DESC
 
 -- Details only toggle between cool and hot
 local MS_DETAIL_DESC = {
-	GENERIC = "A forged metal part. Perfect for crafting.",
-	HOT = "Still hot from the anvil. Handle carefully!",
+	GENERIC = "A forged metal part. Perfect!",
+	HOT = "#It's hot from the anvil! I should handle this carefully!",
 }
 ___________________________DESCRIBE.MS_COPPER_DETAIL = MS_DETAIL_DESC
 ___________________________DESCRIBE.MS_ALU_DETAIL = MS_DETAIL_DESC
@@ -31,19 +32,19 @@ ___________________________DESCRIBE.MS_ALU_INGOT_FORMLESS = "A shapeless lump of
 ___________________________DESCRIBE.MS_BRONZE_INGOT_FORMLESS = "A shapeless lump of hot bronze. The anvil awaits."
 ___________________________DESCRIBE.MS_GOLD_INGOT_FORMLESS = "A shapeless lump of hot gold. The anvil awaits."
 
-___________________________DESCRIBE.MS_COPPER_ORE = "Copper ore. Needs a good melting."
-___________________________DESCRIBE.MS_ALU_ORE = "Aluminium ore. Lighter than it looks."
-___________________________DESCRIBE.MS_COAL = "Dense black coal. Excellent furnace fuel."
-___________________________DESCRIBE.MS_GEODE_ORE = "A geode. Something interesting might be inside."
-___________________________DESCRIBE.MS_SLAG = "Failed forging. Science isn't always pretty."
+___________________________DESCRIBE.MS_COPPER_ORE = "Traces of oxidation are visible."
+___________________________DESCRIBE.MS_ALU_ORE = "Too soft for metal."
+___________________________DESCRIBE.MS_COAL = "Excellent furnace fuel."
+___________________________DESCRIBE.MS_GEODE_ORE = "#Maybe there's something in this rock?"
+___________________________DESCRIBE.MS_SLAG = "#Well, that didn't work."
 
-___________________________DESCRIBE.MS_ANVIL = "My scientist nature demands presision tools."
-___________________________DESCRIBE.MS_ANVIL_HELPER = "My scientist nature demands presision tools."
-___________________________DESCRIBE.MS_FURNACE = "Do not stick your head in it."
-___________________________DESCRIBE.MS_FURNACE_BELLOW = "My fan desing would still be better."
+___________________________DESCRIBE.MS_ANVIL = "A hammer is  needed for the job here."
+___________________________DESCRIBE.MS_ANVIL_HELPER = "A hammer is  needed for the job here."
+___________________________DESCRIBE.MS_FURNACE = "An oversized stove."
+___________________________DESCRIBE.MS_FURNACE_BELLOW = "Let's turn up the heat!"
 ___________________________DESCRIBE.MS_FURNACE_CAMPFIRE = {
 	OUT = "I should get this fire going.",
-	EMBERS = "Barely warm enough to melt anything.",
+	EMBERS = "#Barely warm enough for a proper smelting",
 	LOW = "A modest little fire.",
 	NORMAL = "Burning nicely.",
 	HIGH = "Now that's a proper smelting fire!",
@@ -60,110 +61,135 @@ ___________________________DESCRIBE.MS_GIANT_BOULDER_SNOW = "A boulder of unusua
 ___________________________DESCRIBE.MS_APPLE_TREE = {
 	GENERIC = "A modest apple tree.",
 	BURNT = "Burnt to a crisp.",
-	CHOPPED = "It put up a decent fight.",
+	CHOPPED = "It put up a decent fight.", --Instead of "Take that, nature!" ?
 }
 ___________________________DESCRIBE.MS_APPLE_TREE_SNOW = ___________________________DESCRIBE.MS_APPLE_TREE
 ___________________________DESCRIBE.MS_APPLE = "A fresh mountain apple."
 ___________________________DESCRIBE.MS_APPLE_COOKED = "Warm and sweet."
-___________________________DESCRIBE.MS_APPLE_DRIED = "Chewy, and it'll keep."
-___________________________DESCRIBE.MS_GOLDEN_APPLE = "Shiny, and probably overkill."
+___________________________DESCRIBE.MS_APPLE_DRIED = "Crispy slices."
+___________________________DESCRIBE.MS_GOLDEN_APPLE = "I mine and crafted for it."
 ___________________________DESCRIBE.MS_BIG_APPLE = "Now that's an apple!"
 ___________________________DESCRIBE.MS_APPLE_CORE = "I could plant this."
-___________________________DESCRIBE.MS_APPLE_PIE = "A proper mountain dessert."
-___________________________DESCRIBE.MS_APPLE_CARAMEL = "Sticky, sweet, and dangerous to touch."
-___________________________DESCRIBE.MS_POISONED_APPLE = "I shouldn't eat that."
+___________________________DESCRIBE.MS_APPLE_PIE = "Now THAT is American!"
+___________________________DESCRIBE.MS_APPLE_CARAMEL = "Sticky."
+___________________________DESCRIBE.MS_POISONED_APPLE = "Poison trickles down the apple."
 
 ___________________________DESCRIBE.MS_WORLDMIGRATOR_DOWN = {
 	DEFAULT = "A peculiar rock.",
-	ON = "A teleport to a far-away and totally safe place.",
+	ON = "A teleport to a far-away.",
 	OFF = "Does not work. Can't help but think lack of caves is to blame.",
 }
 ___________________________DESCRIBE.MS_WORLDMIGRATOR_UP = ___________________________DESCRIBE.MS_WORLDMIGRATOR_DOWN
 
 ___________________________DESCRIBE.MS_CLIMBING = "Looks climbable. Up we go!"
-___________________________DESCRIBE.MS_CLIMBING_DOWN = "A way back down. Preferably not headfirst."
-___________________________DESCRIBE.MS_ARENATELEPORTER = "An uncanny totem. Something fights on the other side."
-___________________________DESCRIBE.MS_ARENATELEPORTER_EXIT = "An uncanny totem. The way out, hopefully."
-___________________________DESCRIBE.MS_SHORTCUT = "A hollowed totem. Could link somewhere."
-___________________________DESCRIBE.MS_SHORTCUT_ON = "It's awake. Destination unknown, adventure certain."
-___________________________DESCRIBE.MS_SHORTCUT_EXIT = "A hollowed totem. The other end of a shortcut."
-___________________________DESCRIBE.MS_SHORTCUT_EXIT_ON = "It's awake. Better hope the landing is soft."
-___________________________DESCRIBE.MS_CAVE_ENTRANCE_VERTICAL = "A cave opening in the cliff face."
+___________________________DESCRIBE.MS_CLIMBING_DOWN = "A way down."
+___________________________DESCRIBE.MS_ARENATELEPORTER = "An ominous aura emanates from it."
+___________________________DESCRIBE.MS_ARENATELEPORTER_EXIT = "A convenient escape."
+___________________________DESCRIBE.MS_SHORTCUT = "A suitable energy source is needed."
+___________________________DESCRIBE.MS_SHORTCUT_ON = "A shortcut?"
+___________________________DESCRIBE.MS_SHORTCUT_EXIT = "A suitable energy source is needed."
+___________________________DESCRIBE.MS_SHORTCUT_EXIT_ON = "A shortcut?"
+___________________________DESCRIBE.MS_CAVE_ENTRANCE_VERTICAL = "A cave opening in the cliff's face."
 ___________________________DESCRIBE.MS_CAVE_ENTRANCE = "A passage deeper into the mountain."
 ___________________________DESCRIBE.MS_CAVE_EXIT = "A passage back toward daylight."
 ___________________________DESCRIBE.MS_CAVE_ENTRANCE_LIGHT = "Light! That must be the way out."
 
-___________________________DESCRIBE.MS_WALL_BUSH = "Stubborn shrubbery clinging to the cliff."
-___________________________DESCRIBE.MS_WALL_STONE = "Ore peeking out of the rock face."
-___________________________DESCRIBE.MS_BROKEN_PILLAR = "This column has seen better days."
+___________________________DESCRIBE.MS_WALL_BUSH = "It grows at high altitudes."
+___________________________DESCRIBE.MS_WALL_STONE = "Some ore has manifested in the rock. How do I get it out?"
+___________________________DESCRIBE.MS_BROKEN_PILLAR = "Remains of an ancient mechanism?"
 
-___________________________DESCRIBE.MOUNTAIN_FROZEN_MEATBALLS = "Meatballs, frozen solid. Nature's fridge."
-___________________________DESCRIBE.MOUNTAIN_KIKI = "A wild mountain monkey. It looks mischievous."
-___________________________DESCRIBE.MOUNTAIN_KIKI_HOUSE = "Home sweet... nest?"
-___________________________DESCRIBE.MOUNTAIN_CRATER_POOL = "A steaming crater pool. Warm and inviting."
-___________________________DESCRIBE.MOUNTAIN_KIKI_PROJECTILE1 = "An icy snowball with a spike of attitude."
-___________________________DESCRIBE.MOUNTAIN_KIKI_PROJECTILE2 = "A snowball that freezes on contact."
-___________________________DESCRIBE.MOUNTAIN_KIKI_PROJECTILE3 = "A snowball that messes with the mind."
-___________________________DESCRIBE.MOUNTAIN_FALCON = "A sharp-eyed falcon."
-___________________________DESCRIBE.MOUNTAIN_FALCON_BASE = "A falcon's mound. Best not to disturb it."
+___________________________DESCRIBE.MOUNTAIN_FROZEN_MEATBALLS = "I can't bite through it."
+___________________________DESCRIBE.MOUNTAIN_KIKI = "Gloomy monkey."
+___________________________DESCRIBE.MOUNTAIN_KIKI_HOUSE = "A cold cave."
+___________________________DESCRIBE.MOUNTAIN_CRATER_POOL = "A warm bath amidst the mountains."
+___________________________DESCRIBE.MOUNTAIN_KIKI_PROJECTILE1 = "A chunk of snow is flying."
+___________________________DESCRIBE.MOUNTAIN_KIKI_PROJECTILE2 = "Snow and ice."
+___________________________DESCRIBE.MOUNTAIN_KIKI_PROJECTILE3 = "Not the hair!"
+___________________________DESCRIBE.MOUNTAIN_FALCON = "A sharp-eyed hawk."
+___________________________DESCRIBE.MOUNTAIN_FALCON_BASE = "A hawk's mound. Best not to disturb it."
 ___________________________DESCRIBE.MOUNTAIN_WINDHORN = "A horn that summons the wind itself."
-___________________________DESCRIBE.MOUNTAIN_COCKROACH = "Ugh. A mountain cockroach."
-___________________________DESCRIBE.MOUNTAIN_COCKROACH_NEST = "Where the cockroaches gather. Delightful."
+___________________________DESCRIBE.MOUNTAIN_COCKROACH = "Ugh. A stone cockroach."
+___________________________DESCRIBE.MOUNTAIN_COCKROACH_NEST = "That's where the cockroaches gather. Delightful."
 ___________________________DESCRIBE.MOUNTAIN_STALACTITE = "A stalactite. Holds up... well, hangs up."
 ___________________________DESCRIBE.MOUNTAIN_STALAGMITE = "A stalagmite. Growing from the ground up."
-___________________________DESCRIBE.MOUNTAIN_GOAT = "A mountain goat. Sure-footed and stubborn."
-___________________________DESCRIBE.MOUNTAIN_ICEGOAT = "A goat, but colder."
-___________________________DESCRIBE.MOUNTAIN_GOLEM = "A living mountain! Or close enough."
-___________________________DESCRIBE.MOUNTAIN_GOLEM_PILLAR = "A pillar of stone. It feels unfinished."
+___________________________DESCRIBE.MOUNTAIN_GOAT = "Stubborn goatpaca"
+___________________________DESCRIBE.MOUNTAIN_ICEGOAT = "The cold clearly makes him angry."
+___________________________DESCRIBE.MOUNTAIN_GOLEM = "It wasn't worth waking him up."
+___________________________DESCRIBE.MOUNTAIN_GOLEM_PILLAR = "It holds a great charge of energy."
 ___________________________DESCRIBE.MOUNTAIN_GOLEM_PLATFORM = "A foundation for something enormous."
-___________________________DESCRIBE.MOUNTAIN_SANDBLOCK = "A block of compacted sand."
-___________________________DESCRIBE.MOUNTAIN_SANDBLOCK_CHARGED = "Sand, crackling with energy."
-___________________________DESCRIBE.MOUNTAIN_SANDSPIKE_TALL = "A spike of sand. Pointy!"
-___________________________DESCRIBE.MOUNTAIN_SANDSPIKE_CHARGED_TALL = "A charged sandspike. Extra pointy!"
+___________________________DESCRIBE.MOUNTAIN_SANDBLOCK = "That tower is blocking the way."
+___________________________DESCRIBE.MOUNTAIN_SANDBLOCK_CHARGED = "His power lies in the tower."
+___________________________DESCRIBE.MOUNTAIN_SANDSPIKE_TALL = "Sharp spike!"
+___________________________DESCRIBE.MOUNTAIN_SANDSPIKE_CHARGED_TALL = "Ready to explode at any moment!"
 ___________________________DESCRIBE.MOUNTAIN_BUSH = "A hardy mountain fern."
 ___________________________DESCRIBE.DUG_MOUNTAIN_BUSH = "A dug-up mountain fern. I can replant it."
 ___________________________DESCRIBE.MOUNTAIN_PLANTS_BUSH = "A scraggly mountain bush."
 ___________________________DESCRIBE.MOUNTAIN_PLANTS_TREE = "A small mountain tree."
 ___________________________DESCRIBE.MOUNTAIN_PLANTS_GRASS = "Tough mountain grass."
 ___________________________DESCRIBE.MOUNTAIN_PLANTS_BRANCHES = "A little sapling."
-___________________________DESCRIBE.MOUNTAIN_PLANTS_FLOWER = "A mountain flower."
-___________________________DESCRIBE.MOUNTAIN_PLANTS_POMEGRANATE = "A pomegranate plant. Fancy!"
+___________________________DESCRIBE.MOUNTAIN_PLANTS_FLOWER = "Smells better than the other flowers I've seen."
+___________________________DESCRIBE.MOUNTAIN_PLANTS_POMEGRANATE = "Wild pomegranate."
 
-___________________________DESCRIBE.MOUNTAIN_YOTH_LANCE = "A bronze spear. Pointy science."
+___________________________DESCRIBE.MOUNTAIN_YOTH_LANCE = "Sharp stuff."
 ___________________________DESCRIBE.MOUNTAIN_WATHGRITHR_SHIELD = "A sturdy bronze shield."
-___________________________DESCRIBE.MOUNTAIN_ARMOR_COPPER = "Bronze armor with serious muscle."
-___________________________DESCRIBE.MOUNTAIN_HELMET_COPPER = "A bronze helmet. Protects the brains!"
-___________________________DESCRIBE.MOUNTAIN_COPPER_AXE = "A copper axe. Chops with style."
-___________________________DESCRIBE.MOUNTAIN_COPPER_BAT = "An aluminium bat. Lightweight punishment."
-___________________________DESCRIBE.MOUNTAIN_GOAPACA_HORN = "A goat horn. Could be useful."
-___________________________DESCRIBE.MOUNTAIN_ALUMINUM_AXE = "An aluminium axe. Light and sharp."
-___________________________DESCRIBE.MOUNTAIN_ALUMINUM_PICKAXE = "An aluminium pickaxe. Mines with less effort."
-___________________________DESCRIBE.MOUNTAIN_ALUMINUM_DAGGER = "An aluminium sword. Sleek!"
-___________________________DESCRIBE.MOUNTAIN_COPPER_PICKAXE = "A copper pickaxe. Gets the job done."
-___________________________DESCRIBE.MOUNTAIN_SUPER_GILDEDAXE = "A gilded axe taken to extremes."
-___________________________DESCRIBE.MOUNTAIN_SUPER_GILDEDPICKAXE = "A gilded pickaxe taken to extremes."
-___________________________DESCRIBE.MOUNTAIN_SUPER_GILDEDSHOVEL = "A gilded shovel taken to extremes."
+___________________________DESCRIBE.MOUNTAIN_ARMOR_COPPER = "A bronze suit with some serious muscle."
+___________________________DESCRIBE.MOUNTAIN_HELMET_COPPER = "It's a rather shiny helmet."
+___________________________DESCRIBE.MOUNTAIN_COPPER_AXE = "It hones itself with every chop!"
+___________________________DESCRIBE.MOUNTAIN_COPPER_BAT = "The greener it is, the harder it hits."
+___________________________DESCRIBE.MOUNTAIN_GOAPACA_HORN = "You could send a person flying with this."
+___________________________DESCRIBE.MOUNTAIN_ALUMINUM_AXE = "Light and sharp."
+___________________________DESCRIBE.MOUNTAIN_ALUMINUM_PICKAXE = "Now, not a single stone can hide from me."
+___________________________DESCRIBE.MOUNTAIN_ALUMINUM_DAGGER = "Dart time!"
+___________________________DESCRIBE.MOUNTAIN_COPPER_PICKAXE = "It oxidizes quickly."
+___________________________DESCRIBE.MOUNTAIN_SUPER_GILDEDAXE = "It glistens in the sun."
+___________________________DESCRIBE.MOUNTAIN_SUPER_GILDEDPICKAXE = "Much more gilded."
+___________________________DESCRIBE.MOUNTAIN_SUPER_GILDEDSHOVEL = "I think that's too refined for such dirty work."
 
-___________________________DESCRIBE.MOUNTAIN_ICECREAM = "Mountain ice cream! Brain freeze incoming."
-___________________________DESCRIBE.MOUNTAIN_TORNADO_SORBET = "A milkshake with a whirlwind kick."
-___________________________DESCRIBE.MOUNTAIN_MONSTER_DRUMSTICK = "A drumstick from something... monstrous."
-___________________________DESCRIBE.MOUNTAIN_MONSTER_DRUMSTICK_COOKED = "Fried monster meat. Surprisingly tempting."
+___________________________DESCRIBE.MOUNTAIN_ICECREAM = "I should eat it before it melts all over my fingers!"
+___________________________DESCRIBE.MOUNTAIN_TORNADO_SORBET = "Now that's a shake that'll blow me away!"
+___________________________DESCRIBE.MOUNTAIN_MONSTER_DRUMSTICK = "A bunch of feathers are still stuck on the meat."
+___________________________DESCRIBE.MOUNTAIN_MONSTER_DRUMSTICK_COOKED = "Think it'll still fly if I throw it?"
 ___________________________DESCRIBE.MOUNTAIN_SNOWBALL = "A packed mountain snowball."
-___________________________DESCRIBE.MOUNTAIN_SUSPICIOUS_ORE = "Suspicious ore. What's it hiding?"
-___________________________DESCRIBE.MOUNTAIN_GREEN_STONE = "A green mountain stone."
-___________________________DESCRIBE.MOUNTAIN_COLD_ROCK = "A stone that feels unnaturally cold."
-___________________________DESCRIBE.MOUNTAIN_SNOWPEAK_STONE = "Stone from the snowy peaks."
-___________________________DESCRIBE.MOUNTAIN_SNOWPILE = "A pile of mountain snow."
-___________________________DESCRIBE.MOUNTAIN_GRAVEL_PILE = "A pile of gravel. Diggable potential."
-___________________________DESCRIBE.MOUNTAIN_TRANSFORMATION_CUBE = "A cube that transforms materials. Pure science!"
-___________________________DESCRIBE.MOUNTAIN_WOODEN_BOX = "A wooden box. What's inside?"
-___________________________DESCRIBE.HAT_TINFOIL = "A tinfoil hat. For keeping... things... out."
-___________________________DESCRIBE.MOUNTAIN_TOP = "A mountain top ripe for planting a flag."
+___________________________DESCRIBE.MOUNTAIN_SUSPICIOUS_ORE = "I need to break it open to find out what's inside."
+___________________________DESCRIBE.MOUNTAIN_GREEN_STONE = "There's grass on that stone."
+___________________________DESCRIBE.MOUNTAIN_COLD_ROCK = "A dense stone structure."
+___________________________DESCRIBE.MOUNTAIN_SNOWPEAK_STONE = "The stones maintain their balance."
+___________________________DESCRIBE.MOUNTAIN_SNOWPILE = "Snowdrift."
+___________________________DESCRIBE.MOUNTAIN_GRAVEL_PILE = "A pile of stones."
+___________________________DESCRIBE.MOUNTAIN_TRANSFORMATION_CUBE = "#Full of energy for transformation."
+___________________________DESCRIBE.MOUNTAIN_WOODEN_BOX = "I hope there's something edible in there."
+___________________________DESCRIBE.HAT_TINFOIL = "Protects the brain."
+___________________________DESCRIBE.MOUNTAIN_TOP = "Finally! The Peak!"
 
-___________________________DESCRIBE.TURF_MS_SNOW = "A chunk of snowy ground."
-___________________________DESCRIBE.TURF_MS_BRICK = "A brick floor tile."
-___________________________DESCRIBE.TURF_MS_CAVE = "A cave floor tile."
-___________________________DESCRIBE.TURF_MS_MOUNTAIN_LOW = "Turf from the mountain lowlands."
-___________________________DESCRIBE.TURF_MS_MOUNTAIN_LOW_2 = "Turf from the mountain lowlands."
-___________________________DESCRIBE.TURF_MS_MOUNTAIN_HIGH = "Turf from the mountain highlands."
-___________________________DESCRIBE.TURF_MS_PERMAFROST = "Turf of permafrost. Permanently chilly."
+___________________________DESCRIBE.TURF_MS_SNOW = "A carpet of snow."
+___________________________DESCRIBE.TURF_MS_BRICK = "A brick floor tile-." --Why do these end with an em-dash?
+___________________________DESCRIBE.TURF_MS_CAVE = "A cave floor tile-."
+___________________________DESCRIBE.TURF_MS_MOUNTAIN_LOW = "Turf from the mountain lowlands-."
+___________________________DESCRIBE.TURF_MS_MOUNTAIN_LOW_2 = "Turf from the mountain lowlands-."
+___________________________DESCRIBE.TURF_MS_MOUNTAIN_HIGH = "Turf from the mountain highlands-."
+___________________________DESCRIBE.TURF_MS_PERMAFROST = "Turf of permafrost. Permanently chilly-."
+
+------------------------------------------------------------
+-- Announcements
+
+___________________________ANNOUNCE.MS_GOLDEN_APPLE_BUFF_START = {
+	"I feel like the fairest one of them all!",
+}
+___________________________ANNOUNCE.MS_GOLDEN_APPLE_BUFF_END = {
+	"Still feels like my head's in the nether...",
+}
+___________________________ANNOUNCE.MS_MOUNTAIN_ICE_CREAM_START = {
+	"Ugh, brainfreeze!",
+}
+___________________________ANNOUNCE.MS_MOUNTAIN_ICE_CREAM_END = {
+	"I still have goosebumps...",
+}
+___________________________ANNOUNCE.MS_TORNADO_MILKSHAKE_START = {
+	"What a rush!",
+}
+___________________________ANNOUNCE.MS_TORNADO_MILKSHAKE_ABILITY_READY = {
+	"I'm ready to reap another whirlwind!",
+}
+___________________________ANNOUNCE.MS_TORNADO_MILKSHAKE_END = {
+	"I feel a little dizzy after all that...",
+}

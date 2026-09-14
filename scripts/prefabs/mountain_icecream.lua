@@ -29,9 +29,18 @@ local function Buff_OnAttached(inst, target)
 	inst:ListenForEvent("onhitother", OnHitOther, target)
 end
 
+local function Buff_Say(target, strid)
+	if target ~= nil and target:IsValid() and target.components.talker ~= nil then
+		target.components.talker:Say(GetString(target, strid))
+	end
+end
+
 local function Buff_OnDetached(inst, target)
 	if target ~= nil and target:IsValid() then
 		inst:RemoveEventCallback("onhitother", OnHitOther, target)
+		if target.components.health == nil or not target.components.health:IsDead() then
+			Buff_Say(target, "MS_MOUNTAIN_ICE_CREAM_END")
+		end
 	end
 	inst:Remove()
 end
@@ -81,6 +90,7 @@ end
 local function OnEaten(inst, eater)
 	if eater ~= nil and eater.components.debuffable ~= nil and eater:HasTag("player") then
 		eater:AddDebuff("buff_mountain_icecream", "buff_mountain_icecream")
+		Buff_Say(eater, "MS_MOUNTAIN_ICE_CREAM_START")
 	end
 end
 

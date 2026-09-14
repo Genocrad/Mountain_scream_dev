@@ -54,12 +54,21 @@ local function Buff_OnAttached(inst, target)
 	end, target)
 end
 
+local function Buff_Say(target, strid)
+	if target ~= nil and target:IsValid() and target.components.talker ~= nil then
+		target.components.talker:Say(GetString(target, strid))
+	end
+end
+
 local function Buff_OnDetached(inst, target)
 	if target ~= nil and target:IsValid() then
 		target:RemoveTag("ms_tornado_buff")
 		if target.sg ~= nil and target.sg:HasStateTag("ms_tornado") then
 			target.sg.statemem.exiting_to_pst = true
 			target.sg:GoToState("ms_tornado_pst")
+		end
+		if target.components.health == nil or not target.components.health:IsDead() then
+			Buff_Say(target, "MS_TORNADO_MILKSHAKE_END")
 		end
 	end
 	inst:Remove()

@@ -1,14 +1,23 @@
 local MS_LANGUAGE = 'en'
-if locale == "zh" or locale == "zht" or locale == "zhr" then
-    MS_LANGUAGE = 'ch'
-end
-
 name = "Mountain Scream"
 description = "..."
-if MS_LANGUAGE == 'ch' then
+if locale == "zh" or locale == "zht" or locale == "zhr" then
+    MS_LANGUAGE = 'ch'
     name = "山啸"
     description = "..."
+elseif locale == "ru" then
+    MS_LANGUAGE = 'ru'
+    name = "Горный крик"
+    description = "..."
 end
+
+-- if MS_LANGUAGE == 'ch' then
+--     name = "山啸"
+--     description = "..."
+-- elseif MS_LANGUAGE == 'ru' then
+--     name = "Горный крик"
+--     description = "..."
+-- end
 
 author = "Milanjorim, luigi.m.mario, 你要帮帮威吊"
 version = "1.0.0"
@@ -35,26 +44,26 @@ local function make_title(label)
 end
 local CONFIG_TEXT = {
     sections = {
-        game = { ch = "游戏设置", en = "Game Settings" },    },
+        game = { ch = "游戏设置", ru = "Настройки игры", en = "Game Settings" },    },
     labels = {
-        language = { ch = "游戏语言", en = "Game Language" },
-        enable_collision_for_player = { ch = "游戏语言", en = "Enable edge collision for players" },
+        language = { ch = "游戏语言", ru = "Язык игры", en = "Game Language" },
+        enable_collision_for_player = { ch = "山体边缘碰撞", ru = "Столкновение на краю горы", en = "Enable edge collision for players" },
     },
     hovers = {
-        language = { ch = "设置游戏内的语言", en = "Sets the in-game language." },
-        enable_collision_for_player = { ch = "", en = "Prevents falling from the mountain" },
+        language = { ch = "设置游戏内的语言", ru = "Устанавливает язык игры", en = "Sets the in-game language." },
+        enable_collision_for_player = { ch = "防止玩家从山体边缘坠落", ru = "Предотвращает падение с горы", en = "Prevents falling from the mountain" },
     },
 }
 local CONFIG_SCHEMA = {
     { type = "section", key = "game" },
     { type = "setting", name = "language", default = { ch = "ch", en = "en", ru = "ru" }, options = {
-        { data = "en", text = { ch = "英文", es = "Ingles", en = "English" } },
-        { data = "ch", text = { ch = "中文", es = "Chino", en = "Chinese" } },
-        { data = "ru", text = { ch = "俄文", es = "Ruso", en = "Russian" } },
+        { data = "en", text = { ch = "英文", ru = "Английский", en = "English" } },
+        { data = "ch", text = { ch = "中文", ru = "Китайский", en = "Chinese" } },
+        { data = "ru", text = { ch = "俄文", ru = "Русский", en = "Russian" } },
     }},
     { type = "setting", name = "enable_collision_for_player", default = false, options = {
-        { data = false, text = { ch = "", es = "", en = "Disable" } },
-        { data = true, text = { ch = "", es = "", en = "Enable" } },
+        { data = false, text = { ch = "禁用", ru = "Отключить", en = "Disable" } },
+        { data = true, text = { ch = "启用", ru = "Включить", en = "Enable" } },
     }},
 }
 local function build_configuration_options(lang)

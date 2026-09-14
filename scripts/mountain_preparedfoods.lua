@@ -35,6 +35,9 @@ local foods =
 		oneatenfn = function(inst, eater)
 			if eater ~= nil and eater.components.debuffable ~= nil and eater:HasTag("player") then
 				eater:AddDebuff("buff_mountain_tornado_sorbet", "buff_mountain_tornado_sorbet")
+				if eater.components.talker ~= nil then
+					eater.components.talker:Say(GetString(eater, "MS_TORNADO_MILKSHAKE_START"))
+				end
 			end
 		end,
 	},

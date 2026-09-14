@@ -139,6 +139,13 @@ local function StartCooldown(inst)
 	inst._ms_tornado_cd_task = inst:DoTaskInTime(TUNING.MOUNTAIN_TORNADO_SORBET.COOLDOWN, function()
 		inst._ms_tornado_cd_task = nil
 		inst:RemoveTag("ms_tornado_cd")
+		if inst:IsValid()
+			and inst:HasTag("ms_tornado_buff")
+			and (inst.components.health == nil or not inst.components.health:IsDead())
+			and inst.components.talker ~= nil
+		then
+			inst.components.talker:Say(GetString(inst, "MS_TORNADO_MILKSHAKE_ABILITY_READY"))
+		end
 	end)
 end
 
