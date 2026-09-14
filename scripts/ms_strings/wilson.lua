@@ -162,12 +162,12 @@ ___________________________DESCRIBE.HAT_TINFOIL = "Protects the brain."
 ___________________________DESCRIBE.MOUNTAIN_TOP = "Finally! The Peak!"
 
 ___________________________DESCRIBE.TURF_MS_SNOW = "A carpet of snow."
-___________________________DESCRIBE.TURF_MS_BRICK = "A brick floor tile-." --Why do these end with an em-dash?
-___________________________DESCRIBE.TURF_MS_CAVE = "A cave floor tile-."
-___________________________DESCRIBE.TURF_MS_MOUNTAIN_LOW = "Turf from the mountain lowlands-."
-___________________________DESCRIBE.TURF_MS_MOUNTAIN_LOW_2 = "Turf from the mountain lowlands-."
-___________________________DESCRIBE.TURF_MS_MOUNTAIN_HIGH = "Turf from the mountain highlands-."
-___________________________DESCRIBE.TURF_MS_PERMAFROST = "Turf of permafrost. Permanently chilly-."
+___________________________DESCRIBE.TURF_MS_BRICK = "A brick floor tile."
+___________________________DESCRIBE.TURF_MS_CAVE = "A cave floor tile."
+___________________________DESCRIBE.TURF_MS_MOUNTAIN_LOW = "Turf from the mountain lowlands."
+___________________________DESCRIBE.TURF_MS_MOUNTAIN_LOW_2 = "Turf from the mountain lowlands."
+___________________________DESCRIBE.TURF_MS_MOUNTAIN_HIGH = "Turf from the mountain highlands."
+___________________________DESCRIBE.TURF_MS_PERMAFROST = "Turf of permafrost. Permanently chilly."
 
 ------------------------------------------------------------
 -- Announcements
