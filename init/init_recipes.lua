@@ -51,7 +51,7 @@ local CUBE_RECIPES =
 	{
 		name = "ms_messagebottle",
 		product = "messagebottle",
-		ingredient = "messagebottleempty",
+		ingredient = { "messagebottleempty", "papyrus" },
 		cost = 0.05,
 	},
 	{
