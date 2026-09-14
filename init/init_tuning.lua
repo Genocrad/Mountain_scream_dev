@@ -118,7 +118,7 @@ TUNING.MS_LEVEL_CONTENTS = {
 			ms_mountain_low_2 = {
 				mountain_plants_bush = 0.55,
 				mountain_plants_tree = 0.1,
-				mountain_plants_flower = 0.7,
+				mountain_plants_flower = 0.8,
 				mountain_bush = 0.1,
 				mountain_plants_pomegranate = 0.2,
 			},
@@ -146,7 +146,7 @@ TUNING.MS_LEVEL_CONTENTS = {
 			ms_mountain_low_2 = {
 				mountain_plants_bush = 0.55,
 				mountain_plants_tree = 0.1,
-				mountain_plants_flower = 0.7,
+				mountain_plants_flower = 0.8,
 				mountain_bush = 0.1,
 				mountain_plants_pomegranate = 0.2,
 			},
