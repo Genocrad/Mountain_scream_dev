@@ -507,7 +507,7 @@ local function fn()
 	inst:AddComponent("damagetyperesist")
 
 	inst:AddComponent("combat")
-	inst.components.combat.playerdamagepercent = 0.5
+	inst.components.combat.playerdamagepercent = 0.25
 	inst.components.combat.hiteffectsymbol = "pg_pelvis"
 	inst.components.combat.forcefacing = false
 	inst.components.combat:SetDefaultDamage(TUNING.MOUNTAIN_GOLEM.DAMAGE)

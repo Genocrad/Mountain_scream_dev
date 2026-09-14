@@ -1050,7 +1050,7 @@ TUNING.MOUNTAIN_GOLEM = {
 		RADIUS = 4,              -- 冲击范围
 	},
 
-	HEALTH = 32000,              -- 最大生命
+	HEALTH = 20000,              -- 最大生命
 	DAMAGE = 300,                -- 基础攻击伤害
 	ATTACK_PERIOD = 3,           -- 攻击间隔（秒）
 	ATTACK_RANGE = 5,            -- 近战攻击距离
@@ -1122,7 +1122,7 @@ TUNING.MOUNTAIN_GOLEM = {
 	LASER_RANGE = 12,            -- 激光目标搜索范围
 	LASER_MAX_TARGETS = 5,       -- 单次技能最多锁定目标数
 	LASER_PLANAR_DAMAGE = 50,    -- 激光初始位面伤害
-	LASER_DOT_DPS = 40,          -- 激光持续伤害（非月灼）
+	LASER_DOT_DPS = 4,          -- 激光持续伤害（非月灼）
 	LASER_DOT_HIT_INTERVAL = 0.4, -- 激光持续伤害受击反馈间隔（秒）
 
 }
