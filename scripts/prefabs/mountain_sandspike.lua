@@ -2,14 +2,14 @@ local assets =
 {
 	Asset("ANIM", "anim/mountain_sand_spike_stone.zip"),
 	Asset("ANIM", "anim/mountain_sand_spike_bank.zip"),
-	Asset("ANIM", "anim/sand_splash_fx.zip"),
+	Asset("ANIM", "anim/ms_snow_splash_fx.zip"),
 }
 
 local charged_assets =
 {
 	Asset("ANIM", "anim/mountain_sand_spike_stone_charged.zip"),
 	Asset("ANIM", "anim/mountain_sand_spike_bank.zip"),
-	Asset("ANIM", "anim/sand_splash_fx.zip"),
+	Asset("ANIM", "anim/ms_snow_splash_fx.zip"),
 	Asset("ANIM", "anim/mushroombomb_base.zip"),
 }
 
@@ -453,7 +453,7 @@ local function MakeSpike(name, charged)
 
 		inst.AnimState:SetBank("mountain_sand_spike_bank")
 		inst.AnimState:SetBuild(build)
-		inst.AnimState:OverrideSymbol("sand_splash", "sand_splash_fx", "sand_splash")
+		inst.AnimState:OverrideSymbol("sand_splash", "ms_snow_splash_fx", "sand_splash")
 		inst.AnimState:SetLayer(LAYER_BACKGROUND)
 		inst.AnimState:SetSortOrder(3)
 
