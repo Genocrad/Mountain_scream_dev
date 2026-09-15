@@ -6,6 +6,8 @@ local ______________NAMES = STRINGS.NAMES
 
 STRINGS.UI.CRAFTING_FILTERS.MOUNTAIN_SCIENCE = "转化"
 STRINGS.UI.CRAFTING.MOUNTAIN_CUBE = "魔方耐久不足"
+STRINGS.ACTIONS.MS_FORGE = "锻造"
+STRINGS.ACTIONS.MS_SMELT = "炼制"
 
 ______________NAMES.MS_COPPER_ORE = "铜块"
 ______________NAMES.MS_ALU_ORE = "铝块"
@@ -136,4 +138,8 @@ STRINGS.MOUNTAIN_TOP = {
 	NAMED_FMT = "%s的山顶",
 	GENERIC_DESC = "一座适合插旗的山顶。",
 	FLAGGED_DESC = "这面旗帜是{name}插上的。",
+}
+
+STRINGS.MS_FURNACE = {
+	HEATED_DESC = "已经加热到 {temp}。",
 }

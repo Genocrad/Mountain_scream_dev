@@ -194,6 +194,7 @@ local function fn_helper()
   inst.persists = false
   
   inst:AddTag("decortable")
+  inst:AddTag("ms_anvil")
 
   --inst.Transform:SetScale(2,2,2)
 
@@ -239,6 +240,7 @@ local function fn()
   inst.entity:AddMiniMapEntity()
   
   inst:AddTag("decortable")
+  inst:AddTag("ms_anvil")
 
   inst.AnimState:SetBank("ms_anvil")
   inst.AnimState:SetBuild("ms_anvil")

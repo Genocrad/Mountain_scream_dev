@@ -162,3 +162,34 @@ AddStategraphActionHandler("wilson", ActionHandler(ACTIONS.MS_MINE_STALACTITE, "
 AddStategraphActionHandler("wilson_client", ActionHandler(ACTIONS.MS_MINE_STALACTITE, "throw_line"))
 AddStategraphActionHandler("wilson", ActionHandler(ACTIONS.MS_THROW, "throw_line"))
 AddStategraphActionHandler("wilson_client", ActionHandler(ACTIONS.MS_THROW, "throw_line"))
+
+------------------------------------------------------------------------------------------------------------------------
+-- 铁砧上的锤子：锻造锭，不是拆除铁砧。熔炉等建筑仍显示原版 Destroy。
+
+if STRINGS.ACTIONS.MS_FORGE == nil then
+	STRINGS.ACTIONS.MS_FORGE = is_chinese and "锻造" or (locale == "ru" and "Ковать" or "Forge")
+end
+if STRINGS.ACTIONS.MS_SMELT == nil then
+	STRINGS.ACTIONS.MS_SMELT = is_chinese and "炼制" or (locale == "ru" and "Плавить" or "Smelt")
+end
+
+local old_hammer_stroverridefn = ACTIONS.HAMMER.stroverridefn
+ACTIONS.HAMMER.stroverridefn = function(act)
+	if act.target ~= nil and act.target:HasTag("ms_anvil") then
+		return STRINGS.ACTIONS.MS_FORGE
+	end
+	if old_hammer_stroverridefn ~= nil then
+		return old_hammer_stroverridefn(act)
+	end
+end
+
+-- 熔炉仍走 COOK 逻辑，但文案是炼制，不改烹饪锅
+local old_cook_stroverridefn = ACTIONS.COOK.stroverridefn
+ACTIONS.COOK.stroverridefn = function(act)
+	if act.target ~= nil and act.target:HasTag("ms_furnace") then
+		return STRINGS.ACTIONS.MS_SMELT
+	end
+	if old_cook_stroverridefn ~= nil then
+		return old_cook_stroverridefn(act)
+	end
+end

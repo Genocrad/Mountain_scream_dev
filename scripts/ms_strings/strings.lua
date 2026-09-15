@@ -6,6 +6,8 @@ local ______________NAMES = STRINGS.NAMES
 
 STRINGS.UI.CRAFTING_FILTERS.MOUNTAIN_SCIENCE = "Transformation"
 STRINGS.UI.CRAFTING.MOUNTAIN_CUBE = "Not enough cube durability"
+STRINGS.ACTIONS.MS_FORGE = "Forge"
+STRINGS.ACTIONS.MS_SMELT = "Smelt"
 
 ______________NAMES.MS_COPPER_ORE = "Copper Nugget"
 ______________NAMES.MS_ALU_ORE = "Aluminium Nugget"
@@ -136,6 +138,10 @@ STRINGS.MOUNTAIN_TOP = {
 	NAMED_FMT = "%s's Mountain Top",
 	GENERIC_DESC = "A mountain top ripe for planting a flag.",
 	FLAGGED_DESC = "This flag was planted by {name}.",
+}
+
+STRINGS.MS_FURNACE = {
+	HEATED_DESC = "It is heated up to {temp}.",
 }
 
 

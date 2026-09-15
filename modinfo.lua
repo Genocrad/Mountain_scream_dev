@@ -1,23 +1,27 @@
 local MS_LANGUAGE = 'en'
 name = "Mountain Scream"
-description = "..."
+description = [[
+
+󰀛Find the mountain totem and explore the mountain
+󰀛featuring new content and conquer Mount Wumpet
+]]
 if locale == "zh" or locale == "zht" or locale == "zhr" then
     MS_LANGUAGE = 'ch'
-    name = "山啸"
-    description = "..."
+    name = "Mountain Scream-山啸"
+    description = [[
+
+󰀛寻找山之图腾，探索群山
+󰀛体验全新内容，征服温佩特山！
+]]
 elseif locale == "ru" then
     MS_LANGUAGE = 'ru'
-    name = "Горный крик"
-    description = "..."
-end
+    name = "Mountain Scream-Горный крик"
+    description = [[
 
--- if MS_LANGUAGE == 'ch' then
---     name = "山啸"
---     description = "..."
--- elseif MS_LANGUAGE == 'ru' then
---     name = "Горный крик"
---     description = "..."
--- end
+󰀛Найти горный тотем и исследовать горы
+󰀛предлагает новые возможности и покорить гору Вумпет
+]]
+end
 
 author = "Milanjorim, luigi.m.mario, 你要帮帮威吊"
 version = "1.0.0"
@@ -33,7 +37,7 @@ dont_starve_compatible = false
 reign_of_giants_compatible = false
 dst_compatible = true
 api_version = 10
-server_filter_tags = {"archipelago","islands"}
+server_filter_tags = {"ms", "archipelago", "islands"}
 
 
 local function get_lang_text(text_map, lang)

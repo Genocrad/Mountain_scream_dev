@@ -22,7 +22,7 @@ params.ms_furnace =
 		side_align_tip = 100,
 		buttoninfo =
 		{
-			text = STRINGS.ACTIONS.COOK,
+			text = STRINGS.ACTIONS.MS_SMELT,
 			position = Vector3(0, -165, 0),
 		},
 	},

@@ -125,8 +125,9 @@ end
 
 
 local function descriptionfn(inst)
-  -- TO DO: This is gonna be inconvinient for translators. Redo?
-  return "It is heated up to " .. string.format("%.1f", inst.components.temperature:GetCurrent())
+  return subfmt(STRINGS.MS_FURNACE.HEATED_DESC, {
+    temp = string.format("%.1f", inst.components.temperature:GetCurrent()),
+  })
 end
 
 -- Hierarchy is as such here: furnace (persists) -> campfire(persits) -> firefx and bellow (do not persist)
