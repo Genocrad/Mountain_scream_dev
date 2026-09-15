@@ -14,8 +14,21 @@ local function OnActivate(inst, doer)
     end
 end
 
-local function SetShortcutMinimapIcon(inst, enabled)
+local function SetShortcutOn(inst, enabled)
+  inst._is_on:set(enabled == true)
   inst.MiniMapEntity:SetIcon(enabled and "ms_shortcut.tex" or "ms_shortcut_off.tex")
+end
+
+local function getstatus(inst)
+  return inst._is_on:value() and "ON" or "OFF"
+end
+
+local function DisplayNameFn(inst)
+  local name = string.upper(inst.prefab)
+  if inst._is_on:value() then
+    return STRINGS.NAMES[name.."_ON"]
+  end
+  return STRINGS.NAMES[name]
 end
 
 local function OnCubeTaken(inst)
@@ -25,12 +38,12 @@ local function OnCubeTaken(inst)
     inst.components.workable:SetWorkable(false)
     inst.AnimState:PlayAnimation("idle")
     inst.components.teleporter:SetEnabled(false)
-    SetShortcutMinimapIcon(inst, false)
+    SetShortcutOn(inst, false)
     teleport_target.components.trader:Enable()
     teleport_target.components.workable:SetWorkable(false)
     teleport_target.AnimState:PlayAnimation("idle")
     teleport_target.components.teleporter:SetEnabled(false)
-    SetShortcutMinimapIcon(teleport_target, false)
+    SetShortcutOn(teleport_target, false)
     if inst.cube_percent then
       local cube = SpawnPrefab("mountain_transformation_cube")
       cube.components.finiteuses:SetPercent(inst.cube_percent)
@@ -59,13 +72,13 @@ local function OnCubeGiven(inst, giver, item)
     inst.components.teleporter:SetEnabled(true)
     inst.cube_percent = item.components.finiteuses:GetPercent()
     inst.AnimState:PlayAnimation("idle_on")
-    SetShortcutMinimapIcon(inst, true)
+    SetShortcutOn(inst, true)
     teleport_target.components.trader:Disable()
     teleport_target.components.workable:SetWorkable(true)
     teleport_target.components.teleporter:SetEnabled(true)
     teleport_target.cube_percent = item.components.finiteuses:GetPercent()
     teleport_target.AnimState:PlayAnimation("idle_on")
-    SetShortcutMinimapIcon(teleport_target, true)
+    SetShortcutOn(teleport_target, true)
   end
     if giver ~= nil then
         inst.SoundEmitter:PlaySound("dontstarve/common/together/atrium_gate/key_in")
@@ -134,6 +147,9 @@ local function fn()
 
   inst.MiniMapEntity:SetIcon("ms_shortcut_off.tex")
 
+  inst._is_on = net_bool(inst.GUID, "ms_shortcut.is_on")
+  inst.displaynamefn = DisplayNameFn
+
   MakeObstaclePhysics(inst, 1)
   
   inst:SetDeploySmartRadius(3)
@@ -148,6 +164,7 @@ local function fn()
   end
 
   inst:AddComponent("inspectable")
+  inst.components.inspectable.getstatus = getstatus
 
   local teleporter = inst:AddComponent("teleporter")
   teleporter.onActivate = OnActivate

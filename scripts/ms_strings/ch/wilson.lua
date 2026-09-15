@@ -89,14 +89,15 @@ ___________________________DESCRIBE.MS_CLIMBING = "看起来能爬。上去！"
 ___________________________DESCRIBE.MS_CLIMBING_DOWN = "下去的路。"
 ___________________________DESCRIBE.MS_ARENATELEPORTER = "散发着不祥的气息。"
 ___________________________DESCRIBE.MS_ARENATELEPORTER_EXIT = "一条方便的退路。"
-___________________________DESCRIBE.MS_SHORTCUT = "需要合适的能量源。"
-___________________________DESCRIBE.MS_SHORTCUT_ON = "捷径？"
-___________________________DESCRIBE.MS_SHORTCUT_EXIT = "需要合适的能量源。"
-___________________________DESCRIBE.MS_SHORTCUT_EXIT_ON = "捷径？"
+___________________________DESCRIBE.MS_SHORTCUT = {
+	OFF = "需要合适的能量源。",
+	ON = "捷径？",
+}
+___________________________DESCRIBE.MS_SHORTCUT_EXIT = ___________________________DESCRIBE.MS_SHORTCUT
 ___________________________DESCRIBE.MS_CAVE_ENTRANCE_VERTICAL = "崖壁上的洞穴入口。"
 ___________________________DESCRIBE.MS_CAVE_ENTRANCE = "通往山腹更深处的通道。"
 ___________________________DESCRIBE.MS_CAVE_EXIT = "通往日光的通道。"
-___________________________DESCRIBE.MS_CAVE_ENTRANCE_LIGHT = "光！那一定是出口。"
+___________________________DESCRIBE.MS_CAVE_EXIT_LIGHT = "光！那一定是出口。"
 
 ___________________________DESCRIBE.MS_WALL_BUSH = "生长在高海拔处。"
 ___________________________DESCRIBE.MS_WALL_STONE = "岩石里显露出矿石。怎么挖出来呢？"

@@ -89,14 +89,15 @@ ___________________________DESCRIBE.MS_CLIMBING = "Looks climbable. Up we go!"
 ___________________________DESCRIBE.MS_CLIMBING_DOWN = "A way down."
 ___________________________DESCRIBE.MS_ARENATELEPORTER = "An ominous aura emanates from it."
 ___________________________DESCRIBE.MS_ARENATELEPORTER_EXIT = "A convenient escape."
-___________________________DESCRIBE.MS_SHORTCUT = "A suitable energy source is needed."
-___________________________DESCRIBE.MS_SHORTCUT_ON = "A shortcut?"
-___________________________DESCRIBE.MS_SHORTCUT_EXIT = "A suitable energy source is needed."
-___________________________DESCRIBE.MS_SHORTCUT_EXIT_ON = "A shortcut?"
+___________________________DESCRIBE.MS_SHORTCUT = {
+	OFF = "A suitable energy source is needed.",
+	ON = "A shortcut?",
+}
+___________________________DESCRIBE.MS_SHORTCUT_EXIT = ___________________________DESCRIBE.MS_SHORTCUT
 ___________________________DESCRIBE.MS_CAVE_ENTRANCE_VERTICAL = "A cave opening in the cliff's face."
 ___________________________DESCRIBE.MS_CAVE_ENTRANCE = "A passage deeper into the mountain."
 ___________________________DESCRIBE.MS_CAVE_EXIT = "A passage back toward daylight."
-___________________________DESCRIBE.MS_CAVE_ENTRANCE_LIGHT = "Light! That must be the way out."
+___________________________DESCRIBE.MS_CAVE_EXIT_LIGHT = "Light! That must be the way out."
 
 ___________________________DESCRIBE.MS_WALL_BUSH = "It grows at high altitudes."
 ___________________________DESCRIBE.MS_WALL_STONE = "Some ore has manifested in the rock. How do I get it out?"
