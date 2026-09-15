@@ -53,9 +53,13 @@ ___________________________DESCRIBE.MS_ALU_ROCK = "Валун, богатый а
 ___________________________DESCRIBE.MS_COAL_ROCK = "Валун с углём."
 ___________________________DESCRIBE.MS_COPPER_ROCK = "Валун, богатый медью."
 ___________________________DESCRIBE.MS_GEODE_ROCK = "Валун, в котором спрятаны жеоды."
-___________________________DESCRIBE.MS_GIANT_BOULDER_GRASS = "Валун необычных размеров. Добыча займёт время."
-___________________________DESCRIBE.MS_GIANT_BOULDER_ROCK = "Валун необычных размеров. Добыча займёт время."
-___________________________DESCRIBE.MS_GIANT_BOULDER_SNOW = "Валун необычных размеров. Добыча займёт время."
+local MS_GIANT_BOULDER_DESC = {
+	GENERIC = "Валун необычных размеров. Добыча займёт время.",
+	EMPTY = "Здесь пусто.",
+}
+___________________________DESCRIBE.MS_GIANT_BOULDER_GRASS = MS_GIANT_BOULDER_DESC
+___________________________DESCRIBE.MS_GIANT_BOULDER_ROCK = MS_GIANT_BOULDER_DESC
+___________________________DESCRIBE.MS_GIANT_BOULDER_SNOW = MS_GIANT_BOULDER_DESC
 
 ___________________________DESCRIBE.MS_APPLE_TREE = {
 	GENERIC = "Скромная яблоня.",

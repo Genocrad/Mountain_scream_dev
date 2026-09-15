@@ -9,7 +9,7 @@ local MS_INGOT_DESC = {
 	GENERIC = "一块结实的金属锭。",
 	WARM = "还锻打不了。",
 	HOT = "可以锻打了。",
-	MELT = "#软得像温热的黄油！",
+	MELT = "软得像温热的黄油！",
 }
 ___________________________DESCRIBE.MS_COPPER_INGOT = MS_INGOT_DESC
 ___________________________DESCRIBE.MS_ALU_INGOT = MS_INGOT_DESC
@@ -19,7 +19,7 @@ ___________________________DESCRIBE.MS_GOLD_INGOT = MS_INGOT_DESC
 -- Details only toggle between cool and hot
 local MS_DETAIL_DESC = {
 	GENERIC = "锻打成型的金属零件。完美！",
-	HOT = "#刚下砧还烫着！得小心拿！",
+	HOT = "刚下砧还烫着！得小心拿！",
 }
 ___________________________DESCRIBE.MS_COPPER_DETAIL = MS_DETAIL_DESC
 ___________________________DESCRIBE.MS_ALU_DETAIL = MS_DETAIL_DESC
@@ -35,8 +35,8 @@ ___________________________DESCRIBE.MS_GOLD_INGOT_FORMLESS = "一团滚烫的无
 ___________________________DESCRIBE.MS_COPPER_ORE = "能看见氧化的痕迹。"
 ___________________________DESCRIBE.MS_ALU_ORE = "对金属来说太软了。"
 ___________________________DESCRIBE.MS_COAL = "熔炉的好燃料。"
-___________________________DESCRIBE.MS_GEODE_ORE = "#这块石头里说不定有东西？"
-___________________________DESCRIBE.MS_SLAG = "#唉，没成。"
+___________________________DESCRIBE.MS_GEODE_ORE = "这块石头里说不定有东西？"
+___________________________DESCRIBE.MS_SLAG = "唉，没成。"
 
 ___________________________DESCRIBE.MS_ANVIL = "这儿得用锤子才行。"
 ___________________________DESCRIBE.MS_ANVIL_HELPER = "这儿得用锤子才行。"
@@ -44,7 +44,7 @@ ___________________________DESCRIBE.MS_FURNACE = "一台超大号炉子。"
 ___________________________DESCRIBE.MS_FURNACE_BELLOW = "把火再煽旺点！"
 ___________________________DESCRIBE.MS_FURNACE_CAMPFIRE = {
 	OUT = "该把火生起来了。",
-	EMBERS = "#热度勉强够正经冶炼",
+	EMBERS = "热度勉强够正经冶炼",
 	LOW = "一小堆火。",
 	NORMAL = "烧得正好。",
 	HIGH = "这才像样的冶炼之火！",
@@ -54,9 +54,13 @@ ___________________________DESCRIBE.MS_ALU_ROCK = "一块富含铝的岩石。"
 ___________________________DESCRIBE.MS_COAL_ROCK = "一块含煤的岩石。"
 ___________________________DESCRIBE.MS_COPPER_ROCK = "一块富含铜的岩石。"
 ___________________________DESCRIBE.MS_GEODE_ROCK = "一块藏着晶洞的岩石。"
-___________________________DESCRIBE.MS_GIANT_BOULDER_GRASS = "一块大得出奇的巨石。挖起来可得费些功夫。"
-___________________________DESCRIBE.MS_GIANT_BOULDER_ROCK = "一块大得出奇的巨石。挖起来可得费些功夫。"
-___________________________DESCRIBE.MS_GIANT_BOULDER_SNOW = "一块大得出奇的巨石。挖起来可得费些功夫。"
+local MS_GIANT_BOULDER_DESC = {
+	GENERIC = "一块大得出奇的巨石。挖起来可得费些功夫。",
+	EMPTY = "这里是空的。",
+}
+___________________________DESCRIBE.MS_GIANT_BOULDER_GRASS = MS_GIANT_BOULDER_DESC
+___________________________DESCRIBE.MS_GIANT_BOULDER_ROCK = MS_GIANT_BOULDER_DESC
+___________________________DESCRIBE.MS_GIANT_BOULDER_SNOW = MS_GIANT_BOULDER_DESC
 
 ___________________________DESCRIBE.MS_APPLE_TREE = {
 	GENERIC = "一棵普通的苹果树。",
@@ -67,7 +71,7 @@ ___________________________DESCRIBE.MS_APPLE_TREE_SNOW = _______________________
 ___________________________DESCRIBE.MS_APPLE = "一个新鲜的山地苹果。"
 ___________________________DESCRIBE.MS_APPLE_COOKED = "又暖又甜。"
 ___________________________DESCRIBE.MS_APPLE_DRIED = "脆脆的薄片。"
-___________________________DESCRIBE.MS_GOLDEN_APPLE = "挖矿又手工做出来的。"
+___________________________DESCRIBE.MS_GOLDEN_APPLE = "为了它我可是又挖矿又制作的。"
 ___________________________DESCRIBE.MS_BIG_APPLE = "好大一个苹果！"
 ___________________________DESCRIBE.MS_APPLE_CORE = "可以种下去。"
 ___________________________DESCRIBE.MS_APPLE_PIE = "这才叫美式风味！"
@@ -112,7 +116,7 @@ ___________________________DESCRIBE.MOUNTAIN_COCKROACH = "呃。一只石蟑螂�
 ___________________________DESCRIBE.MOUNTAIN_COCKROACH_NEST = "蟑螂聚集的地方。真美妙。"
 ___________________________DESCRIBE.MOUNTAIN_STALACTITE = "石钟乳。撑着……不，挂着。"
 ___________________________DESCRIBE.MOUNTAIN_STALAGMITE = "石笋。从地上往上长。"
-___________________________DESCRIBE.MOUNTAIN_GOAT = "固执的羊驼羊"
+___________________________DESCRIBE.MOUNTAIN_GOAT = "固执的驼羊"
 ___________________________DESCRIBE.MOUNTAIN_ICEGOAT = "寒冷显然让他更暴躁了。"
 ___________________________DESCRIBE.MOUNTAIN_GOLEM = "真不该把他吵醒。"
 ___________________________DESCRIBE.MOUNTAIN_GOLEM_PILLAR = "蕴藏着巨大的能量。"
@@ -156,18 +160,18 @@ ___________________________DESCRIBE.MOUNTAIN_COLD_ROCK = "结构密实的石头�
 ___________________________DESCRIBE.MOUNTAIN_SNOWPEAK_STONE = "这些石头保持着平衡。"
 ___________________________DESCRIBE.MOUNTAIN_SNOWPILE = "雪堆。"
 ___________________________DESCRIBE.MOUNTAIN_GRAVEL_PILE = "一堆石头。"
-___________________________DESCRIBE.MOUNTAIN_TRANSFORMATION_CUBE = "#充满转化的能量。"
+___________________________DESCRIBE.MOUNTAIN_TRANSFORMATION_CUBE = "充满转化的能量。"
 ___________________________DESCRIBE.MOUNTAIN_WOODEN_BOX = "希望里面有能吃的。"
 ___________________________DESCRIBE.HAT_TINFOIL = "保护大脑。"
 ___________________________DESCRIBE.MOUNTAIN_TOP = "终于！顶峰！"
 
 ___________________________DESCRIBE.TURF_MS_SNOW = "一层雪毯。"
-___________________________DESCRIBE.TURF_MS_BRICK = "一块砖地皮-。" --Why do these end with an em-dash?
-___________________________DESCRIBE.TURF_MS_CAVE = "一块洞穴地皮-。"
-___________________________DESCRIBE.TURF_MS_MOUNTAIN_LOW = "低山的地皮-。"
-___________________________DESCRIBE.TURF_MS_MOUNTAIN_LOW_2 = "低山的地皮-。"
-___________________________DESCRIBE.TURF_MS_MOUNTAIN_HIGH = "高山的地皮-。"
-___________________________DESCRIBE.TURF_MS_PERMAFROST = "冻土地皮。永久寒冷-。"
+___________________________DESCRIBE.TURF_MS_BRICK = "一块砖地皮。"
+___________________________DESCRIBE.TURF_MS_CAVE = "一块洞穴地皮。"
+___________________________DESCRIBE.TURF_MS_MOUNTAIN_LOW = "低山的地皮。"
+___________________________DESCRIBE.TURF_MS_MOUNTAIN_LOW_2 = "低山的地皮。"
+___________________________DESCRIBE.TURF_MS_MOUNTAIN_HIGH = "高山的地皮。"
+___________________________DESCRIBE.TURF_MS_PERMAFROST = "冻土地皮，永久寒冷。"
 
 ------------------------------------------------------------
 -- Announcements

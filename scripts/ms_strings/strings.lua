@@ -5,7 +5,7 @@
 local ______________NAMES = STRINGS.NAMES
 
 STRINGS.UI.CRAFTING_FILTERS.MOUNTAIN_SCIENCE = "Transformation"
-STRINGS.UI.CRAFTING.MOUNTAIN_CUBE = "Not enough cube\ndurability"
+STRINGS.UI.CRAFTING.MOUNTAIN_CUBE = "Not enough cube durability"
 
 ______________NAMES.MS_COPPER_ORE = "Copper Nugget"
 ______________NAMES.MS_ALU_ORE = "Aluminium Nugget"

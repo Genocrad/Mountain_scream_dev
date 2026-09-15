@@ -9,7 +9,7 @@ local MS_INGOT_DESC = {
 	GENERIC = "A solid metal ingot.",
 	WARM = "I still can't forge it.",
 	HOT = "It’s ready to be forged.",
-	MELT = "#It's as soft as warm butter!",
+	MELT = "It's as soft as warm butter!",
 }
 ___________________________DESCRIBE.MS_COPPER_INGOT = MS_INGOT_DESC
 ___________________________DESCRIBE.MS_ALU_INGOT = MS_INGOT_DESC
@@ -19,7 +19,7 @@ ___________________________DESCRIBE.MS_GOLD_INGOT = MS_INGOT_DESC
 -- Details only toggle between cool and hot
 local MS_DETAIL_DESC = {
 	GENERIC = "A forged metal part. Perfect!",
-	HOT = "#It's hot from the anvil! I should handle this carefully!",
+	HOT = "It's hot from the anvil! I should handle this carefully!",
 }
 ___________________________DESCRIBE.MS_COPPER_DETAIL = MS_DETAIL_DESC
 ___________________________DESCRIBE.MS_ALU_DETAIL = MS_DETAIL_DESC
@@ -35,8 +35,8 @@ ___________________________DESCRIBE.MS_GOLD_INGOT_FORMLESS = "A shapeless lump o
 ___________________________DESCRIBE.MS_COPPER_ORE = "Traces of oxidation are visible."
 ___________________________DESCRIBE.MS_ALU_ORE = "Too soft for metal."
 ___________________________DESCRIBE.MS_COAL = "Excellent furnace fuel."
-___________________________DESCRIBE.MS_GEODE_ORE = "#Maybe there's something in this rock?"
-___________________________DESCRIBE.MS_SLAG = "#Well, that didn't work."
+___________________________DESCRIBE.MS_GEODE_ORE = "Maybe there's something in this rock?"
+___________________________DESCRIBE.MS_SLAG = "Well, that didn't work."
 
 ___________________________DESCRIBE.MS_ANVIL = "A hammer is  needed for the job here."
 ___________________________DESCRIBE.MS_ANVIL_HELPER = "A hammer is  needed for the job here."
@@ -44,7 +44,7 @@ ___________________________DESCRIBE.MS_FURNACE = "An oversized stove."
 ___________________________DESCRIBE.MS_FURNACE_BELLOW = "Let's turn up the heat!"
 ___________________________DESCRIBE.MS_FURNACE_CAMPFIRE = {
 	OUT = "I should get this fire going.",
-	EMBERS = "#Barely warm enough for a proper smelting",
+	EMBERS = "Barely warm enough for a proper smelting",
 	LOW = "A modest little fire.",
 	NORMAL = "Burning nicely.",
 	HIGH = "Now that's a proper smelting fire!",
@@ -54,9 +54,13 @@ ___________________________DESCRIBE.MS_ALU_ROCK = "An aluminium-rich boulder."
 ___________________________DESCRIBE.MS_COAL_ROCK = "A coal-bearing boulder."
 ___________________________DESCRIBE.MS_COPPER_ROCK = "A copper-rich boulder."
 ___________________________DESCRIBE.MS_GEODE_ROCK = "A boulder hiding geodes."
-___________________________DESCRIBE.MS_GIANT_BOULDER_GRASS = "A boulder of unusual size. Mining it could take a while."
-___________________________DESCRIBE.MS_GIANT_BOULDER_ROCK = "A boulder of unusual size. Mining it could take a while."
-___________________________DESCRIBE.MS_GIANT_BOULDER_SNOW = "A boulder of unusual size. Mining it could take a while."
+local MS_GIANT_BOULDER_DESC = {
+	GENERIC = "A boulder of unusual size. Mining it could take a while.",
+	EMPTY = "It's empty here.",
+}
+___________________________DESCRIBE.MS_GIANT_BOULDER_GRASS = MS_GIANT_BOULDER_DESC
+___________________________DESCRIBE.MS_GIANT_BOULDER_ROCK = MS_GIANT_BOULDER_DESC
+___________________________DESCRIBE.MS_GIANT_BOULDER_SNOW = MS_GIANT_BOULDER_DESC
 
 ___________________________DESCRIBE.MS_APPLE_TREE = {
 	GENERIC = "A modest apple tree.",
@@ -156,7 +160,7 @@ ___________________________DESCRIBE.MOUNTAIN_COLD_ROCK = "A dense stone structur
 ___________________________DESCRIBE.MOUNTAIN_SNOWPEAK_STONE = "The stones maintain their balance."
 ___________________________DESCRIBE.MOUNTAIN_SNOWPILE = "Snowdrift."
 ___________________________DESCRIBE.MOUNTAIN_GRAVEL_PILE = "A pile of stones."
-___________________________DESCRIBE.MOUNTAIN_TRANSFORMATION_CUBE = "#Full of energy for transformation."
+___________________________DESCRIBE.MOUNTAIN_TRANSFORMATION_CUBE = "Full of energy for transformation."
 ___________________________DESCRIBE.MOUNTAIN_WOODEN_BOX = "I hope there's something edible in there."
 ___________________________DESCRIBE.HAT_TINFOIL = "Protects the brain."
 ___________________________DESCRIBE.MOUNTAIN_TOP = "Finally! The Peak!"

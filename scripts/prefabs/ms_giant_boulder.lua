@@ -62,6 +62,14 @@ local function OnLoad(inst, data)
   end
 end
 
+-- oretype is not networked; use the revealed empty-cavity anim (synced) for inspect.
+local function getstatus(inst)
+    if inst.AnimState:IsCurrentAnimation(inst.biome .. "_ore0") then
+        return "EMPTY"
+    end
+    return "GENERIC"
+end
+
 local function MakeRock(biome)
   local function fn()  
     local inst = CreateEntity()
@@ -105,7 +113,8 @@ local function MakeRock(biome)
     workable:SetOnWorkCallback(OnWork)
     workable.savestate = true
     
-    inst:AddComponent("inspectable")
+    local inspectable = inst:AddComponent("inspectable")
+    inspectable.getstatus = getstatus
     
     inst.OnSave = OnSave
     inst.OnLoad = OnLoad
