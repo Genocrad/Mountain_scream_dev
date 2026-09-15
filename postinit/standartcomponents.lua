@@ -7,8 +7,6 @@ GLOBAL.setfenv(1, GLOBAL)
 local old_MakeCharacterPhysics = MakeCharacterPhysics
 
 function MakeCharacterPhysics(inst, mass, rad, ...)
-  
-  
   if TheWorld:HasTag("mountain_scream_dungeons") then
     local phys = inst.entity:AddPhysics()
     phys:SetMass(mass)
@@ -23,7 +21,6 @@ function MakeCharacterPhysics(inst, mass, rad, ...)
       COLLISION.CHARACTERS,
       COLLISION.GIANTS
     )
-    
     if TheWorld.ismastersim then
       phys:SetCollisionMask(
       COLLISION.WORLD,
@@ -33,14 +30,89 @@ function MakeCharacterPhysics(inst, mass, rad, ...)
       COLLISION.GIANTS,
       COLLISION.MS_CLOUDS
       )  
+      if inst and inst:HasTag("player") then
+        phys:SetCollisionMask(
+      COLLISION.WORLD,
+      COLLISION.OBSTACLES,
+      COLLISION.SMALLOBSTACLES,
+      COLLISION.CHARACTERS,
+      COLLISION.GIANTS
+      )  
+      end
     end
-  
     return phys
-  
-  
-  
   else
     return old_MakeCharacterPhysics(inst, mass, rad, ...)
+  end
+end
+
+local old_ChangeToCharacterPhysics = ChangeToCharacterPhysics
+
+function ChangeToCharacterPhysics(inst, mass, rad, ...)
+  if TheWorld:HasTag("mountain_scream_dungeons") then
+    local phys = inst.Physics
+    if mass then
+        phys:SetMass(mass)
+        phys:SetFriction(0)
+        phys:SetDamping(5)
+    end
+    phys:SetCollisionGroup(COLLISION.CHARACTERS)
+    if TheWorld.ismastersim then
+      phys:SetCollisionMask(
+        COLLISION.WORLD,
+        COLLISION.OBSTACLES,
+        COLLISION.SMALLOBSTACLES,
+        COLLISION.CHARACTERS,
+        COLLISION.GIANTS,
+        COLLISION.MS_CLOUDS
+      )
+    else
+      phys:SetCollisionMask(
+        COLLISION.WORLD,
+        COLLISION.OBSTACLES,
+        COLLISION.SMALLOBSTACLES,
+        COLLISION.CHARACTERS,
+        COLLISION.GIANTS
+      )
+    end
+    if rad then
+        phys:SetCapsule(rad, 1)
+    end
+    return phys
+  else
+    old_ChangeToCharacterPhysics(inst, mass, rad, ...)
+  end
+end
+
+local old_MakeGhostPhysics = MakeGhostPhysics
+
+function MakeGhostPhysics(inst, mass, rad, ...)
+  if TheWorld:HasTag("mountain_scream_dungeons") then
+    local phys = inst.entity:AddPhysics()
+    phys:SetMass(mass)
+    phys:SetFriction(0)
+    phys:SetDamping(5)
+    phys:SetCollisionGroup(COLLISION.CHARACTERS)
+    if TheWorld.ismastersim then
+    phys:SetCollisionMask(
+      TheWorld:CanFlyingCrossBarriers() and COLLISION.GROUND or COLLISION.WORLD,
+      --COLLISION.OBSTACLES,
+      COLLISION.CHARACTERS,
+      COLLISION.GIANTS,
+      COLLISION.MS_CLOUDS
+    )
+    else
+      phys:SetCollisionMask(
+      TheWorld:CanFlyingCrossBarriers() and COLLISION.GROUND or COLLISION.WORLD,
+      --COLLISION.OBSTACLES,
+      COLLISION.CHARACTERS,
+      COLLISION.GIANTS
+    )
+    end
+    phys:SetCapsule(rad, 1)
+    return phys
+  else
+    old_MakeGhostPhysics(inst, mass, rad, ...)
   end
 end
 
