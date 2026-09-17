@@ -13,7 +13,7 @@ AddPrefabPostInit("cave", function(inst)
     local Hounded = inst.components.hounded
   if Hounded then
 
-local old_check = UpvalueHacker.GetUpvalue(Hounded.OnUpdate, "CheckForLocationImmunityAllPlayers", "CheckForLocationImmunity")
+local old_check = UpvalueHacker.GetUpvalue(Hounded.OnUpdate, "CheckForLocationImmunity")
 
 local function CheckForLocationImmunity(player)
    
@@ -29,7 +29,7 @@ local function CheckForLocationImmunity(player)
   old_check(player)
 end
 
-UpvalueHacker.SetUpvalue(Hounded.OnUpdate, CheckForLocationImmunity, "CheckForLocationImmunityAllPlayers", "CheckForLocationImmunity")
+UpvalueHacker.SetUpvalue(Hounded.OnUpdate, CheckForLocationImmunity, "CheckForLocationImmunity")
 
 
 local old_summonspawn = UpvalueHacker.GetUpvalue(Hounded.SummonSpawn, "SummonSpawn")
