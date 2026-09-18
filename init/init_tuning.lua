@@ -469,7 +469,11 @@ TUNING.MS_ANVIL_MINIMAL_HITS = 3
 -- XK: creatures / tools / foods
 
 TUNING.MS_FALL_DAMAGE = 60
- 
+
+-- 山体上下层传送黑屏。原版 teleporter 默认：camera=3, arrive=4, 淡入 2 秒。
+TUNING.MS_CLIMB_TRAVEL_CAMERA_TIME = 2
+TUNING.MS_CLIMB_TRAVEL_ARRIVE_TIME = 2.5
+
 -- mountain_top（山顶插旗）
 TUNING.MOUNTAIN_TOP = {
 	FLAG_SANITY = 50,           -- 插旗即时理智

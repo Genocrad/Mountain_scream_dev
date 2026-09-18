@@ -104,6 +104,8 @@ local function fn()
     local teleporter = inst:AddComponent("teleporter")
     teleporter.onActivate = OnActivate
     teleporter.offset = 3
+    teleporter.travelcameratime = TUNING.MS_CLIMB_TRAVEL_CAMERA_TIME
+    teleporter.travelarrivetime = TUNING.MS_CLIMB_TRAVEL_ARRIVE_TIME
     teleporter:SetSelfManaged(true)
     --Does not save.
     --teleporter.saveenabled = true

@@ -57,7 +57,7 @@ local function MakePreparedFood(data)
 
             inst:AddTag("spicedfood")
 
-            inst.inv_image_bg = { image = (data.basename or data.name)..".tex" }
+            inst.inv_image_bg = { image = (data.inv_image or data.basename or data.name)..".tex" }
             inst.inv_image_bg.atlas = GetInventoryItemAtlas(inst.inv_image_bg.image)
 
             food_symbol_build = data.overridebuild or "cook_pot_food"
@@ -128,18 +128,16 @@ local function MakePreparedFood(data)
         inst.wet_prefix = data.wet_prefix
 
         inst:AddComponent("inventoryitem")
-        inst.components.inventoryitem.atlasname = MS_ITEMS_ATLAS
-        inst.components.inventoryitem.imagename = data.inv_image or data.name
         if data.OnPutInInventory then
             inst:ListenForEvent("onputininventory", data.OnPutInInventory)
         end
 
         if spicename ~= nil then
+            -- 调味料理用原版香料 overlay，不能绑 MS_ITEMS_ATLAS
             inst.components.inventoryitem:ChangeImageName(spicename.."_over")
-        elseif data.basename ~= nil then
-            inst.components.inventoryitem:ChangeImageName(data.basename)
-        elseif data.inv_image ~= nil then
-            inst.components.inventoryitem:ChangeImageName(data.inv_image)
+        else
+            inst.components.inventoryitem.atlasname = MS_ITEMS_ATLAS
+            inst.components.inventoryitem.imagename = data.inv_image or data.name
         end
 
         inst:AddComponent("stackable")
@@ -171,8 +169,17 @@ local function MakePreparedFood(data)
 end
 
 local prefs = {}
+local foods = require("mountain_preparedfoods")
 
-for k, v in pairs(require("mountain_preparedfoods")) do
+for k, v in pairs(foods) do
     table.insert(prefs, MakePreparedFood(v))
 end
+
+-- GenerateSpicedFoods 在 init_cooking.lua 中于 PrefabFiles 加载前调用
+for k, v in pairs(require("spicedfoods")) do
+    if v.basename ~= nil and foods[v.basename] ~= nil then
+        table.insert(prefs, MakePreparedFood(v))
+    end
+end
+
 return unpack(prefs)

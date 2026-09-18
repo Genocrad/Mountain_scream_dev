@@ -83,3 +83,12 @@ for k, recipe in pairs(foods) do
 		table.insert(recipe_cards, { recipe_name = recipe.name, cooker_name = "cookpot" })
 	end
 end
+
+-- 沃利调味：生成 *_spice_* 配方并注册到便携香料站。
+-- 预制体由 scripts/prefabs/mountain_preparedfoods.lua 在 PrefabFiles 加载时创建。
+GenerateSpicedFoods(foods)
+for _, recipe in pairs(require("spicedfoods")) do
+	if recipe.basename ~= nil and foods[recipe.basename] ~= nil then
+		AddCookerRecipe("portablespicer", recipe)
+	end
+end

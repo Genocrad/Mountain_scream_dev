@@ -80,6 +80,8 @@ local function fn()
   teleporter.onActivate = OnActivate
   teleporter.overrideteleportarrivestate = "abyss_drop"
   teleporter.offset = 3
+  teleporter.travelcameratime = TUNING.MS_CLIMB_TRAVEL_CAMERA_TIME
+  teleporter.travelarrivetime = TUNING.MS_CLIMB_TRAVEL_ARRIVE_TIME
   teleporter.saveenabled = true
   --teleporter:SetSelfManaged(lobbyexit)
   teleporter:SetEnabled(false)
