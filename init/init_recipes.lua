@@ -94,10 +94,13 @@ end
 
 ------------------------------------------------------------------------------------------------------------------------
 
+-- custom_pos：不进下方 11x2 分类网格（否则会排到「全部」后面另起一行）。
+-- 按钮放到顶栏，和收藏 / 节日专属同一行。
 AddRecipeFilter({
 	name = "MOUNTAIN_SCIENCE",
 	atlas = "images/inventoryimages/ms_crafticons.xml",
 	image = "ms_crafticon.tex",
+	custom_pos = true,
 })
 
 local CUBE_ATLAS = "images/inventoryimages/mountain_items.xml"
@@ -497,17 +500,40 @@ AddClassPostConstruct("widgets/redux/craftingmenu_details", function(self)
 end)
 
 ------------------------------------------------------------------------------------------------------------------------
--- 制作栏：无方块时隐藏 MOUNTAIN_SCIENCE 过滤器按钮
+-- 制作栏顶栏：转化过滤器放在收藏右侧（节日专属同排），无方块时隐藏。
+-- 参考 tmp_ref/.../craftingmenu_widget.lua 的 SPECIAL_EVENT / UpdateEventButtonLayout。
+
+local CUBE_FILTER_BUTTON_SIZE = 38
+local CUBE_SEARCH_BOX_HEIGHT = 40
 
 AddClassPostConstruct("widgets/redux/craftingmenu_widget", function(self)
-	local function UpdateMountainScienceFilter(menu)
-		local btn = menu.filter_buttons ~= nil and menu.filter_buttons.MOUNTAIN_SCIENCE or nil
-		if btn == nil then
+	local function EnsureMountainScienceFilterButton(menu)
+		if menu.filter_buttons ~= nil and menu.filter_buttons.MOUNTAIN_SCIENCE ~= nil then
+			return menu.filter_buttons.MOUNTAIN_SCIENCE
+		end
+		local filter_def = CRAFTING_FILTERS.MOUNTAIN_SCIENCE
+		if filter_def == nil or menu.MakeFilterButton == nil or menu.filter_panel == nil then
+			return nil
+		end
+
+		local btn = menu.filter_panel:AddChild(menu:MakeFilterButton(filter_def, CUBE_FILTER_BUTTON_SIZE))
+		menu.filter_buttons[filter_def.name] = btn
+		menu.mountain_science_filter = btn
+		if menu.top_row_widgets ~= nil then
+			table.insert(menu.top_row_widgets, 2, btn)
+		end
+		btn:Hide()
+		return btn
+	end
+
+	local function LayoutMountainScienceTopRow(menu)
+		local btn = EnsureMountainScienceFilterButton(menu)
+		if btn == nil or menu.grid_left == nil or menu.grid_button_space == nil then
 			return
 		end
-		local owner = menu.owner
-		local show = owner ~= nil and owner:HasTag(BUILDER_TAG)
-		if show then
+
+		local show_cube = menu.owner ~= nil and menu.owner:HasTag(BUILDER_TAG)
+		if show_cube then
 			btn:Show()
 		else
 			btn:Hide()
@@ -515,18 +541,60 @@ AddClassPostConstruct("widgets/redux/craftingmenu_widget", function(self)
 				menu:SelectFilter(CRAFTING_FILTERS.FAVORITES.name, true)
 			end
 		end
+
+		local y = -2
+		if menu.favorites_filter ~= nil then
+			y = menu.favorites_filter:GetPosition().y
+		end
+
+		-- 顶栏从左起：收藏 | 转化(可选) | 节日(可选) | 制作站
+		local slot = 1
+		if show_cube then
+			btn:SetPosition(menu.grid_left + menu.grid_button_space * slot, y)
+			slot = slot + 1
+		end
+
+		if menu.special_event_filter ~= nil then
+			menu.special_event_filter:SetPosition(menu.grid_left + menu.grid_button_space * slot, y)
+			if menu.event_layout then
+				slot = slot + 1
+			end
+		end
+
+		if menu.crafting_station_filter ~= nil then
+			menu.crafting_station_filter:SetPosition(menu.grid_left + menu.grid_button_space * slot, y)
+		end
+
+		local extra = (show_cube and 1 or 0) + (menu.event_layout and 1 or 0)
+		local search_spaces = 6.5 - extra * 1.5
+		if menu.search_box ~= nil
+			and menu.search_box.textbox_root ~= nil
+			and menu.search_box.textbox_root.textbox_bg ~= nil
+			and menu.search_box.textbox_root.textbox ~= nil then
+			menu.search_box.textbox_root.textbox_bg:ScaleToSize(menu.grid_button_space * search_spaces, CUBE_SEARCH_BOX_HEIGHT)
+			menu.search_box.textbox_root.textbox:SetRegionSize(menu.grid_button_space * search_spaces - 30, CUBE_SEARCH_BOX_HEIGHT)
+		end
 	end
+
+	EnsureMountainScienceFilterButton(self)
+	LayoutMountainScienceTopRow(self)
 
 	local old_UpdateFilterButtons = self.UpdateFilterButtons
 	function self:UpdateFilterButtons(...)
 		local result = old_UpdateFilterButtons(self, ...)
-		UpdateMountainScienceFilter(self)
+		LayoutMountainScienceTopRow(self)
 		return result
+	end
+
+	local old_UpdateEventButtonLayout = self.UpdateEventButtonLayout
+	function self:UpdateEventButtonLayout(...)
+		old_UpdateEventButtonLayout(self, ...)
+		LayoutMountainScienceTopRow(self)
 	end
 
 	local old_OnCraftingMenuOpen = self.OnCraftingMenuOpen
 	function self:OnCraftingMenuOpen(...)
-		UpdateMountainScienceFilter(self)
+		LayoutMountainScienceTopRow(self)
 		return old_OnCraftingMenuOpen(self, ...)
 	end
 end)
