@@ -22,7 +22,6 @@ local function CheckForLocationImmunity(player)
 		
 		local x,y,z = player.Transform:GetWorldPosition()
 		if TheWorld.net.components.dungeonmapoverwatch and TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(x,y,z) ~= nil and TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(x,y,z) > TUNING.MS_CAVES_START then  
-      c_announce("MS_CheckForLocationImmunity")
       _targetableplayers[player.GUID] = "ms_caves"
     end
 	end
