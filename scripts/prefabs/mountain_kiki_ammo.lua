@@ -7,7 +7,7 @@ local function fn()
 	MakeInventoryPhysics(inst)
 
 	inst:AddTag("nosteal")
-
+  
 	inst.entity:SetPristine()
 
 	if not TheWorld.ismastersim then
@@ -17,7 +17,7 @@ local function fn()
 	inst.persists = false
 
 	inst:AddComponent("inventoryitem")
-
+  inst.components.inventoryitem:SetOnDroppedFn(inst.Remove)
 	return inst
 end
 
