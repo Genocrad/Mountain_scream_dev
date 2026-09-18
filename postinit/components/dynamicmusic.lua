@@ -11,9 +11,8 @@ GLOBAL.setfenv(1, GLOBAL)
 local EPIC_TAGS = { "epic" }
 local NO_EPIC_TAGS = { "noepicmusic" }
 
-AddPlayerPostInit(function(inst)
-    if not TheNet:IsDedicated() then
-      inst:DoTaskInTime(0, function(inst)
+local function musicsetup(inst)
+          
           local old_startdanger = UpvalueHacker.GetUpvalue(inst.event_listeners["attacked"][TheWorld][1], "StartDanger")
 
           local oldSEASON_EPICFIGHT_MUSIC = UpvalueHacker.GetUpvalue(inst.event_listeners["attacked"][TheWorld][1], "StartDanger", "SEASON_EPICFIGHT_MUSIC")
@@ -27,20 +26,30 @@ AddPlayerPostInit(function(inst)
             local SEASON_EPICFIGHT_MUSIC = oldSEASON_EPICFIGHT_MUSIC
             local SEASON_DANGER_MUSIC = oldSEASON_DANGER_MUSIC
             local _isenabled = UpvalueHacker.GetUpvalue(TheWorld.event_listeners["enabledynamicmusic"][TheWorld][1], "_isenabled")
+            local _dangertask = UpvalueHacker.GetUpvalue(player.event_listeners["buildsuccess"][TheWorld][1], "_dangertask")
+            local _extendtime = UpvalueHacker.GetUpvalue(player.event_listeners["goinsane"][TheWorld][1], "_extendtime")
             if  player.map_level_current and player.map_level_current < TUNING.MS_CAVES_START and _isenabled then
-              local x, y, z = player.Transform:GetWorldPosition()
-              local epics = TheSim:FindEntities(x, y, z, 30, EPIC_TAGS, NO_EPIC_TAGS)
-              StopBusy()        
-              _soundemitter:PlaySound(
-                #epics > 0
-                and "ms_sfx/ms_music/boss_music"
-                or "dontstarve/music/music_danger_winter",
-                "danger")
-              local _dangertask = player:DoTaskInTime(10, StopDanger, true)
+              if _dangertask == nil then
+                local x, y, z = player.Transform:GetWorldPosition()
+                local epics = TheSim:FindEntities(x, y, z, 30, EPIC_TAGS, NO_EPIC_TAGS)
 
-              UpvalueHacker.SetUpvalue(TheWorld.event_listeners["enabledynamicmusic"][TheWorld][1], _dangertask, "StopDanger", "_dangertask")
-              UpvalueHacker.SetUpvalue(TheWorld.event_listeners["enabledynamicmusic"][TheWorld][1], nil, "StopDanger", "_triggeredlevel")
-              UpvalueHacker.SetUpvalue(TheWorld.event_listeners["enabledynamicmusic"][TheWorld][1], 10, "StopDanger", "_extendtime")
+                 
+                  StopBusy()        
+                  _soundemitter:PlaySound(
+                    #epics > 0
+                    and "ms_sfx/ms_music/boss_music"
+                    or "dontstarve/music/music_danger_winter",
+                    "danger")
+                
+                local _dangertask = TheWorld:DoTaskInTime(10, StopDanger, true)
+              
+                UpvalueHacker.SetUpvalue(TheWorld.event_listeners["enabledynamicmusic"][TheWorld][1], _dangertask, "StopDanger", "_dangertask")
+                UpvalueHacker.SetUpvalue(TheWorld.event_listeners["enabledynamicmusic"][TheWorld][1], nil, "StopDanger", "_triggeredlevel")
+                UpvalueHacker.SetUpvalue(TheWorld.event_listeners["enabledynamicmusic"][TheWorld][1], 0, "StopDanger", "_extendtime")
+              else
+                local time = GetTime() + 10
+                UpvalueHacker.SetUpvalue(TheWorld.event_listeners["enabledynamicmusic"][TheWorld][1],  time, "StopDanger", "_extendtime")
+              end
             else
               old_startdanger(player, ...)
             end
@@ -72,7 +81,7 @@ AddPlayerPostInit(function(inst)
                 end
 
                 _soundemitter:SetParameter("busy", "intensity", 1)
-                _busytask = inst:DoTaskInTime(15, StopBusy, true)
+                _busytask = TheWorld:DoTaskInTime(15, StopBusy, true)
 
                 UpvalueHacker.SetUpvalue(TheWorld.event_listeners["enabledynamicmusic"][TheWorld][1], BUSYTHEMES.MOUNTAINS, "StopBusy", "_busytheme")
                 UpvalueHacker.SetUpvalue(TheWorld.event_listeners["enabledynamicmusic"][TheWorld][1], _busytask, "StopBusy", "_busytask")
@@ -120,7 +129,17 @@ AddPlayerPostInit(function(inst)
           end
 
           TheWorld:WatchWorldState("cavephase", OnPhase)
-
-        end)
+        end
+    
+AddPlayerPostInit(function(inst)
+    local music_was_set_upped = false -- Not the best way to do it, but who cares -\_(-_-)_
+    if not TheNet:IsDedicated() then
+      inst:DoTaskInTime(2, function(inst) if inst.event_listeners["attacked"] ~= nil and not music_was_set_upped then music_was_set_upped = true musicsetup(inst) end end)
+      inst:DoTaskInTime(4, function(inst) if inst.event_listeners["attacked"] ~= nil and not music_was_set_upped then music_was_set_upped = true musicsetup(inst) end end)
+      inst:DoTaskInTime(6, function(inst) if inst.event_listeners["attacked"] ~= nil and not music_was_set_upped then music_was_set_upped = true musicsetup(inst) end end)
+      inst:DoTaskInTime(8, function(inst) if inst.event_listeners["attacked"] ~= nil and not music_was_set_upped then music_was_set_upped = true musicsetup(inst) end end)
+      inst:DoTaskInTime(10, function(inst) if inst.event_listeners["attacked"] ~= nil and not music_was_set_upped then music_was_set_upped = true musicsetup(inst) end end)
+      inst:DoTaskInTime(12, function(inst) if inst.event_listeners["attacked"] ~= nil and not music_was_set_upped then music_was_set_upped = true musicsetup(inst) end end)
+      inst:DoTaskInTime(14, function(inst) if inst.event_listeners["attacked"] ~= nil and not music_was_set_upped then music_was_set_upped = true musicsetup(inst) end end)
     end
   end)
