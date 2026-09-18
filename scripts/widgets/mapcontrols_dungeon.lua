@@ -22,7 +22,10 @@ end
 --base class for imagebuttons and animbuttons.
 local MapControlsDungeon = Class(Widget, function(self)
     Widget._ctor(self, "Map Controls Dungeon")
-
+    
+    if ThePlayer then
+        ThePlayer.map_level_shown = ThePlayer.map_level_current
+    end
     self.level1 = self:AddChild(ImageButton("images/hud.xml", "craft_end_normal.tex", nil, nil, nil, nil, {1,1}, {0,0}))
     self.level1:SetPosition(-60, 240, 0)
     self.level1:SetScale(-.7, -.7, .7)
