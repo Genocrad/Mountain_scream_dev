@@ -7,7 +7,7 @@ local ___________________________ANNOUNCE = STRINGS.CHARACTERS.GENERIC
 -- Forging: ingots share temperature statuses (GENERIC / WARM / HOT / MELT)
 local MS_INGOT_DESC = {
 	GENERIC = "Прочный металлический слиток.",
-	WARM = "Недостаточно разогреть для ковки.",
+	WARM = "Недостаточно разогрет для ковки.",
 	HOT = "Уже можно ковать.",
 	MELT = "Мягкий, как масло!",
 }
@@ -19,7 +19,7 @@ ___________________________DESCRIBE.MS_GOLD_INGOT = MS_INGOT_DESC
 -- Details only toggle between cool and hot
 local MS_DETAIL_DESC = {
 	GENERIC = "Выкованная металлическая деталь. Идеально!",
-	HOT = "Ещё горячая с наковальни. Осторожнее!",
+	HOT = "Ещё горячая, с наковальни. Осторожно!",
 }
 ___________________________DESCRIBE.MS_COPPER_DETAIL = MS_DETAIL_DESC
 ___________________________DESCRIBE.MS_ALU_DETAIL = MS_DETAIL_DESC
@@ -33,7 +33,7 @@ ___________________________DESCRIBE.MS_BRONZE_INGOT_FORMLESS = "Бесформе
 ___________________________DESCRIBE.MS_GOLD_INGOT_FORMLESS = "Бесформенный ком горячего золота. Наковальня ждёт."
 
 ___________________________DESCRIBE.MS_COPPER_ORE = "Видны следы окисления."
-___________________________DESCRIBE.MS_ALU_ORE = "Слишком мягкий для метала."
+___________________________DESCRIBE.MS_ALU_ORE = "Слишком мягкий для металла."
 ___________________________DESCRIBE.MS_COAL = "Отличное топливо для печи."
 ___________________________DESCRIBE.MS_GEODE_ORE = "Внутри может быть что-то интересное."
 ___________________________DESCRIBE.MS_SLAG = "Неудачная ковка."
@@ -85,7 +85,7 @@ ___________________________DESCRIBE.MS_WORLDMIGRATOR_DOWN = {
 }
 ___________________________DESCRIBE.MS_WORLDMIGRATOR_UP = ___________________________DESCRIBE.MS_WORLDMIGRATOR_DOWN
 
-___________________________DESCRIBE.MS_CLIMBING = "Похоже, можно взобраться вверх"
+___________________________DESCRIBE.MS_CLIMBING = "Похоже, можно взобраться вверх."
 ___________________________DESCRIBE.MS_CLIMBING_DOWN = "Путь вниз."
 ___________________________DESCRIBE.MS_ARENATELEPORTER = "От него исходит зловещая аура."
 ___________________________DESCRIBE.MS_ARENATELEPORTER_EXIT = "Время уходить отсюда."
@@ -105,7 +105,7 @@ ___________________________DESCRIBE.MS_BROKEN_PILLAR = "Остатки древ�
 
 ___________________________DESCRIBE.MOUNTAIN_FROZEN_MEATBALLS = "Не разгрызть."
 ___________________________DESCRIBE.MOUNTAIN_KIKI = "Суровая макака."
-___________________________DESCRIBE.MOUNTAIN_KIKI_HOUSE = "Холодная пещера"
+___________________________DESCRIBE.MOUNTAIN_KIKI_HOUSE = "Холодная пещера."
 ___________________________DESCRIBE.MOUNTAIN_CRATER_POOL = "Теплая ванна среди гор."
 ___________________________DESCRIBE.MOUNTAIN_KIKI_PROJECTILE1 = "Кусок снега летит."
 ___________________________DESCRIBE.MOUNTAIN_KIKI_PROJECTILE2 = "Снег с льдом."
@@ -122,7 +122,7 @@ ___________________________DESCRIBE.MOUNTAIN_ICEGOAT = "Её  явно злит 
 ___________________________DESCRIBE.MOUNTAIN_GOLEM = "Не стояло его будить."
 ___________________________DESCRIBE.MOUNTAIN_GOLEM_PILLAR = "Таит в себе большой заряд энергии."
 ___________________________DESCRIBE.MOUNTAIN_GOLEM_PLATFORM = "Основание для чего-то громадного."
-___________________________DESCRIBE.MOUNTAIN_SANDBLOCK = "Башня мешает проходу"
+___________________________DESCRIBE.MOUNTAIN_SANDBLOCK = "Башня мешает проходу."
 ___________________________DESCRIBE.MOUNTAIN_SANDBLOCK_CHARGED = "В башне находится его сила."
 ___________________________DESCRIBE.MOUNTAIN_SANDSPIKE_TALL = "Острый!"
 ___________________________DESCRIBE.MOUNTAIN_SANDSPIKE_CHARGED_TALL = "Готов к взрыву в любой момент!"
@@ -140,18 +140,18 @@ ___________________________DESCRIBE.MOUNTAIN_WATHGRITHR_SHIELD = "Прочный
 ___________________________DESCRIBE.MOUNTAIN_ARMOR_COPPER = "Доспех с серьёзной мускулатурой."
 ___________________________DESCRIBE.MOUNTAIN_HELMET_COPPER = "Блестящий шлем."
 ___________________________DESCRIBE.MOUNTAIN_COPPER_AXE = "С каждым ударом становится острее."
-___________________________DESCRIBE.MOUNTAIN_COPPER_BAT = "Чем зеленее, тем сильнее бьёт"
+___________________________DESCRIBE.MOUNTAIN_COPPER_BAT = "Чем зеленее, тем сильнее бьёт."
 ___________________________DESCRIBE.MOUNTAIN_GOAPACA_HORN = "Этим можно кому-то по голове треснуть."
 ___________________________DESCRIBE.MOUNTAIN_ALUMINUM_AXE = "Лёгкий и острый."
 ___________________________DESCRIBE.MOUNTAIN_ALUMINUM_PICKAXE = "Ни один камень от меня не спрячется."
 ___________________________DESCRIBE.MOUNTAIN_ALUMINUM_DAGGER = "Время для дартса"
 ___________________________DESCRIBE.MOUNTAIN_COPPER_PICKAXE = "Быстро окисляется."
-___________________________DESCRIBE.MOUNTAIN_SUPER_GILDEDAXE = "Сияет на солнце"
+___________________________DESCRIBE.MOUNTAIN_SUPER_GILDEDAXE = "Сияет на солнце."
 ___________________________DESCRIBE.MOUNTAIN_SUPER_GILDEDPICKAXE = "Намного прочнее."
 ___________________________DESCRIBE.MOUNTAIN_SUPER_GILDEDSHOVEL = "Думаю это слишком изысканно, для такой грязной работы."
 
 ___________________________DESCRIBE.MOUNTAIN_ICECREAM = "Нужно быстрее есть, пока не растаяло."
-___________________________DESCRIBE.MOUNTAIN_TORNADO_SORBET = "Закрученые вихрем сливки."
+___________________________DESCRIBE.MOUNTAIN_TORNADO_SORBET = "Закрученные вихрем сливки."
 ___________________________DESCRIBE.MOUNTAIN_MONSTER_DRUMSTICK = "Куча перьев на мясе."
 ___________________________DESCRIBE.MOUNTAIN_MONSTER_DRUMSTICK_COOKED = "Лучше не стало."
 ___________________________DESCRIBE.MOUNTAIN_SNOWBALL = "Плотный горный снежок."
@@ -184,7 +184,7 @@ ___________________________ANNOUNCE.MS_GOLDEN_APPLE_BUFF_END = {
 	"Голова всё ещё словно в Нижнем мире...",
 }
 ___________________________ANNOUNCE.MS_MOUNTAIN_ICE_CREAM_START = {
-	"Ох, аж в мозги замерзли!",
+	"Ох, аж мозги замерзли!",
 }
 ___________________________ANNOUNCE.MS_MOUNTAIN_ICE_CREAM_END = {
 	"До сих пор мурашки по коже...",
