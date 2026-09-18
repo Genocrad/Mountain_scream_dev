@@ -24,7 +24,7 @@ elseif locale == "ru" then
 end
 
 author = "Milanjorim, luigi.m.mario, 你要帮帮威吊"
-version = "1.0.0"
+version = "1.0.2"
 forumthread = "/"
 
 icon_atlas = "images/modicon.xml"
@@ -37,7 +37,7 @@ dont_starve_compatible = false
 reign_of_giants_compatible = false
 dst_compatible = true
 api_version = 10
-server_filter_tags = {"ms", "archipelago", "islands"}
+server_filter_tags = {"ms", "mountain"}
 
 
 local function get_lang_text(text_map, lang)
