@@ -64,8 +64,7 @@ local function fn()
     
     local inventoryitem = inst:AddComponent("inventoryitem")
 
-    local stackable = inst:AddComponent("stackable")
-    stackable.maxsize = TUNING.STACK_SIZE_MEDITEM
+  
     
     inst:AddComponent("workable")
     inst.components.workable:SetWorkAction(ACTIONS.MINE)
