@@ -53,7 +53,6 @@ local function CheckMountainLevel(inst)
       IsUsingMSDoorDirty(inst)
     end
     
-    ThePlayer.map_level_shown = level
     ThePlayer.map_level_current = level
     
     ThePlayer.components.playervision:UpdateCCTable()
