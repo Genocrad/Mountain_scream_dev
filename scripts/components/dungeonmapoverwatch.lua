@@ -75,15 +75,15 @@ function DungeonMapOverwatch:AddSpawnPointsForWall(level,x,y,dx,dy,isfull)
   for i = 1, math.random(1,3) do
     -- Luigi: If this is a full wall, we allow objects to spawn from -1 to 1, if not 0 to 1
     if isfull then
-      table.insert(self.wall_spawn_points[level], {x = dx ~= 0 and x + dx/2 or x + math.random()*2 - 1, y = 1.5 + math.random() * 8, z = dy ~= 0 and y + dy/2 or y + math.random()*2 - 1,
+      table.insert(self.wall_spawn_points[level], {x = dx ~= 0 and x + dx/2 or x + math.random()*2 - 1, y = 5 + math.random() * 6, z = dy ~= 0 and y + dy/2 or y + math.random()*2 - 1,
                  angle = dx == 1 and 0 or (dx== -1 and 180 or (dy == -1 and 90 or 270))})
     else 
       -- As corners have both dx and dy, choose one of them.
       if math.random() > 0.5 then
-        table.insert(self.wall_spawn_points[level], {x =  x + dx/2, y = 3 + math.random() * 6, z = y - dy - dy * math.random(),
+        table.insert(self.wall_spawn_points[level], {x =  x + dx/2, y = 5 + math.random() * 6, z = y - dy - dy * math.random(),
                  angle = dx == 1 and 0 or 180})
       else
-        table.insert(self.wall_spawn_points[level], {x = x - dx - dx * math.random(), y = 1.5 + math.random() * 8, z = y + dy/2,
+        table.insert(self.wall_spawn_points[level], {x = x - dx - dx * math.random(), y = 5 + math.random() * 6, z = y + dy/2,
                  angle = dy == -1 and 90 or 270})
       end
     end
