@@ -44,6 +44,7 @@ Assets = {
 	Asset("ANIM", "anim/clouds_overlay.zip"),
  	Asset("ANIM", "anim/minimap_cloud_overlay.zip"),
 	Asset("ANIM", "anim/ms_hello_turf.zip"), -- Luigi: Why loading normally does not work? Huh?
+	Asset("ANIM", "anim/ms_tree_rock_normal.zip"),
 	Asset("ANIM", "anim/player_wx78_actions.zip"), -- tornado sorbet transform
 	Asset("SHADER", "shaders/cave_vertical_shader.ksh"),
 	Asset("SHADER", "shaders/mountain_vertical_shader.ksh"),
