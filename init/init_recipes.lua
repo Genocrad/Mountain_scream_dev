@@ -607,7 +607,7 @@ AddRecipe2("mountain_snowball_ice",
 	TECH.SCIENCE_ONE,
 	{
 		product = "ice",
-		description = "ice",
+		description = "mountain_snowball_ice",
 		image = "ice.tex",
 	},
 	{ "REFINE", "COOKING" }

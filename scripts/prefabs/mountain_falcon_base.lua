@@ -66,6 +66,51 @@ local function OnIsCaveNight(inst, iscavenight)
 	end
 end
 
+-- Flying birds don't need walkable ground; official SpawnChild otherwise
+-- bails when FindWalkableOffset fails around the mound.
+local function GetGuardSpawnOffset(inst)
+	local theta = math.random() * TWOPI
+	local r = 1 + math.random()
+	return Vector3(r * math.cos(theta), 0, r * math.sin(theta))
+end
+
+local function RallyChild(child, attacker)
+	if child == nil or not child:IsValid() then
+		return
+	end
+	if child.components.health ~= nil and child.components.health:IsDead() then
+		return
+	end
+
+	child._returning_home = false
+	child._deaggro_pending = nil
+
+	if child.sg ~= nil and not child.sg:HasStateTag("dead") then
+		if child.sg:HasStateTag("flight") then
+			child.DynamicShadow:Enable(true)
+			if child.components.health ~= nil then
+				child.components.health:SetInvincible(false)
+			end
+			child.Physics:Stop()
+			local x, y, z = child.Transform:GetWorldPosition()
+			if y > 1 then
+				child.Transform:SetPosition(x, 0, z)
+			end
+			child.sg:GoToState("taunt")
+		end
+	end
+
+	if attacker ~= nil and attacker:IsValid() then
+		if child.RememberPursuitTarget ~= nil then
+			child:RememberPursuitTarget(attacker)
+		end
+		if child.components.combat ~= nil then
+			child.components.combat:SetTarget(attacker)
+			child.components.combat:BlankOutAttacks(0.75 + math.random())
+		end
+	end
+end
+
 local function SpawnAllGuards(inst, attacker)
 	if inst.components.health:IsDead() or inst.components.childspawner == nil then
 		return
@@ -75,23 +120,38 @@ local function SpawnAllGuards(inst, attacker)
 	inst.AnimState:PushAnimation("idle", false)
 
 	local spawner = inst.components.childspawner
-	local num_to_release = spawner.childreninside
-	if num_to_release <= 0 then
-		return
+
+	-- SpawnChild refuses invincible attackers (including brief i-frames).
+	-- Still spawn, then assign the real target afterwards.
+	local spawn_target = attacker
+	if spawn_target ~= nil
+		and spawn_target.components.health ~= nil
+		and spawn_target.components.health:IsInvincible() then
+		spawn_target = nil
 	end
 
-	WithSpawningEnabled(spawner, function()
-		for _ = 1, num_to_release do
-			local defender = spawner:SpawnChild(attacker, "mountain_falcon")
-			if defender ~= nil and attacker ~= nil and defender.components.combat ~= nil then
-				if defender.RememberPursuitTarget ~= nil then
-					defender:RememberPursuitTarget(attacker)
-				end
-				defender.components.combat:SetTarget(attacker)
-				defender.components.combat:BlankOutAttacks(1.5 + math.random() * 2)
-			end
+	-- Daytime auto-roam empties childreninside. Hitting must still pull
+	-- remaining inside birds AND aggro anyone already outside.
+	if not spawner:CanSpawn() and spawner:CountChildrenOutside() == 0 and not spawner:IsFull() then
+		spawner:AddChildrenInside(1)
+	end
+
+	local failures = 0
+	while spawner:CanSpawn() and failures < 6 do
+		local defender = spawner:SpawnChild(spawn_target, "mountain_falcon")
+		if defender == nil then
+			failures = failures + 1
+		else
+			failures = 0
+			RallyChild(defender, attacker)
 		end
-	end)
+	end
+
+	if attacker ~= nil and attacker:IsValid() then
+		for child in pairs(spawner.childrenoutside) do
+			RallyChild(child, attacker)
+		end
+	end
 end
 
 local function OnKilled(inst)
@@ -170,6 +230,8 @@ local function fn()
 	if to_fill > 0 then
 		childspawner:AddChildrenInside(to_fill)
 	end
+	childspawner.overridespawnlocation = GetGuardSpawnOffset
+	childspawner.spawnradius = { min = 1, max = 2 }
 	childspawner:StartRegen()
 
 	inst:WatchWorldState("iscaveday", OnIsCaveDay)
