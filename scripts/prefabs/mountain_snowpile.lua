@@ -251,6 +251,8 @@ local function fn()
 
 	inst:AddTag("snowpile")
 	inst:AddTag("structure")
+	-- 原版仆从只挖掘带 stump/grave/farm_debris 的目标，加 grave 让其主动铲雪堆
+	inst:AddTag("grave")
 
 	inst.scrapbook_anim = "idle_full"
 

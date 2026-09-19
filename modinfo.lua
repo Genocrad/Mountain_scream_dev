@@ -24,7 +24,7 @@ elseif locale == "ru" then
 end
 
 author = "Milanjorim, luigi.m.mario, 你要帮帮威吊"
-version = "1.0.2"
+version = "1.0.4"
 forumthread = "/"
 
 icon_atlas = "images/modicon.xml"
