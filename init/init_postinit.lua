@@ -7,6 +7,7 @@ modimport("postinit/prefabs/wolfgang")
 modimport("postinit/prefabs/caves")
 modimport("postinit/prefabs/forest")
 modimport("postinit/prefabs/goldnugget")
+modimport("postinit/prefabs/tree_rocks")
 
 modimport("postinit/stategraphs/wilson")
 modimport("postinit/stategraphs/wilson_client")
