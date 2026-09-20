@@ -31,6 +31,22 @@ local function IsMsTechnicalTile(tile)
   (not tile == 1 and not TileGroupManager:IsLandTile(tile))
 end
 
+local function comparelevelborder(level,x,z)
+  local centerx, centery = TheWorld.net.components.dungeonmapoverwatch._map_points_level_x:value()[level], TheWorld.net.components.dungeonmapoverwatch._map_points_level_y:value()[level]
+  if centerx - x < -TheWorld.net.components.dungeonmapoverwatch.level_limits_xp[level] then
+    TheWorld.net.components.dungeonmapoverwatch.level_limits_xp[level] = x - centerx 
+  end
+  if centerx - x > TheWorld.net.components.dungeonmapoverwatch.level_limits_xn[level]  then
+    TheWorld.net.components.dungeonmapoverwatch.level_limits_xn[level] = centerx - x
+  end
+  if centery - z < -TheWorld.net.components.dungeonmapoverwatch.level_limits_yp[level] then
+    TheWorld.net.components.dungeonmapoverwatch.level_limits_yp[level] = z - centery 
+  end
+  if centery - z > TheWorld.net.components.dungeonmapoverwatch.level_limits_yn[level] then
+    TheWorld.net.components.dungeonmapoverwatch.level_limits_yn[level] = centery - z
+  end
+end
+
 
 function DungeonWallSpawner:SpawnMainEntrance()
   local center_x, center_y = TheWorld.net.components.dungeonmapoverwatch:GetPointForLevel(2)
@@ -84,8 +100,8 @@ function DungeonWallSpawner:SpawnArenaTeleporter()
     if attempts <= 0 then x,z = center_x, center_y end
     if (IsMsTile(TheWorld.Map:GetTileAtPoint(x, 0, z)) and self.exits[8]:GetDistanceSqToPoint(x,0,z) > 128) or attempts <= 0 then
       local tile_x, tile_z = TheWorld.Map:GetTileXYAtPoint(x, 0, z)
-      for i = -50, 50 do 
-        for j = -50, 50 do
+      for i = -10, 10 do 
+        for j = -10, 10 do
           if TheWorld.Map:GetTile(tile_x + i + TUNING.MS_TERRAFORMER_OFFSET_X[8], tile_z + j + TUNING.MS_TERRAFORMER_OFFSET_Y[8]) == 1 and math.sqrt(i*i+j*j) < 50 then
             TheWorld.Map:SetTile(tile_x + i + TUNING.MS_TERRAFORMER_OFFSET_X[8], tile_z + j + TUNING.MS_TERRAFORMER_OFFSET_Y[8], WORLD_TILES.CLOUDS_WHITE)  
           end
@@ -95,12 +111,14 @@ function DungeonWallSpawner:SpawnArenaTeleporter()
       for i = -2, 2 do 
         for j = -2, 2 do
           TheWorld.Map:SetTile(tile_x + i, tile_z + j, WORLD_TILES.MS_PERMAFROST) 
+          comparelevelborder(8,tile_x + i, tile_z + j)
         end
       end
       for i = -1, 1 do 
         for j = -1, 1 do
           TheWorld.Map:SetTile(tile_x + i, tile_z + j, WORLD_TILES.VOID_TECHNICAL) 
           TheWorld.Map:SetTile(tile_x + i + TUNING.MS_TERRAFORMER_OFFSET_X[8], tile_z + j + TUNING.MS_TERRAFORMER_OFFSET_Y[8], WORLD_TILES.MS_SNOW)
+          comparelevelborder(9,tile_x + i + TUNING.MS_TERRAFORMER_OFFSET_X[8], tile_z + j + TUNING.MS_TERRAFORMER_OFFSET_Y[8])
           if TheWorld.components.undertile ~= nil then
             TheWorld.components.undertile:SetTileUnderneath(tile_x + i + TUNING.MS_TERRAFORMER_OFFSET_X[8], tile_z + j + TUNING.MS_TERRAFORMER_OFFSET_Y[8], WORLD_TILES.MS_PERMAFROST)
           end
@@ -123,9 +141,9 @@ function DungeonWallSpawner:SpawnArenaTeleporter()
   -- Now spawn the arena.
   local arena_width = { 4, 5, 6, 7, 7, 7, 7, 7, 7, 7, 7, 7, 6, 5, 4 }
   local tile_x, tile_z = TheWorld.Map:GetTileXYAtPoint(center_x, 0, center_y)
-  for i = -50, 50 do 
-    for j = -50, 50 do
-      if TheWorld.Map:GetTile(tile_x + i + TUNING.MS_TERRAFORMER_OFFSET_X[8] + TUNING.MS_TERRAFORMER_OFFSET_X[9], tile_z + j + TUNING.MS_TERRAFORMER_OFFSET_Y[8] + TUNING.MS_TERRAFORMER_OFFSET_Y[9] ) == 1 and math.sqrt(i*i+j*j) < 50 then
+  for i = -14, 14 do 
+    for j = -14, 14 do
+      if TheWorld.Map:GetTile(tile_x + i + TUNING.MS_TERRAFORMER_OFFSET_X[8] + TUNING.MS_TERRAFORMER_OFFSET_X[9], tile_z + j + TUNING.MS_TERRAFORMER_OFFSET_Y[8] + TUNING.MS_TERRAFORMER_OFFSET_Y[9] ) == 1 then
           TheWorld.Map:SetTile(tile_x + i + TUNING.MS_TERRAFORMER_OFFSET_X[8] + TUNING.MS_TERRAFORMER_OFFSET_X[9], tile_z + j + TUNING.MS_TERRAFORMER_OFFSET_Y[8] + TUNING.MS_TERRAFORMER_OFFSET_Y[9], WORLD_TILES.CLOUDS_WHITE)  
       end
     end
@@ -135,6 +153,7 @@ function DungeonWallSpawner:SpawnArenaTeleporter()
       TheWorld.Map:SetTile(tile_x + i + TUNING.MS_TERRAFORMER_OFFSET_X[8] + TUNING.MS_TERRAFORMER_OFFSET_X[9], tile_z + j + TUNING.MS_TERRAFORMER_OFFSET_Y[8] + TUNING.MS_TERRAFORMER_OFFSET_Y[9], WORLD_TILES.MS_SNOW) 
       if TheWorld.components.undertile ~= nil then
         TheWorld.components.undertile:SetTileUnderneath(tile_x + i + TUNING.MS_TERRAFORMER_OFFSET_X[8] + TUNING.MS_TERRAFORMER_OFFSET_X[9], tile_z + j + TUNING.MS_TERRAFORMER_OFFSET_Y[8] + TUNING.MS_TERRAFORMER_OFFSET_Y[9], WORLD_TILES.MS_PERMAFROST)
+        comparelevelborder(10,tile_x + i + TUNING.MS_TERRAFORMER_OFFSET_X[8] + TUNING.MS_TERRAFORMER_OFFSET_X[9], tile_z + j + TUNING.MS_TERRAFORMER_OFFSET_Y[8] + TUNING.MS_TERRAFORMER_OFFSET_Y[9])
       end
       TheWorld.net.components.dungeonmapoverwatch:AddSpawnPointsForTile(9, tile_x + i + TUNING.MS_TERRAFORMER_OFFSET_X[8] + TUNING.MS_TERRAFORMER_OFFSET_X[9], tile_z + j + TUNING.MS_TERRAFORMER_OFFSET_Y[8] + TUNING.MS_TERRAFORMER_OFFSET_Y[9])
     end
@@ -161,7 +180,8 @@ function DungeonWallSpawner:SpawnArenaTeleporter()
       local scene = SpawnPrefab("ms_twin_portal_scene")
       scene.Transform:SetPosition(x, 0, z)
       local teleporter, shortcut_exit = scene:Build()
-
+      local tilex, tilez = TheWorld.Map:GetTileXYAtPoint(x, 0, z)
+      comparelevelborder(8, tilex, tilez)
       local exit = SpawnPrefab("ms_arenateleporter_exit")
       exit.Transform:SetPosition(center_x + TUNING.MS_TERRAFORMER_OFFSET_X[8] * 4 + TUNING.MS_TERRAFORMER_OFFSET_X[9] * 4 ,0, center_y + TUNING.MS_TERRAFORMER_OFFSET_Y[8] * 4 + TUNING.MS_TERRAFORMER_OFFSET_Y[9]*4 - 12)
       exit:SetExitTarget(teleporter)
@@ -182,6 +202,8 @@ local function spawn_5x5_area(self, level, x,y, wall, normal_tile, technical_til
   for i = -2, 2 do 
     for j = -2, 2 do
       TheWorld.Map:SetTile(tilex + i, tiley + j, normal_tile) 
+      comparelevelborder(level, tilex + i, tiley + j)
+      TheWorld.net.components.dungeonmapoverwatch.cloud_tiles_planned_cords[tilex + i][tiley + j] = true
     end
   end
   for i = -1, 1 do 
@@ -189,6 +211,7 @@ local function spawn_5x5_area(self, level, x,y, wall, normal_tile, technical_til
       TheWorld.Map:SetTile(tilex + i, tiley + j, technical_tile) 
     end
   end
+  
   local function spawnwall(dx, dy, angle)
     local new_wall = SpawnPrefab("ms_mountain_wall" .. wall)
     new_wall.Transform:SetPosition(x+dx , 0, y+dy)
@@ -206,6 +229,8 @@ local function spawn_5x5_area(self, level, x,y, wall, normal_tile, technical_til
   for i = -1, 1 do 
     for j = -1, 1 do
       TheWorld.Map:SetTile(tilex + i + TUNING.MS_TERRAFORMER_OFFSET_X[level] + random_x, tiley + j + TUNING.MS_TERRAFORMER_OFFSET_Y[level] + random_y, normal_tile) 
+      TheWorld.net.components.dungeonmapoverwatch.cloud_tiles_planned_cords[tilex + i + TUNING.MS_TERRAFORMER_OFFSET_X[level] + random_x][tiley + j + TUNING.MS_TERRAFORMER_OFFSET_Y[level] + random_y] = true
+      comparelevelborder(level+1, tilex + i + TUNING.MS_TERRAFORMER_OFFSET_X[level] + random_x, tiley + j + TUNING.MS_TERRAFORMER_OFFSET_Y[level] + random_y)
     end
   end
   self.exits[level+1] = SpawnPrefab("ms_climbing_down")
@@ -214,6 +239,7 @@ local function spawn_5x5_area(self, level, x,y, wall, normal_tile, technical_til
   self.exits[level+1].components.teleporter.teleport_offset = { x = 0, y = 0, z = 3 }
   self.entrances[level]:SetExitTarget(self.exits[level+1])
   self.exits[level+1]:SetExitTarget(self.entrances[level])
+
 end
 
 function DungeonWallSpawner:SpawnWallsAroundPoint(level, wall, size, normal_tile, technical_tile)
@@ -385,6 +411,7 @@ function DungeonWallSpawner:SpawnWallsAroundPoint(level, wall, size, normal_tile
           -- Check if we should spawn an entrance to the next level. More distance = more chance.
           if (l == 1 or r == 1 or d == 1 or u == 1)  then
             TheWorld.net.components.dungeonmapoverwatch:AddSpawnPointsForWall(level, center_x+x*4, center_y+y*4, r-l, d-u, true)
+            local spawned_climb = false
             if not spawned then
               last_entrance_x, last_entrance_y, last_exit_x, last_exit_y, last_r, last_l, last_d, last_u = center_x+x*4 + (r * 4 - l *4) * 0.05, center_y+y*4 + (d*4 - u *4) * 0.05,
                                                                                                            center_x+x*4 + l - r + TUNING.MS_TERRAFORMER_OFFSET_X[level]*4,
@@ -401,9 +428,10 @@ function DungeonWallSpawner:SpawnWallsAroundPoint(level, wall, size, normal_tile
                 self.entrances[level]:SetExitTarget(self.exits[level+1])
                 self.exits[level+1]:SetExitTarget(self.entrances[level])
                 spawned = true
+                spawned_climb = true
               end
             end
-            if not spawned_cave_entrance then
+            if not spawned_cave_entrance and not spawned_climb then
               if math.random() < self.exits[level]:GetDistanceSqToPoint(center_x+x*4- l * 4 + r * 4, 0, center_y+y*4+ (-u * 4 + d * 4)*(r-1)*(l-1))/(TUNING.MS_TERRAFORMER_SIZE[level] * TUNING.MS_TERRAFORMER_SIZE[level] * 16 * 10) and self.cave_doors[level] then
                 local entrance = SpawnPrefab("ms_cave_entrance_vertical")
                 entrance.Transform:SetPosition(center_x+x*4 + (r * 4 - l *4) * 0.05, 0, center_y+y*4 + (d*4 - u *4) * 0.05)
@@ -518,7 +546,6 @@ local function addmobpointsforcaves(level,x,y,r,l,d,u,floor_type)
       else
         angle = 45
       end
-      print("x", min_x, max_x, min_y, max_y, point_x, point_y, angle)
        TheWorld.net.components.dungeonmapoverwatch:AddPointForWall(level, x + point_x, y + math.max(point_y-1, -20), angle)
     else -- Now handle the case where wall is o. the z axis
       local min_x, max_x = math.min(type_to_points[floor_type][wall][1], type_to_points[floor_type][wall+1][1]), math.max(type_to_points[floor_type][wall][1], type_to_points[floor_type][wall+1][1])
@@ -700,10 +727,34 @@ function DungeonWallSpawner:SanityCheck(entrance, exit)
       local tile = TheWorld.Map:GetTileAtPoint(x - deltax * i, 0, z - deltay * i)
       if tile == 1 or tile == WORLD_TILES.CLOUDS_WHITE or tile == WORLD_TILES.CLOUDS_DARK then
         local tile_x, tile_y = TheWorld.Map:GetTileXYAtPoint(x - deltax * i, 0, z - deltay * i)
-        print("WORLD_TILES.MS_BRIDGE", tile, x - deltax * i, 0, z - deltay * i)
+        for i = -7, 7 do
+          for j = -7, 7 do
+            TheWorld.net.components.dungeonmapoverwatch.cloud_tiles_planned_cords[tile_x+i][tile_y+j] = true
+          end
+        end
         TheWorld.Map:SetTile(tile_x, tile_y, WORLD_TILES.MS_BRIDGE)
       end
     end
   end
 end
+
+function DungeonWallSpawner:SpawnClouds()
+  local dungeonow  = TheWorld.net.components.dungeonmapoverwatch
+  for level = 2, TUNING.MS_CAVES_START do
+    local centerx, centery = dungeonow._map_points_level_x:value()[level], dungeonow._map_points_level_y:value()[level]
+    local xp, xn, yp, yn = dungeonow.level_limits_xp[level], dungeonow.level_limits_xn[level], dungeonow.level_limits_yp[level], dungeonow.level_limits_yn[level]
+    for i = -(xn+10), (xp+10) do
+      for j = -(yn+10), (yp+10) do
+        local tile = TheWorld.Map:GetTile(centerx + i, centery + j) 
+        
+        if dungeonow.cloud_tiles_planned_cords[centerx + i][centery + j] == true then
+          if (not TileGroupManager:IsLandTile(tile)) and not (tile == WORLD_TILES.CLOUDS_DARK) and not (tile == WORLD_TILES.VOID_TECHNICAL) then
+            TheWorld.Map:SetTile(centerx + i, centery + j, WORLD_TILES.CLOUDS_WHITE)
+          end
+        end
+      end
+    end
+  end
+end
+
 return DungeonWallSpawner

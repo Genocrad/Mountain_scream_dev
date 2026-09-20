@@ -4,21 +4,38 @@ local DungeonMapOverwatch = Class(function(self, inst)
     self.inst = inst
     
     self.terraformers_points = {}
+    self.level_limits_xp = {}
+    self.level_limits_xn = {}
+    self.level_limits_yn = {}
+    self.level_limits_yp = {}
     self.exits = {}
     self.mob_spawn_points = {}
     self.wall_spawn_points = {}
     self.mob_spawn_points_near_walls = {} 
     
     for i = 1, 20 do 
+      self.level_limits_xp[i] = 0
+      self.level_limits_xn[i] = 0
+      self.level_limits_yn[i] = 0
+      self.level_limits_yp[i] = 0
       self.terraformers_points[i] = {}
       self.exits[i] = nil
       self.mob_spawn_points[i] = {}
       self.wall_spawn_points[i] = {} -- Not for walls, but on the walls
       self.mob_spawn_points_near_walls[i] = {} -- if we ever want to have something that spawns only near the walls, like fallen boulders or something.
     end
-    
+  
     local map = TheWorld.Map
     self.map_width, self.map_height = map:GetSize()
+    
+    self.cloud_tiles_planned_cords = {} 
+    
+    for i = -20, self.map_width do
+      self.cloud_tiles_planned_cords[i] = {}
+       for j = -20, self.map_height do
+        self.cloud_tiles_planned_cords[i][j] = false 
+      end
+    end
     
     self.map_points_level_x = {}
     self._map_points_level_x = net_ushortarray(inst.GUID, "dungeonmapoverwatch._map_points_level_x") -- Arrays are expensive, and we do not need precise cords, really.
@@ -26,7 +43,11 @@ local DungeonMapOverwatch = Class(function(self, inst)
      self.map_points_level_y = {}
     self._map_points_level_y = net_ushortarray(inst.GUID, "dungeonmapoverwatch._map_points_level_y") -- Arrays are expensive, and we do not need precise cords, really.
     
-    
+    self._level_limits_xp = net_ushortarray(inst.GUID, "dungeonmapoverwatch._level_limits_xp") 
+    self._level_limits_xn = net_ushortarray(inst.GUID, "dungeonmapoverwatch._level_limits_xn") 
+    self._level_limits_yn = net_ushortarray(inst.GUID, "dungeonmapoverwatch._level_limits_yn") 
+    self._level_limits_yp = net_ushortarray(inst.GUID, "dungeonmapoverwatch._level_limits_yp") 
+
     --V2C: Recommended to explicitly add tag to prefab pristine state
     inst:AddTag("dungeonmapoverwatch")
     
@@ -36,10 +57,34 @@ local DungeonMapOverwatch = Class(function(self, inst)
       self.map_points_level_x[2] = 70
       self.map_points_level_y[2] = 70
     
+      -- Caves have no terraformer, set manually instead
+      self.level_limits_xp[9] = 20
+      self.level_limits_xn[9] = 20
+      self.level_limits_yn[9] = 20
+      self.level_limits_yp[9] = 20
+      self.level_limits_xp[10] = 20
+      self.level_limits_xn[10] = 20
+      self.level_limits_yn[10] = 20
+      self.level_limits_yp[10] = 20
+      self.level_limits_xp[11] = 50
+      self.level_limits_xn[11] = 50
+      self.level_limits_yn[11] = 50
+      self.level_limits_yp[11] = 50
+      self.level_limits_xp[12] = 50
+      self.level_limits_xn[12] = 50
+      self.level_limits_yn[12] = 50
+      self.level_limits_yp[12] = 50 
+      
+      self._level_limits_xp:set({0, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50})
+      self._level_limits_xn:set({0, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50})
+      self._level_limits_yp:set({0, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50})
+      self._level_limits_yn:set({0, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50})
+      
       for i = 3, #TUNING.MS_TERRAFORMER_OFFSET_X do
         self.map_points_level_x[i] = self.map_points_level_x[i-1] +TUNING.MS_TERRAFORMER_OFFSET_X[i-1]
         self.map_points_level_y[i] = self.map_points_level_y[i-1] +TUNING.MS_TERRAFORMER_OFFSET_Y[i-1]
       end
+      
       self._map_points_level_y:set(self.map_points_level_y)
       self._map_points_level_x:set(self.map_points_level_x)
       
@@ -139,6 +184,7 @@ function DungeonMapOverwatch:GetPointForLevel(level)
     return -self.map_width * 2 + xs[level] * 4, -self.map_height * 2 + ys[level] * 4
 end
 
+
 function DungeonMapOverwatch:GetTileDiffForLevel(level)
     if self.terraformers_points[level] then
       local x = 0
@@ -172,17 +218,18 @@ function DungeonMapOverwatch:GetNearestLevel(x,y,z)
       if distsq < best_min then
         best_min = distsq
         best_level = i
-        best_min_x = math.abs(dx)
-        best_min_z = math.abs(dz)
+        best_min_x = dx
+        best_min_z = dz
       end
     end
   end
 
   -- Square territory per floor (not circle).
-  if best_level ~= nil and best_min_x < 200 and best_min_z < 200 then
-    return best_level
-  end
-  if best_level == 2 and best_min_x < 250 and best_min_z < 250 then
+  if best_level ~= nil and 
+     best_min_x < self._level_limits_xp:value()[best_level]*4 + 8 and
+     best_min_x > -self._level_limits_xn:value()[best_level]*4 - 8 and
+     best_min_z < self._level_limits_yp:value()[best_level]*4 + 8 and
+     best_min_z > -self._level_limits_yn:value()[best_level]*4 - 8 then
     return best_level
   end
   return nil
@@ -194,8 +241,33 @@ function DungeonMapOverwatch:OnLoad(data)
     if data ~= nil then
       self.map_points_level_x = data.map_points_level_x
       self.map_points_level_y = data.map_points_level_y
-      self._map_points_level_y:set(self.map_points_level_y)
-      self._map_points_level_x:set(self.map_points_level_x)
+      self._map_points_level_y:set(data.map_points_level_y)
+      self._map_points_level_x:set(data.map_points_level_x)
+    end
+    if data and data.level_limits_xp ~= nil then
+      self.level_limits_xp = data.level_limits_xp -- Luigi: Not needed, but juuuust in case.
+      self.level_limits_xn = data.level_limits_xn
+      self.level_limits_yn = data.level_limits_yn
+      self.level_limits_yp = data.level_limits_yp
+      self._level_limits_xp:set(data.level_limits_xp)
+      self._level_limits_xn:set(data.level_limits_xn)
+      self._level_limits_yn:set(data.level_limits_yn)
+      self._level_limits_yp:set(data.level_limits_yp)
+    else -- For worlds before the clouds/level change
+        self.level_limits_xp[1] = 60
+        self.level_limits_xn[1] = -60
+        self.level_limits_yn[1] = -60
+        self.level_limits_yp[1] = 60
+      for i = 2, 20 do
+        self.level_limits_xp[i] = 50
+        self.level_limits_xn[i] = -50
+        self.level_limits_yn[i] = -50
+        self.level_limits_yp[i] = 50
+      end
+      self._level_limits_xp:set(data.level_limits_xp)
+      self._level_limits_xn:set(data.level_limits_xn)
+      self._level_limits_yn:set(data.level_limits_yn)
+      self._level_limits_yp:set(data.level_limits_yp)
     end
 end
 
@@ -203,6 +275,10 @@ function DungeonMapOverwatch:OnSave()
     local data = {}
     data.map_points_level_x = self.map_points_level_x
     data.map_points_level_y = self.map_points_level_y
+    data.level_limits_xp = self.level_limits_xp
+    data.level_limits_xn = self.level_limits_xn
+    data.level_limits_yn = self.level_limits_yn
+    data.level_limits_yp = self.level_limits_yp
     return data
 end
 
