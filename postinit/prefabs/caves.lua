@@ -19,6 +19,12 @@ local function onterraformingfinished(inst)
   inst.components.dungeonwallspawner:SpawnArenaTeleporter()
   inst.components.dungeonwallspawner:SpawnWallsAroundPoint(8, "_snow", 25, WORLD_TILES.MS_PERMAFROST, WORLD_TILES.MS_PERMAFROST_TECHNICAL)
 
+  inst.components.dungeonwallspawner:SpawnClouds()
+  -- Now terraforming ended, sync client/host
+  TheWorld.net.components.dungeonmapoverwatch._level_limits_xp:set(TheWorld.net.components.dungeonmapoverwatch.level_limits_xp)
+  TheWorld.net.components.dungeonmapoverwatch._level_limits_xn:set(TheWorld.net.components.dungeonmapoverwatch.level_limits_xn)
+  TheWorld.net.components.dungeonmapoverwatch._level_limits_yn:set(TheWorld.net.components.dungeonmapoverwatch.level_limits_yn)
+  TheWorld.net.components.dungeonmapoverwatch._level_limits_yp:set(TheWorld.net.components.dungeonmapoverwatch.level_limits_yp)
   -- After walls: decorate configured floors (level 1–2 green foothills for now).
   if inst.components.dungeoncontentspawner ~= nil then
     inst.components.dungeoncontentspawner:SpawnConfiguredLevels()
