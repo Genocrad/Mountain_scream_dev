@@ -23,11 +23,8 @@ end
 function Drownable:ShouldFallInVoid()
   local x, y, z = self.inst.Transform:GetWorldPosition()
   -- Oof, I cant use isvisualground for overhang. This shall do.
-  return (IsMsClouds(TheWorld.Map:GetTileAtPoint(x+1, y, z)) and 
-    IsMsClouds(TheWorld.Map:GetTileAtPoint(x-1, y, z)) and
-    IsMsClouds(TheWorld.Map:GetTileAtPoint(x, y, z-1)) and
-    IsMsClouds(TheWorld.Map:GetTileAtPoint(x, y, z+1))) or
-    old_ShouldFallInVoid(self)
+  return (not TheWorld.Map:IsVisualGroundAtPoint(x, y, z) and TheWorld.Map:GetTileAtPoint(x, y, z) ~= WORLD_TILES.VOID_TECHNICAL) 
+    or old_ShouldFallInVoid(self)
 end
 
 function Drownable:Teleport()
