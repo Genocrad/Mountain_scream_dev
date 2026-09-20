@@ -25,6 +25,7 @@ end
   
 
 local function SetTileOrNoiseOrNoise(tile, rarity, x, z, snow_randomseed, snow_rarity, level)
+  level = level + 1
   local current
   if type(tile) == "table" then
     local random = perlin(x/8+0.001,0,z/8+0.001)
@@ -41,6 +42,26 @@ local function SetTileOrNoiseOrNoise(tile, rarity, x, z, snow_randomseed, snow_r
     if TheWorld.components.undertile ~= nil then
       TheWorld.components.undertile:SetTileUnderneath(x, z, current)
     end
+  end
+  -- Luigi: Just doing it is cheaper then doing checks, i think?
+  for i = -10, 10 do
+    for j = -10, 10 do
+      TheWorld.net.components.dungeonmapoverwatch.cloud_tiles_planned_cords[x+i][z+j] = true
+    end
+  end
+  -- Now check if this is the furthest point.
+  local centerx, centery = TheWorld.net.components.dungeonmapoverwatch._map_points_level_x:value()[level], TheWorld.net.components.dungeonmapoverwatch._map_points_level_y:value()[level]
+  if centerx - x < -TheWorld.net.components.dungeonmapoverwatch.level_limits_xp[level] then
+    TheWorld.net.components.dungeonmapoverwatch.level_limits_xp[level] = x - centerx 
+  end
+  if centerx - x > TheWorld.net.components.dungeonmapoverwatch.level_limits_xn[level]  then
+    TheWorld.net.components.dungeonmapoverwatch.level_limits_xn[level] = centerx - x
+  end
+  if centery - z < -TheWorld.net.components.dungeonmapoverwatch.level_limits_yp[level] then
+    TheWorld.net.components.dungeonmapoverwatch.level_limits_yp[level] = z - centery 
+  end
+  if centery - z > TheWorld.net.components.dungeonmapoverwatch.level_limits_yn[level] then
+    TheWorld.net.components.dungeonmapoverwatch.level_limits_yn[level] = centery - z
   end
   TheWorld.net.components.dungeonmapoverwatch:AddSpawnPointsForTile(level, x, z)
 end
@@ -96,16 +117,7 @@ local function MakeTerraformer(name, tiles, tile_rarity, snow_randomseed, snow_r
         
         local center_x, center_y = TheWorld.Map:GetTileXYAtPoint(posx, posy, posz)
         
-        -- Replace void with CLOUD_WHITE, so there is no collision between land and void and for minimap rendering
-        -- Not for terraformer_1 though
         if level ~= 1 then
-          for i = -50, 50 do 
-            for j = -50, 50 do
-              if TheWorld.Map:GetTile(center_x + i, center_y + j) == 1 and math.sqrt(i*i+j*j) < 50 then
-                TheWorld.Map:SetTile(center_x + i, center_y + j, WORLD_TILES.CLOUDS_WHITE)  
-              end
-            end
-          end
           -- Not efficient, but more is better in this case. 
           for i = -3, 3 do
             for j = -3, 3 do 
@@ -189,21 +201,24 @@ local function MakeTerraformer(name, tiles, tile_rarity, snow_randomseed, snow_r
             
             if IsMsTile(thistile) then
               if water_tile == false then
-                TheWorld.Map:SetTile(x,y, WORLD_TILES.VOID_TECHNICAL)
+               
                 
                 -- first level needs to go to a specific spot, so it has separate logic.
                 if inst.prefab == "terraformer_mountain_dungeon_level_1" then
                   local deltax, deltay = TheWorld.net.components.dungeonmapoverwatch:GetTileDiffForLevel(1)
+                  TheWorld.Map:SetTile(x,y, WORLD_TILES.VOID_TECHNICAL)
                   SetTileOrNoiseOrNoise(tiles, tile_rarity, x-deltax+70,y-deltay+70, snow_randomseed, snow_rarity, level)
           
-                else
+              else
+                 TheWorld.Map:SetTile(x,y, WORLD_TILES.VOID_TECHNICAL)
                   SetTileOrNoiseOrNoise(tiles, tile_rarity, x+spawn_offset_x,y+spawn_offset_y, snow_randomseed, snow_rarity, level)
                 end
               else
                 
                 if inst.prefab == "terraformer_mountain_dungeon_level_1" then
                   local deltax, deltay = TheWorld.net.components.dungeonmapoverwatch:GetTileDiffForLevel(1)
-                  TheWorld.Map:SetTile(x-deltax+80,y-deltay+80, WORLD_TILES.CLOUDS_DARK)
+                  TheWorld.Map:SetTile(x,y, WORLD_TILES.VOID_TECHNICAL)
+                  SetTileOrNoiseOrNoise(tiles, tile_rarity, x-deltax+70,y-deltay+70, snow_randomseed, snow_rarity, level)
                 else
                   TheWorld.Map:SetTile(x+spawn_offset_x,y+spawn_offset_y, WORLD_TILES.CLOUDS_DARK)
                 end
