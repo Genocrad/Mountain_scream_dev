@@ -154,7 +154,7 @@ local function OnInit(inst)
     else
         inst:ListenForEvent("lightphasedirty", OnLightPhaseDirty)
     end
-
+    
     local phase = light_phases[inst._lightphase:value()]
     if phase ~= nil then
         local params = light_params[phase]
@@ -187,16 +187,35 @@ local function UpdatePosition(inst)
         inst.Transform:SetPosition(x, 0, z)
     end
     if TheWorld.net.components.dungeonmapoverwatch then
+      
       local level = TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(x,y,z)
       if level and level <= TUNING.MS_CAVES_START then
+        inst._lightswitch:set(true)
+        inst.Light:SetIntensity(light_params[TheWorld.state.cavephase].intensity)
         inst.Light:Enable(true)
+        print(inst._target, "true")
       else
+        inst._lightswitch:set(false)
         inst.Light:Enable(false)
+        inst.Light:SetIntensity(0)
+        print(inst._target, "false")
       end
+    else
+      inst:Remove()
     end
   else
     inst:Remove()
   end
+  end
+end
+
+local function lightswitchdirty(inst)
+  if inst._lightswitch:value() then
+    inst.Light:SetIntensity(light_params[TheWorld.state.cavephase].intensity)
+    inst.Light:Enable(true)
+  else
+    inst.Light:Enable(false)
+    inst.Light:SetIntensity(0)
   end
 end
 
@@ -228,11 +247,12 @@ local function common_fn()
     pushparams(inst, inst._currentlight)
 
     inst._lightphase = net_tinybyte(inst.GUID, "cavelight._lightphase", "lightphasedirty")
+    inst._lightswitch = net_bool(inst.GUID, "cavelight._lightswitch", "lightswitchdirty")
     inst._lightphase:set(inst._currentlight.id)
     inst._lighttask = nil
 
     inst:DoTaskInTime(0, OnInit)
-
+    inst:DoTaskInTime(0, lightswitchdirty)
     inst.entity:SetPristine()
 
     if not TheWorld.ismastersim then
