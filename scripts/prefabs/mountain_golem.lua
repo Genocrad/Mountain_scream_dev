@@ -450,7 +450,6 @@ local function fn()
 	inst:AddTag("mech")
 	inst:AddTag("electricdamageimmune")
 	inst:AddTag("epic")
-	inst:AddTag("noepicmusic")
 	inst:AddTag("scarytoprey")
 	inst:AddTag("crazy") -- so they can attack shadow creatures
 	inst:AddTag("mountain_golem")
