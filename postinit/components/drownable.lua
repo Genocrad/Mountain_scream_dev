@@ -22,8 +22,10 @@ end
   
 function Drownable:ShouldFallInVoid()
   local x, y, z = self.inst.Transform:GetWorldPosition()
-  -- Oof, I cant use isvisualground for overhang. This shall do.
-  return (not TheWorld.Map:IsVisualGroundAtPoint(x, y, z) and TheWorld.Map:GetTileAtPoint(x, y, z) ~= WORLD_TILES.VOID_TECHNICAL) 
+  if x == 0 and z == 0 then 
+    return false
+  end
+  return (not TheWorld.Map:IsVisualGroundAtPoint(x, y, z) and not TileGroupManager:IsLandTile(TheWorld.Map:GetTileAtPoint(x, y, z))) or TheWorld.Map:GetTileAtPoint(x, y, z) == WORLD_TILES.VOID_TECHNICAL 
     or old_ShouldFallInVoid(self)
 end
 
