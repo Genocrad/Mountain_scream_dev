@@ -27,21 +27,48 @@ for i = 3, 20 do
 end
 --------------------------------------------------------------------------
 
+local OVERFUEL_DURATION = 10 -- seconds to decay from 2 back to 1
 
---------------------------------------------------------------------------
+local function GetHeatFn(inst)
+	return heats[inst.components.firefx.level] or 20
+end
 
-
-	local function GetHeatFn(inst)
-    
-    inst.AnimState:SetMultColour( (inst._overfueled + 0.5)/1.5, (inst._overfueled+0.5)/3, (inst._overfueled+0.5)/7.5, 1)
-    inst.AnimState:SetAddColour( (inst._overfueled-1), (inst._overfueled-1)/2, (inst._overfueled-1)/5, 1)
-		inst.components.temperatureoverrider:SetTemperature(heats[inst.components.firefx.level] * inst._overfueled)
-    inst._overfueled = math.max(inst._overfueled - (1/(60*10)), 1)  
-    return heats[inst.components.firefx.level] or 20
+local function ApplyOverfuel(inst)
+	local over = inst._overfueled
+	inst.AnimState:SetMultColour((over + 0.5) / 1.5, (over + 0.5) / 3, (over + 0.5) / 7.5, 1)
+	inst.AnimState:SetAddColour(over - 1, (over - 1) / 2, (over - 1) / 5, 1)
+	if inst.components.temperatureoverrider ~= nil then
+		inst.components.temperatureoverrider:SetTemperature(GetHeatFn(inst) * over)
 	end
+end
 
+local function StopOverfuelTask(inst)
+	if inst._overfueltask ~= nil then
+		inst._overfueltask:Cancel()
+		inst._overfueltask = nil
+	end
+end
 
-  
+local function OnOverfuelTick(inst, dt)
+	inst._overfueled = math.max(inst._overfueled - dt / OVERFUEL_DURATION, 1)
+	ApplyOverfuel(inst)
+	if inst._overfueled <= 1 then
+		StopOverfuelTask(inst)
+	end
+end
+
+local function SetOverfueled(inst, value)
+	inst._overfueled = value or 1
+	ApplyOverfuel(inst)
+	if inst._overfueled > 1 then
+		if inst._overfueltask == nil then
+			inst._overfueltask = inst:DoPeriodicTask(FRAMES, OnOverfuelTick, nil, FRAMES)
+		end
+	else
+		StopOverfuelTask(inst)
+	end
+end
+
 	local function fn()
 		local inst = CreateEntity()
 
@@ -84,6 +111,10 @@ end
 		inst.components.firefx.usedayparamforsound = true
 
     inst._overfueled = 1
+    inst.ApplyOverfuel = ApplyOverfuel
+    inst.SetOverfueled = SetOverfueled
+    inst:ListenForEvent("onremove", StopOverfuelTask)
+    ApplyOverfuel(inst)
 		return inst
 	end
 

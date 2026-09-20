@@ -45,11 +45,19 @@ local function updatefuelrate(inst)
 	inst.components.fueled.rate = TheWorld.state.israining and inst.components.rainimmunity == nil and 1 + TUNING.CAMPFIRE_RAIN_RATE * TheWorld.state.precipitationrate or 1
 end
 
+local function SyncFireFXOverfuel(inst)
+  local fx = inst.components.burnable ~= nil and inst.components.burnable.fxchildren and inst.components.burnable.fxchildren[1]
+  if fx ~= nil and fx.ApplyOverfuel ~= nil then
+    fx:ApplyOverfuel()
+  end
+end
+
 local function onupdatefueled(inst)
     if inst.components.burnable ~= nil and inst.components.fueled ~= nil then
         updatefuelrate(inst)
         
         inst.components.burnable:SetFXLevel(inst.components.fueled:GetCurrentSection(), inst.components.fueled:GetSectionPercent())
+        SyncFireFXOverfuel(inst)
     end
 end
 
@@ -69,6 +77,7 @@ local function onfuelchange(newsection, oldsection, inst)
       end
       inst.AnimState:PlayAnimation("cooking_loop_fire")
       inst.components.burnable:SetFXLevel(newsection, inst.components.fueled:GetSectionPercent())
+      SyncFireFXOverfuel(inst)
 		if newsection == inst.components.fueled.sections then
 			inst.queued_charcoal = not inst.disable_charcoal
 		end
@@ -88,7 +97,12 @@ local function OnBellowActivated(inst)
       local x, y, z = inst.Transform:GetWorldPosition()
       local fire = SpawnPrefab("furnace_firesplash_fx")
       fire.Transform:SetPosition(x,y,z)
-      inst.components.burnable.fxchildren[1]._overfueled = 2
+      local fx = inst.components.burnable.fxchildren[1]
+      if fx.SetOverfueled ~= nil then
+        fx:SetOverfueled(2)
+      else
+        fx._overfueled = 2
+      end
     end
   end
 end
