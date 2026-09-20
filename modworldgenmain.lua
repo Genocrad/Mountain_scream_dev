@@ -109,7 +109,6 @@ AddRoom("Mountain_Dungeon_Basic",  {
 		{
 			terraformer_mountain_dungeon_level_1 = 1,
 		},
-  
 	},
 })
 
@@ -152,9 +151,11 @@ AddTask("MountainDungeonLevel_1", {
         
     },
     make_loop = true,
+    cove_room_chance = 0,
+    cove_room_max_edges = 0,
     room_bg = WORLD_TILES.MS_HIGHLAND,
     background_room = "BG_Mountain_Dungeon",
-
+    entrance_room="BridgeEntrance",
     colour={r=0.6,g=0.6,b=0.0,a=1},
 })
 
@@ -186,6 +187,7 @@ AddRoom("Rocky_ms_influence", {
 					            }
 					})
 
+
 AddTaskPreInit("Dig that rock", function(task)
   task.room_choices["Rocky_ms_influence"] = 1
 end)
@@ -203,7 +205,7 @@ AddTaskSetPreInit("cave_default", function(tasksetname)
   table.insert(tasksetname.required_prefabs, "terraformer_mountain_dungeon_level_1")
   table.insert(tasksetname.required_prefabs, "terraformer_mountain_dungeon_level_1")
   table.insert(tasksetname.required_prefabs, "terraformer_mountain_dungeon_level_1")
-    table.insert(tasksetname.required_prefabs, "terraformer_mountain_dungeon_level_1")
+  table.insert(tasksetname.required_prefabs, "terraformer_mountain_dungeon_level_1")
   table.insert(tasksetname.required_prefabs, "terraformer_mountain_dungeon_level_1")
   table.insert(tasksetname.required_prefabs, "terraformer_mountain_dungeon_level_1")
   table.insert(tasksetname.required_prefabs, "terraformer_mountain_dungeon_level_1")
