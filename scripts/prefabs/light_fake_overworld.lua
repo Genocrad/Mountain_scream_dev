@@ -193,12 +193,10 @@ local function UpdatePosition(inst)
         inst._lightswitch:set(true)
         inst.Light:SetIntensity(light_params[TheWorld.state.cavephase].intensity)
         inst.Light:Enable(true)
-        print(inst._target, "true")
       else
         inst._lightswitch:set(false)
         inst.Light:Enable(false)
         inst.Light:SetIntensity(0)
-        print(inst._target, "false")
       end
     else
       inst:Remove()
