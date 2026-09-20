@@ -28,7 +28,7 @@ local function musicsetup(inst)
             local _isenabled = UpvalueHacker.GetUpvalue(TheWorld.event_listeners["enabledynamicmusic"][TheWorld][1], "_isenabled")
             local _dangertask = UpvalueHacker.GetUpvalue(player.event_listeners["buildsuccess"][TheWorld][1], "_dangertask")
             local _extendtime = UpvalueHacker.GetUpvalue(player.event_listeners["goinsane"][TheWorld][1], "_extendtime")
-            if  player.map_level_current and player.map_level_current < TUNING.MS_CAVES_START and _isenabled then
+            if  player.map_level_current and player.map_level_current <= TUNING.MS_CAVES_START and _isenabled then
               if _dangertask == nil then
                 local x, y, z = player.Transform:GetWorldPosition()
                 local epics = TheSim:FindEntities(x, y, z, 30, EPIC_TAGS, NO_EPIC_TAGS)
@@ -40,14 +40,24 @@ local function musicsetup(inst)
                     and "ms_sfx/ms_music/boss_music"
                     or "dontstarve/music/music_danger_winter",
                     "danger")
-                
-                local _dangertask = TheWorld:DoTaskInTime(10, StopDanger, true)
-              
+                local _dangertask 
+                if #epics > 0 then 
+                  _dangertask = TheWorld:DoTaskInTime(20, StopDanger, true)
+                else
+                  _dangertask = TheWorld:DoTaskInTime(10, StopDanger, true)
+                end
                 UpvalueHacker.SetUpvalue(TheWorld.event_listeners["enabledynamicmusic"][TheWorld][1], _dangertask, "StopDanger", "_dangertask")
                 UpvalueHacker.SetUpvalue(TheWorld.event_listeners["enabledynamicmusic"][TheWorld][1], nil, "StopDanger", "_triggeredlevel")
                 UpvalueHacker.SetUpvalue(TheWorld.event_listeners["enabledynamicmusic"][TheWorld][1], 0, "StopDanger", "_extendtime")
               else
-                local time = GetTime() + 10
+                local x, y, z = player.Transform:GetWorldPosition()
+                local epics = TheSim:FindEntities(x, y, z, 30, EPIC_TAGS, NO_EPIC_TAGS)
+                local time
+                if #epics > 0 then
+                  time = GetTime() + 10
+                else
+                  time = GetTime() + 20
+                end
                 UpvalueHacker.SetUpvalue(TheWorld.event_listeners["enabledynamicmusic"][TheWorld][1],  time, "StopDanger", "_extendtime")
               end
             else
