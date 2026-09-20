@@ -183,6 +183,14 @@ local function OnDecorTaken(inst, item)
     end
 end
 
+local function OnRemove(inst)
+  if inst.down_helper then
+    inst.down_helper:Remove()
+    inst.right_helper:Remove()
+    inst.left_helper:Remove()
+  end
+end
+
 local function fn_helper()
   local inst = CreateEntity()
 
@@ -305,6 +313,8 @@ local function fn()
       OnDecorGiven(inst, item)
     end
   end)
+
+  inst.OnRemoveEntity = OnRemove
   
   return inst
 end

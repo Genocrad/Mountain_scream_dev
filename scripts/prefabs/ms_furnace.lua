@@ -37,6 +37,15 @@ local function onhammered(inst, worker)
     inst:Remove()
 end
 
+local function OnRemove(inst)
+  if inst.fire then
+    if inst.fire.bellow then
+      inst.fire.bellow:Remove()
+    end
+    inst.fire:Remove()
+  end
+end
+
 local function onhit(inst, worker)
   if inst.components.stewer.product ~= nil then
     inst.AnimState:PlayAnimation("hit_door_closed")
@@ -324,7 +333,7 @@ local function fn()
   inst:ListenForEvent("temperaturedelta", TemperatureChange)
 
   inst.OnLoadPostPass = onloadpostpass
-
+  inst.OnRemoveEntity = OnRemove
   return inst
 end
 
