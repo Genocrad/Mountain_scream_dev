@@ -3,10 +3,31 @@
 
 local UpvalueHacker = require("tools/upvaluehacker")
 
-local MS_USE_DOOR = Action({ priority = 10 })
+-- 幽灵可进：走 jumpin（动词显示作祟），活人仍用推门动画。
+local MS_USE_DOOR = Action({ priority = 10, ghost_valid = true, encumbered_valid = true })
 MS_USE_DOOR.id = "MS_USE_DOOR"
 MS_USE_DOOR.str = "Enter"
+MS_USE_DOOR.stroverridefn = function(act)
+	if act.doer ~= nil and act.doer:HasTag("playerghost") then
+		local jumpin = STRINGS.ACTIONS.JUMPIN
+		return type(jumpin) == "table" and jumpin.HAUNT or nil
+	end
+end
 MS_USE_DOOR.fn = function(act)
+	if act.doer == nil or act.doer.sg == nil then
+		return false
+	end
+	if act.doer:HasTag("playerghost") then
+		if act.doer.sg.currentstate.name == "jumpin_pre"
+			and act.target ~= nil
+			and act.target.components.teleporter ~= nil
+			and act.target.components.teleporter:IsActive() then
+			act.doer.sg:GoToState("jumpin", { teleporter = act.target })
+			return true
+		end
+		act.doer.sg:GoToState("idle")
+		return false
+	end
 	act.doer.sg:GoToState("ms_door_use", { teleporter = act.target })
 	return true
 end
@@ -18,13 +39,19 @@ local old_teleport = COMPONENT_ACTIONS["SCENE"]["teleporter"]
 COMPONENT_ACTIONS["SCENE"]["teleporter"] = function(inst, doer, actions, right, ...)
 	if inst:HasTag("ms_teleporter") then
 		table.insert(actions, ACTIONS.MS_USE_DOOR)
+	elseif inst:HasTag("ms_snow_teleport") and inst:HasTag("teleporter") and doer:HasTag("playerghost") then
+		-- 雪图腾对活人是 TELEPORT；幽灵无进塔动画，改走虫洞同款 JUMPIN（UI 为作祟）。
+		table.insert(actions, ACTIONS.JUMPIN)
 	else
 		old_teleport(inst, doer, actions, right, ...)
 	end
 end
 
+-- 活人仍在 wilson；死后切到 wilsonghost（已有 jumpin_pre / jumpin）。
 AddStategraphActionHandler("wilson", ActionHandler(ACTIONS.MS_USE_DOOR, "ms_door_use_pre"))
 AddStategraphActionHandler("wilson_client", ActionHandler(ACTIONS.MS_USE_DOOR, "ms_door_use_pre"))
+AddStategraphActionHandler("wilsonghost", ActionHandler(ACTIONS.MS_USE_DOOR, "jumpin_pre"))
+AddStategraphActionHandler("wilsonghost_client", ActionHandler(ACTIONS.MS_USE_DOOR, "jumpin_pre"))
 
 ------------------------------------------------------------------------------------------------------------------------
 -- 竞技场传送：带 ms_snow_teleport 的门走自定义进出状态（雪特效），懒人塔仍走官方 entertownportal

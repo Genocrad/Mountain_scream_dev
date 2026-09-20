@@ -1,6 +1,7 @@
 local Teleporter = require("components/teleporter")
+local UpvalueHacker = require("tools/upvaluehacker")
 local old_Teleport = Teleporter.Teleport
-
+local old_ReceivePlayer = Teleporter.ReceivePlayer
 
 local ENV = env
 GLOBAL.setfenv(1, GLOBAL)
@@ -27,4 +28,23 @@ function Teleporter:Teleport(obj, ...)
 	else
 		old_Teleport(self, obj, ...)
 	end
+end
+
+-- 幽灵 SG 有 jumpout，没有 abyss_drop / 进塔落地。到达时改 jumpout。
+local old_ondoerarrive = UpvalueHacker.GetUpvalue(old_ReceivePlayer, "ondoerarrive")
+if old_ondoerarrive ~= nil then
+	local function ondoerarrive(inst, self, doer)
+		local saved
+		if doer ~= nil and doer:IsValid() and doer:HasTag("playerghost") then
+			saved = self.overrideteleportarrivestate
+			if saved ~= nil and saved ~= "jumpout" then
+				self.overrideteleportarrivestate = "jumpout"
+			end
+		end
+		old_ondoerarrive(inst, self, doer)
+		if saved ~= nil then
+			self.overrideteleportarrivestate = saved
+		end
+	end
+	UpvalueHacker.SetUpvalue(old_ReceivePlayer, ondoerarrive, "ondoerarrive")
 end
