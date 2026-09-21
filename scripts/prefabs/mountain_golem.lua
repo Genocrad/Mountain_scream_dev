@@ -451,7 +451,7 @@ local function fn()
 	inst:AddTag("electricdamageimmune")
 	inst:AddTag("epic")
 	inst:AddTag("scarytoprey")
-	inst:AddTag("crazy") -- so they can attack shadow creatures
+	-- inst:AddTag("crazy") -- so they can attack shadow creatures
 	inst:AddTag("mountain_golem")
 
 	inst.DynamicShadow:SetSize(6, 3.5)
