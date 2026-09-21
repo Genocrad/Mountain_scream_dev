@@ -13,7 +13,7 @@ local prefabs =
 {
 	"vault_pillar_guard_swipe_fx",
 	"vault_pillar_guard_smash_fx",
-	"mountain_sandspike_tall",
+	"mountain_sandspike_temp_tall",
 	"mountain_sandspike_charged_tall",
 	"mountain_beam_fx",
 

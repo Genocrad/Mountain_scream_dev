@@ -35,7 +35,7 @@ end
 
 local function SpawnSandSpikeAt(pos, charged)
 	local function try_spawn(x, z)
-		local prefab = charged and "mountain_sandspike_charged_tall" or "mountain_sandspike_tall"
+		local prefab = charged and "mountain_sandspike_charged_tall" or "mountain_sandspike_temp_tall"
 		local spike = SpawnPrefab(prefab)
 		if spike ~= nil then
 			spike.Transform:SetPosition(x, 0, z)
@@ -282,7 +282,7 @@ end
 local SANDBLOCK_RADIUS = 1.1
 
 local SANDBLOCK_BLOCKER_ONEOF_TAGS = { "mushroomsprout", "pond" }
-local SANDBLOCK_CLEAR_ONEOF_TAGS = { "mountain_sandblock", "mountain_sandblock_charged", "groundspike" }
+local SANDBLOCK_CLEAR_ONEOF_TAGS = { "mountain_sandblock", "mountain_sandblock_charged", "mountain_sandspike_temp", "mountain_sandspike_charged" }
 local SANDBLOCK_BLOCKER_CANT_TAGS = { "INLIMBO" }
 
 local function NoSandblockHoles(pt)
@@ -1065,57 +1065,6 @@ local states =
 
 		ontimeout = SwitchToFourFaced,
 		onexit = SwitchToFourFaced,
-	},
-
-	State{
-		name = "alert",
-		tags = { "alert", "idle", "canrotate" },
-
-		onenter = function(inst)
-			inst.components.locomotor:Stop()
-			local anim = "idle"..tostring(math.random(2, 3))
-			inst.AnimState:PlayAnimation(anim.."_pre")
-			inst.AnimState:PushAnimation(anim.."_loop")
-		end,
-
-		events =
-		{
-			EventHandler("locomote", function(inst)
-				if inst.components.locomotor:WantsToMoveForward() then
-					inst.sg:GoToState("alert_pst")
-				end
-				return true
-			end),
-		},
-	},
-
-	State{
-		name = "alert_pst",
-		tags = { "alert", "idle", "canrotate" },
-
-		onenter = function(inst)
-			inst.components.locomotor:StopMoving()
-			inst.AnimState:PlayAnimation("idle2_pst")
-		end,
-
-		timeline =
-		{
-			FrameEvent(9, function(inst)
-				inst.sg.statemem.canlocomote = true
-			end),
-		},
-
-		events =
-		{
-			EventHandler("locomote", function(inst)
-				return not inst.sg.statemem.canlocomote
-			end),
-			EventHandler("animover", function(inst)
-				if inst.AnimState:AnimDone() then
-					inst.sg:GoToState("idle")
-				end
-			end),
-		},
 	},
 
 	State{

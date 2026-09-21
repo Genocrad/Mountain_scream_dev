@@ -74,6 +74,26 @@ for name, cfg in pairs(SPIKE_CONFIG) do
 	}
 end
 
+local TEMP_DOWNGRADE =
+{
+	tall = "mountain_sandspike_temp_med",
+	med = "mountain_sandspike_temp_short",
+}
+
+local TEMP_SPIKE_CONFIG = {}
+for name, cfg in pairs(SPIKE_CONFIG) do
+	TEMP_SPIKE_CONFIG[name] =
+	{
+		animname = cfg.animname,
+		radius = cfg.radius,
+		mine_work = cfg.mine_work,
+		downgrade = TEMP_DOWNGRADE[name],
+		emerges = cfg.emerges,
+		deals_damage = cfg.deals_damage,
+		temporary = true,
+	}
+end
+
 local DAMAGE_RADIUS_PADDING = .5
 
 local EXPLODETARGET_MUST_TAGS = { "_health", "_combat" }
@@ -244,6 +264,13 @@ local function SpawnDowngradeSpike(inst)
 	local spike = SpawnPrefab(inst.spikeconfig.downgrade)
 	if spike ~= nil then
 		spike.Transform:SetPosition(x, 0, z)
+		if inst.spikeconfig.temporary then
+			spike._lifetime_remaining = inst._lifetime_remaining
+			if spike._lifetime_remaining == nil and inst.components.timer ~= nil then
+				spike._lifetime_remaining = inst.components.timer:GetTimeLeft("lifetime")
+			end
+			spike._lifetime_remaining = spike._lifetime_remaining or 0
+		end
 		if spike.Setup ~= nil then
 			spike:Setup()
 		end
@@ -261,6 +288,11 @@ local function BeginBreak(inst, is_explode)
 		return
 	end
 	inst._breaking = true
+
+	if inst.components.timer ~= nil and inst.components.timer:TimerExists("lifetime") then
+		inst._lifetime_remaining = inst.components.timer:GetTimeLeft("lifetime")
+		inst.components.timer:StopTimer("lifetime")
+	end
 
 	CancelExplodeTimer(inst)
 
@@ -376,11 +408,107 @@ local function SetupIdle(inst)
 	inst._explode_remaining = nil
 end
 
+local SPIKE_NEXT_ANIM =
+{
+	tall = "med",
+	med = "short",
+}
+
+local function PlaySpikeBreak(inst, name)
+	inst.AnimState:PlayAnimation(name.."_break")
+	inst.SoundEmitter:PlaySound(
+		"dontstarve/creatures/together/antlion/sfx/break_spike",
+		nil,
+		(name == "short" and .6) or
+		(name == "med" and .8) or
+		nil
+	)
+end
+
+local function OnSpikeRetractAnimOver(inst)
+	local name = inst._retract_anims ~= nil and table.remove(inst._retract_anims, 1) or nil
+	if name == nil then
+		inst:RemoveEventCallback("animover", OnSpikeRetractAnimOver)
+		inst:Remove()
+		return
+	end
+	PlaySpikeBreak(inst, name)
+end
+
+local function RetractSpike(inst)
+	if inst._breaking or inst._retracting then
+		return
+	end
+	inst._retracting = true
+
+	if inst.components.timer ~= nil then
+		inst.components.timer:StopTimer("lifetime")
+	end
+	CancelExplodeTimer(inst)
+
+	if inst.components.workable ~= nil then
+		inst.components.workable:SetOnWorkCallback(nil)
+		inst.components.workable:SetOnFinishCallback(nil)
+		inst.components.workable:SetWorkable(false)
+	end
+
+	inst:AddTag("NOCLICK")
+	inst.Physics:SetActive(false)
+	inst.persists = false
+
+	inst:RemoveEventCallback("animover", OnBreakAnimOver)
+	inst:RemoveEventCallback("animover", StartSpikeAnim)
+	inst:RemoveEventCallback("animover", FinishEmerge)
+	inst:RemoveEventCallback("animover", BeginEmerge)
+
+	local anims = {}
+	local name = (inst.animname == "med" or inst.animname == "short") and inst.animname or "tall"
+	while name ~= nil do
+		table.insert(anims, name)
+		name = SPIKE_NEXT_ANIM[name]
+	end
+
+	local first = table.remove(anims, 1)
+	inst._retract_anims = anims
+	inst.AnimState:SetLayer(LAYER_WORLD)
+	inst.AnimState:SetSortOrder(0)
+	PlaySpikeBreak(inst, first)
+	inst:ListenForEvent("animover", OnSpikeRetractAnimOver)
+end
+
+local function StartSpikeLifetime(inst)
+	if not inst.spikeconfig.temporary or inst._breaking or inst._retracting then
+		return
+	end
+	if inst.components.timer ~= nil and inst.components.timer:TimerExists("lifetime") then
+		inst._lifetime_remaining = nil
+		return
+	end
+
+	local remaining = inst._lifetime_remaining
+	inst._lifetime_remaining = nil
+	if remaining == nil then
+		remaining = TUNING.MOUNTAIN_GOLEM.SANDSPIKE_LIFETIME
+	end
+	if remaining <= 0 then
+		inst:DoTaskInTime(0, RetractSpike)
+		return
+	end
+	inst.components.timer:StartTimer("lifetime", remaining)
+end
+
+local function OnSpikeLifetime(inst, data)
+	if data.name == "lifetime" then
+		RetractSpike(inst)
+	end
+end
+
 local function Setup(inst)
 	if inst._setup then
 		return
 	end
 	inst._setup = true
+	StartSpikeLifetime(inst)
 
 	if inst.spikeconfig.emerges and not inst._emerged then
 		BeginEmerge(inst)
@@ -396,7 +524,7 @@ local function OnMine(inst, worker)
 end
 
 local function OnMineDown(inst)
-	if not inst.persists or inst._breaking then
+	if not inst.persists or inst._breaking or inst._retracting then
 		return
 	end
 
@@ -426,6 +554,7 @@ local function OnLoadPostPass(inst)
 		return
 	end
 	inst._setup = true
+	StartSpikeLifetime(inst)
 	if inst._emerged then
 		SetupIdle(inst)
 	elseif inst.spikeconfig.emerges then
@@ -435,11 +564,15 @@ local function OnLoadPostPass(inst)
 	end
 end
 
-local function MakeSpike(name, charged)
-	local config = charged and CHARGED_SPIKE_CONFIG[name] or SPIKE_CONFIG[name]
+local function MakeSpike(name, charged, temporary)
+	local config = (temporary and TEMP_SPIKE_CONFIG[name])
+		or (charged and CHARGED_SPIKE_CONFIG[name])
+		or SPIKE_CONFIG[name]
 	local prefab_assets = charged and charged_assets or assets
 	local build = charged and "mountain_sand_spike_stone_charged" or "mountain_sand_spike_stone"
-	local prefab_name = charged and ("mountain_sandspike_charged_"..name) or ("mountain_sandspike_"..name)
+	local prefab_name = (temporary and ("mountain_sandspike_temp_"..name))
+		or (charged and ("mountain_sandspike_charged_"..name))
+		or ("mountain_sandspike_"..name)
 	local general_name = charged and "mountain_sandspike_charged_tall" or "mountain_sandspike_tall"
 
 	local function fn()
@@ -468,7 +601,6 @@ local function MakeSpike(name, charged)
 		inst.Physics:SetActive(false)
 		inst.Physics:SetCapsule(config.radius, 2)
 
-		inst:AddTag("notarget")
 		inst:AddTag("groundspike")
 		inst:AddTag("mountain_sandspike")
 		inst:AddTag("object")
@@ -476,6 +608,9 @@ local function MakeSpike(name, charged)
 		if charged then
 			inst:AddTag("mountain_sandspike_charged")
 			inst:AddTag("explosive")
+		end
+		if temporary then
+			inst:AddTag("mountain_sandspike_temp")
 		end
 
 		inst:SetPrefabNameOverride(general_name)
@@ -513,6 +648,11 @@ local function MakeSpike(name, charged)
 		inst.components.workable:SetOnFinishCallback(OnMineDown)
 		inst.components.workable:SetWorkable(false)
 
+		if temporary then
+			inst:AddComponent("timer")
+			inst:ListenForEvent("timerdone", OnSpikeLifetime)
+		end
+
 		inst.Setup = Setup
 		inst.OnSave = OnSave
 		inst.OnLoad = OnLoad
@@ -528,4 +668,5 @@ local function MakeSpike(name, charged)
 end
 
 return MakeSpike("tall"), MakeSpike("med"), MakeSpike("short"),
-	MakeSpike("tall", true), MakeSpike("med", true), MakeSpike("short", true)
+	MakeSpike("tall", true), MakeSpike("med", true), MakeSpike("short", true),
+	MakeSpike("tall", false, true), MakeSpike("med", false, true), MakeSpike("short", false, true)

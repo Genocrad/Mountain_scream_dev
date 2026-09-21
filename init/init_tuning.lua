@@ -1048,11 +1048,6 @@ TUNING.MOUNTAIN_ICEGOAT = {
 TUNING.MOUNTAIN_GOLEM = {
 
 	PILLAR_HAMMER_WORK = 5,      -- 山岭魔像柱所需镐子敲击次数
-	PILLAR_SUMMON = {            -- 建造完成后召唤魔柱时的冲击伤害
-		DAMAGE = 300,            -- 对生物伤害
-		PLAYER_DAMAGE = 150,     -- 对玩家伤害
-		RADIUS = 4,              -- 冲击范围
-	},
 
 	HEALTH = 20000,              -- 最大生命
 	DAMAGE = 300,                -- 基础攻击伤害
@@ -1077,6 +1072,7 @@ TUNING.MOUNTAIN_GOLEM = {
 
 	----------------------------- 山岭沙刺 -----------------------------
 	SANDSPIKE_CD = 20,           -- 沙刺攻击冷却（秒）
+	SANDSPIKE_LIFETIME = 10,     -- Boss 普通石刺存在时间（秒），读档后按剩余时间继续
 	SANDSPIKE_RANGE = 20,        -- 沙刺目标搜索范围
 	CHARGED_SANDSPIKE_EXPLODE_DELAY = { MIN = 0.5, MAX = 1.5 }, -- 充能沙刺爆炸倒计时（秒，随机）
 	SANDSPIKE_MINE_WORK = {      -- 沙刺镐击次数（tall / med / short）
@@ -1098,6 +1094,7 @@ TUNING.MOUNTAIN_GOLEM = {
 
 	------------------------------ 山岭沙块 -----------------------------
 	TOWER_CD = 50,               -- 沙块环技能冷却（秒）
+	SANDBLOCK_LIFETIME = 30,     -- 普通石塔存在时间（秒），读档后按剩余时间继续
 	SANDBLOCK_RING_RADIUS = 18,  -- 生成圈半径
 	SANDBLOCK_RING_SPACING = 2.5, -- 相邻沙块最短弧长间距（数量 = 2π×半径÷间距）
 	SANDBLOCK_RING_RADIUS_VAR = 1, -- 半径随机偏移（0~该值）

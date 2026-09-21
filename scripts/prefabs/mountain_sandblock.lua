@@ -40,6 +40,9 @@ local BLOCK_STATES =
 
 local OnMine
 local OnMineDown
+local FinishEmerge
+local StartBlockPst
+local BeginEmerge
 
 local function GetStateConfig(inst)
 	return BLOCK_STATES[inst.blockstate]
@@ -153,6 +156,10 @@ local function BeginBreak(inst)
 	end
 	inst._breaking = true
 
+	if inst.components.timer ~= nil then
+		inst.components.timer:StopTimer("lifetime")
+	end
+
 	if inst.components.workable ~= nil then
 		inst.components.workable:SetOnWorkCallback(nil)
 		inst.components.workable:SetOnFinishCallback(nil)
@@ -173,7 +180,84 @@ local function BeginBreak(inst)
 	end
 end
 
-local function FinishEmerge(inst)
+local function OnBlockRetractAnimOver(inst)
+	local state = inst._retract_states ~= nil and table.remove(inst._retract_states, 1) or nil
+	local cfg = state ~= nil and BLOCK_STATES[state] or nil
+	if cfg == nil then
+		inst:RemoveEventCallback("animover", OnBlockRetractAnimOver)
+		inst:Remove()
+		return
+	end
+	inst.AnimState:PlayAnimation(cfg.break_anim)
+	PlayBreakSound(inst, cfg)
+end
+
+local function RetractBlock(inst)
+	if inst._breaking or inst._retracting or inst:HasTag("mountain_sandblock_charged") then
+		return
+	end
+	inst._retracting = true
+
+	if inst.components.timer ~= nil then
+		inst.components.timer:StopTimer("lifetime")
+	end
+
+	if inst.components.workable ~= nil then
+		inst.components.workable:SetOnWorkCallback(nil)
+		inst.components.workable:SetOnFinishCallback(nil)
+		inst.components.workable:SetWorkable(false)
+	end
+
+	inst:AddTag("NOCLICK")
+	inst.Physics:SetActive(false)
+	inst.persists = false
+	UnlinkFromGolem(inst)
+
+	inst:RemoveEventCallback("animover", OnBreakAnimOver)
+	inst:RemoveEventCallback("animover", StartBlockPst)
+	inst:RemoveEventCallback("animover", FinishEmerge)
+	inst:RemoveEventCallback("animover", BeginEmerge)
+
+	local states = {}
+	local state = BLOCK_STATES[inst.blockstate] ~= nil and inst.blockstate or "short"
+	while state ~= nil do
+		table.insert(states, state)
+		state = BLOCK_STATES[state].next
+	end
+
+	local first = table.remove(states, 1)
+	inst._retract_states = states
+	local cfg = BLOCK_STATES[first]
+	inst.AnimState:SetLayer(LAYER_WORLD)
+	inst.AnimState:SetSortOrder(0)
+	inst.AnimState:PlayAnimation(cfg.break_anim)
+	PlayBreakSound(inst, cfg)
+	inst:ListenForEvent("animover", OnBlockRetractAnimOver)
+end
+
+local function StartBlockLifetime(inst)
+	if inst:HasTag("mountain_sandblock_charged") or inst._breaking or inst._retracting then
+		return
+	end
+	if inst.components.timer ~= nil and inst.components.timer:TimerExists("lifetime") then
+		return
+	end
+
+	local remaining = TUNING.MOUNTAIN_GOLEM.SANDBLOCK_LIFETIME
+	if remaining == nil or remaining <= 0 then
+		inst:DoTaskInTime(0, RetractBlock)
+		return
+	end
+	inst.components.timer:StartTimer("lifetime", remaining)
+end
+
+local function OnBlockLifetime(inst, data)
+	if data.name == "lifetime" then
+		RetractBlock(inst)
+	end
+end
+
+FinishEmerge = function(inst)
 	inst:RemoveEventCallback("animover", FinishEmerge)
 	inst._emerged = true
 
@@ -181,14 +265,14 @@ local function FinishEmerge(inst)
 	EnableWorkable(inst)
 end
 
-local function StartBlockPst(inst)
+StartBlockPst = function(inst)
 	inst:RemoveEventCallback("animover", StartBlockPst)
 	inst:ListenForEvent("animover", FinishEmerge)
 	inst.AnimState:PlayAnimation("block_pst")
 	inst.SoundEmitter:PlaySound("dontstarve/creatures/together/antlion/sfx/break")
 end
 
-local function BeginEmerge(inst)
+BeginEmerge = function(inst)
 	if inst._emerged then
 		return
 	end
@@ -212,6 +296,7 @@ local function Setup(inst)
 		return
 	end
 	inst._setup = true
+	StartBlockLifetime(inst)
 
 	if inst.blockstate == "tall" and not inst._emerged then
 		BeginEmerge(inst)
@@ -227,7 +312,7 @@ OnMine = function(inst, worker)
 end
 
 OnMineDown = function(inst)
-	if not inst.persists or inst._breaking then
+	if not inst.persists or inst._breaking or inst._retracting then
 		return
 	end
 
@@ -260,6 +345,8 @@ local function OnLoadPostPass(inst)
 			DoLink(inst, golem)
 		end
 	end
+
+	StartBlockLifetime(inst)
 
 	if inst._setup then
 		return
@@ -302,7 +389,6 @@ local function MakeBlock(charged)
 		)
 		inst.Physics:SetActive(false)
 
-		inst:AddTag("notarget")
 		inst:AddTag("mountain_sandblock")
 		inst:AddTag("object")
 		inst:AddTag("stone")
@@ -324,6 +410,11 @@ local function MakeBlock(charged)
 		inst.components.workable:SetOnWorkCallback(OnMine)
 		inst.components.workable:SetOnFinishCallback(OnMineDown)
 		inst.components.workable:SetWorkable(false)
+
+		if not charged then
+			inst:AddComponent("timer")
+			inst:ListenForEvent("timerdone", OnBlockLifetime)
+		end
 
 		if charged then
 			inst:AddComponent("entitytracker")

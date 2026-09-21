@@ -9,9 +9,6 @@ local prefabs =
 	"mountain_golem",
 }
 
-local SUMMON_DAMAGE_MUST_TAGS = { "_combat" }
-local SUMMON_DAMAGE_CANT_TAGS = { "INLIMBO", "flight", "invisible", "notarget", "noattack", "FX", "DECOR", "playerghost" }
-
 local function OnEntityWake_Pathfinding(inst)
 	if inst._pfx == nil and inst:GetCurrentPlatform() == nil then
 		local _
@@ -45,21 +42,6 @@ local function OnHammerFinished(inst, worker)
 	ActivateMountainGolem(inst)
 end
 
-local function DoSummonDamage(inst)
-	local cfg = TUNING.MOUNTAIN_GOLEM.PILLAR_SUMMON
-	local x, y, z = inst.Transform:GetWorldPosition()
-	local ents = TheSim:FindEntities(x, y, z, cfg.RADIUS, SUMMON_DAMAGE_MUST_TAGS, SUMMON_DAMAGE_CANT_TAGS)
-	for _, v in ipairs(ents) do
-		if v ~= inst and v:IsValid() and not v:IsInLimbo()
-			and not (v.components.health ~= nil and v.components.health:IsDead())
-			and v.components.combat ~= nil
-		then
-			local damage = v:HasTag("player") and cfg.PLAYER_DAMAGE or cfg.DAMAGE
-			v.components.combat:GetAttacked(inst, damage)
-		end
-	end
-end
-
 local function FinishSummon(inst)
 	inst:RemoveEventCallback("animover", inst._OnSummonAnimOver)
 	inst._OnSummonAnimOver = nil
@@ -91,7 +73,6 @@ local function StartSummon(inst)
 	end
 
 	if inst:IsAsleep() then
-		DoSummonDamage(inst)
 		inst.AnimState:PlayAnimation("pillar_idle", true)
 		if inst.components.workable ~= nil then
 			inst.components.workable:SetWorkable(true)
@@ -105,7 +86,6 @@ local function StartSummon(inst)
 	-- 魔像重砸音效：比普通 rocks/place 更有冲击感
 	inst.SoundEmitter:PlaySound("daywalker/action/attack_slam_down")
 	inst.SoundEmitter:PlaySound("daywalker/pillar/hit")
-	DoSummonDamage(inst)
 end
 
 local function fn()
