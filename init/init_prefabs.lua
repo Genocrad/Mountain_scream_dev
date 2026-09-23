@@ -101,4 +101,6 @@ PrefabFiles = {
   "hat_tinfoil",
   "ms_barricade_spawner",
   "ms_giant_boulder",
+  "ms_fake_rain",
+  "ms_fake_snow",
 }
