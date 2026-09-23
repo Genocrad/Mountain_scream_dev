@@ -57,7 +57,7 @@ AddPrefabPostInit("cave", function(inst)
     )
  if not TheNet:IsDedicated() then
   inst.entity:AddWaveComponent()
-    inst.WaveComponent:SetWaveParams(13.5, 2.5, 0)    			-- wave texture u repeat, forward distance between waves
+    inst.WaveComponent:SetWaveParams(13.5, 2.5, -3)    			-- wave texture u repeat, forward distance between waves
     inst.WaveComponent:SetWaveSize(80, 3.5)							-- wave mesh width and height
     inst.WaveComponent:SetWaveMotion(.3, .5, .35) 
     inst.WaveComponent:SetWaveTexture(resolvefilepath("images/wave_null.tex"))
@@ -67,12 +67,14 @@ AddPrefabPostInit("cave", function(inst)
   inst:ListenForEvent("wavemanager_off", function(inst)
     if not TheNet:IsDedicated() then
       inst.WaveComponent:SetWaveTexture(resolvefilepath("images/wave_null.tex"))
+      inst.Map:SetUndergroundFadeHeight(5)
       inst.wavemanager_on = false
     end
   end)
   inst:ListenForEvent("wavemanager_on", function(inst)
     if not TheNet:IsDedicated() then
       inst.WaveComponent:SetWaveTexture(resolvefilepath("images/wave_clouds.tex"))
+      inst.Map:SetUndergroundFadeHeight(0)
       inst.wavemanager_on = true
     end
   end)
