@@ -50,6 +50,7 @@ Assets = {
 	Asset("SHADER", "shaders/mountain_vertical_shader.ksh"),
 	Asset("SHADER", "shaders/clickable_vertical_shader.ksh"),
 	Asset("SHADER", "shaders/rotation_vertical_shader.ksh"),
+	Asset("SHADER", "shaders/map_bounds_mask.ksh"),
 }
 
 --------------------------------------------------------

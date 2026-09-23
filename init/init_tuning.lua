@@ -1,7 +1,7 @@
 --------------------------------------------------------
 -- A: dungeon / forging / collision
 TOOLACTIONS.TOSS = true
-COLLISION.MS_CLOUDS = 32768
+COLLISION.MS_CLOUDS = 16
 FALLOFF_IDS.CLOUDS_FALLOFF = 5
 
 TUNING.MS_LEVEL_TO_TEMP = {

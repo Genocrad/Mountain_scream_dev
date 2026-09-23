@@ -4,18 +4,22 @@ local PauseScreen = require "screens/redux/pausescreen"
 
 
 local MAPSCALE = .5
+local function HasCurrentLevel()
+  return ThePlayer ~= nil and ThePlayer.map_level_current ~= nil
+end
+
 local function OnLevelPressedUp()
-  if ThePlayer.map_level_shown == nil then
-    ThePlayer.map_level_shown = 2
+  if not HasCurrentLevel() then
+    return
   end
-    ThePlayer.map_level_shown = math.min(ThePlayer.map_level_shown+1, 12)
+  ThePlayer.map_level_shown = math.min((ThePlayer.map_level_shown or ThePlayer.map_level_current) + 1, 12)
 end
 
 local function OnLevelPressedDown()
-  if ThePlayer.map_level_shown == nil then
-    ThePlayer.map_level_shown = 2
+  if not HasCurrentLevel() then
+    return
   end
-    ThePlayer.map_level_shown = math.max(ThePlayer.map_level_shown-1, 2)
+  ThePlayer.map_level_shown = math.max((ThePlayer.map_level_shown or ThePlayer.map_level_current) - 1, 2)
 end
 
 
@@ -36,7 +40,7 @@ local MapControlsDungeon = Class(Widget, function(self)
     self.level2:SetScale(-.7, .7, .7)
     self.level2:SetOnClick(OnLevelPressedDown)
     
-    if not TheWorld:HasTag("mountain_scream_dungeons") then
+    if not TheWorld:HasTag("mountain_scream_dungeons") or not HasCurrentLevel() then
       self:Hide()
     end
     --self:RefreshTooltips(mountain_scream_dungeons)

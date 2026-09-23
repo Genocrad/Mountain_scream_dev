@@ -47,11 +47,43 @@ local DungeonMapOverwatch = Class(function(self, inst)
     self._level_limits_xn = net_ushortarray(inst.GUID, "dungeonmapoverwatch._level_limits_xn") 
     self._level_limits_yn = net_ushortarray(inst.GUID, "dungeonmapoverwatch._level_limits_yn") 
     self._level_limits_yp = net_ushortarray(inst.GUID, "dungeonmapoverwatch._level_limits_yp") 
+    self._base_cave_bounds = net_ushortarray(inst.GUID, "dungeonmapoverwatch._base_cave_bounds")
+    self._has_base_cave_bounds = net_bool(inst.GUID, "dungeonmapoverwatch._has_base_cave_bounds")
 
     --V2C: Recommended to explicitly add tag to prefab pristine state
     inst:AddTag("dungeonmapoverwatch")
     
     if TheWorld.ismastersim then
+      -- Capture the generated cave map before the runtime terraformer chain
+      -- stamps the synthetic floor maps into it. This is the cave world's own
+      -- terrain region; it is not floor 1 (which is also used as a terraformer
+      -- anchor by the generated floor layout).
+      local min_tile_x, max_tile_x, min_tile_y, max_tile_y
+      for tile_x = 0, self.map_width - 1 do
+        for tile_y = 0, self.map_height - 1 do
+          local tile = map:GetTile(tile_x, tile_y)
+          if tile ~= nil and tile ~= 1 and
+             tile ~= WORLD_TILES.VOID_TECHNICAL and
+             tile ~= WORLD_TILES.CLOUDS_WHITE and
+             tile ~= WORLD_TILES.CLOUDS_DARK and
+             TileGroupManager:IsLandTile(tile) then
+            min_tile_x = min_tile_x == nil and tile_x or math.min(min_tile_x, tile_x)
+            max_tile_x = max_tile_x == nil and tile_x or math.max(max_tile_x, tile_x)
+            min_tile_y = min_tile_y == nil and tile_y or math.min(min_tile_y, tile_y)
+            max_tile_y = max_tile_y == nil and tile_y or math.max(max_tile_y, tile_y)
+          end
+        end
+      end
+
+      if min_tile_x ~= nil then
+        self.base_cave_bounds = { min_tile_x, max_tile_x, min_tile_y, max_tile_y }
+        self._base_cave_bounds:set(self.base_cave_bounds)
+        self._has_base_cave_bounds:set(true)
+        print(string.format(
+          "[MS BaseCaveBounds] captured initial cave terrain tiles=[x %d..%d, y %d..%d] map_size=(%d,%d)",
+          min_tile_x, max_tile_x, min_tile_y, max_tile_y, self.map_width, self.map_height))
+      end
+
       self.map_points_level_x[1] = 0
       self.map_points_level_y[1] = 0
       self.map_points_level_x[2] = 70
@@ -184,6 +216,48 @@ function DungeonMapOverwatch:GetPointForLevel(level)
     return -self.map_width * 2 + xs[level] * 4, -self.map_height * 2 + ys[level] * 4
 end
 
+function DungeonMapOverwatch:GetBoundsForLevel(level)
+    local center_x, center_z = self:GetPointForLevel(level)
+    if center_x == nil or center_z == nil then
+      return nil, nil, nil, nil
+    end
+
+    local limits_xp = self._level_limits_xp:value()
+    local limits_xn = self._level_limits_xn:value()
+    local limits_yp = self._level_limits_yp:value()
+    local limits_yn = self._level_limits_yn:value()
+    if limits_xp == nil or limits_xn == nil or limits_yp == nil or limits_yn == nil or
+       limits_xp[level] == nil or limits_xn[level] == nil or
+       limits_yp[level] == nil or limits_yn[level] == nil then
+      return nil, nil, nil, nil
+    end
+
+    -- The limits are stored in map tiles. Keep this conversion in sync with
+    -- GetNearestLevel: four world units per tile and the same 8-unit margin.
+    return center_x - limits_xn[level] * 4 - 8,
+           center_x + limits_xp[level] * 4 + 8,
+           center_z - limits_yn[level] * 4 - 8,
+           center_z + limits_yp[level] * 4 + 8
+end
+
+function DungeonMapOverwatch:GetBoundsForBaseCave()
+    if not self._has_base_cave_bounds:value() then
+      return nil, nil, nil, nil
+    end
+
+    local bounds = self._base_cave_bounds:value()
+    if bounds == nil or #bounds < 4 then
+      return nil, nil, nil, nil
+    end
+
+    -- Stored as the min/max initial map tile coordinates. Convert tile centers
+    -- to world coordinates and leave the same small edge margin as floor bounds.
+    return -self.map_width * 2 + bounds[1] * 4 - 8,
+           -self.map_width * 2 + bounds[2] * 4 + 8,
+           -self.map_height * 2 + bounds[3] * 4 - 8,
+           -self.map_height * 2 + bounds[4] * 4 + 8
+end
+
 
 function DungeonMapOverwatch:GetTileDiffForLevel(level)
     if self.terraformers_points[level] then
@@ -243,6 +317,19 @@ function DungeonMapOverwatch:OnLoad(data)
       self.map_points_level_y = data.map_points_level_y
       self._map_points_level_y:set(data.map_points_level_y)
       self._map_points_level_x:set(data.map_points_level_x)
+
+      if data.base_cave_bounds ~= nil and #data.base_cave_bounds >= 4 then
+        self.base_cave_bounds = data.base_cave_bounds
+        self._base_cave_bounds:set(self.base_cave_bounds)
+        self._has_base_cave_bounds:set(true)
+      else
+        -- Old saves do not contain this separately captured region. Do not use
+        -- the constructor-time scan of an already-terraformed saved map as a
+        -- substitute; it would include the synthetic floors as well.
+        self.base_cave_bounds = nil
+        self._has_base_cave_bounds:set(false)
+        print("[MS BaseCaveBounds] missing from save; base-cave mask unavailable until a new world is generated")
+      end
     end
     if data and data.level_limits_xp ~= nil then
       self.level_limits_xp = data.level_limits_xp -- Luigi: Not needed, but juuuust in case.
@@ -255,24 +342,25 @@ function DungeonMapOverwatch:OnLoad(data)
       self._level_limits_yp:set(data.level_limits_yp)
     else -- For worlds before the clouds/level change
         self.level_limits_xp[1] = 60
-        self.level_limits_xn[1] = -60
-        self.level_limits_yn[1] = -60
+        self.level_limits_xn[1] = 60
+        self.level_limits_yn[1] = 60
         self.level_limits_yp[1] = 60
       for i = 2, 20 do
         self.level_limits_xp[i] = 50
-        self.level_limits_xn[i] = -50
-        self.level_limits_yn[i] = -50
+        self.level_limits_xn[i] = 50
+        self.level_limits_yn[i] = 50
         self.level_limits_yp[i] = 50
       end
-      self._level_limits_xp:set(data.level_limits_xp)
-      self._level_limits_xn:set(data.level_limits_xn)
-      self._level_limits_yn:set(data.level_limits_yn)
-      self._level_limits_yp:set(data.level_limits_yp)
+      self._level_limits_xp:set(self.level_limits_xp)
+      self._level_limits_xn:set(self.level_limits_xn)
+      self._level_limits_yn:set(self.level_limits_yn)
+      self._level_limits_yp:set(self.level_limits_yp)
     end
 end
 
 function DungeonMapOverwatch:OnSave()
     local data = {}
+    data.base_cave_bounds = self.base_cave_bounds
     data.map_points_level_x = self.map_points_level_x
     data.map_points_level_y = self.map_points_level_y
     data.level_limits_xp = self.level_limits_xp

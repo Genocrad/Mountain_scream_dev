@@ -1,0 +1,35 @@
+#if defined(GL_ES)
+precision mediump float;
+#endif
+
+uniform sampler2D SAMPLER[1];
+uniform vec4 IMAGE_PARAMS; // rectangle center UV, X half-edge UV
+uniform vec4 IMAGE_PARAMS2; // Z half-edge UV
+
+varying vec2 PS_TEXCOORD;
+varying vec4 PS_COLOUR;
+
+void main()
+{
+    vec2 delta = PS_TEXCOORD - IMAGE_PARAMS.xy;
+    vec2 half_x = IMAGE_PARAMS.zw;
+    vec2 half_z = IMAGE_PARAMS2.xy;
+    float determinant = half_x.x * half_z.y - half_z.x * half_x.y;
+    if (abs(determinant) < 0.000001)
+    {
+        gl_FragColor = vec4(0.0);
+        return;
+    }
+
+    vec2 local = vec2(
+        (delta.x * half_z.y - half_z.x * delta.y) / determinant,
+        (half_x.x * delta.y - delta.x * half_x.y) / determinant);
+    if (abs(local.x) > 1.0 || abs(local.y) > 1.0)
+    {
+        gl_FragColor = vec4(0.0);
+        return;
+    }
+
+    vec4 colour = texture2D(SAMPLER[0], PS_TEXCOORD);
+    gl_FragColor = colour * PS_COLOUR;
+}
