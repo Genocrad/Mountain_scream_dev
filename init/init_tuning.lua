@@ -902,21 +902,27 @@ TUNING.MOUNTAIN_ALUMINUM_DAGGER = {
 	HIT_DIST = 0.75,
 }
 
--- mountain_copper_axe / mountain_copper_pickaxe（耐久越低效率越高）
+-- mountain_copper_axe（耐久越低：砍树效率越高、伤害越高、外观分三阶段）
 TUNING.MOUNTAIN_COPPER_AXE = {
 	USES = 300,
+	-- 按耐久百分比从高到低匹配（pct >= 阈值用该阶段）
+	-- 伤害：阶段1对齐普通斧；2/3 对齐铜棒阶段1/2，仍低于铜棒满锈
+	PHASES = {
+		{ PCT = 0.66, EFFICIENCY = 1, DAMAGE = TUNING.AXE_DAMAGE, STAGE = 1 },
+		{ PCT = 0.33, EFFICIENCY = 2, DAMAGE = 38, STAGE = 2 },
+		{ PCT = 0,    EFFICIENCY = 3, DAMAGE = 51, STAGE = 3 },
+	},
 }
 
+-- mountain_copper_pickaxe（耐久越低：挖矿效率越高、伤害越高、外观分三阶段）
 TUNING.MOUNTAIN_COPPER_PICKAXE = {
 	USES = 99,
-}
-
-TUNING.MOUNTAIN_COPPER_TOOL = {
-	-- 按耐久百分比从高到低匹配（pct >= 阈值用该效率）
-	EFFICIENCY_PHASES = {
-		{ PCT = 0.66, EFFICIENCY = 1 },
-		{ PCT = 0.33, EFFICIENCY = 2 },
-		{ PCT = 0,    EFFICIENCY = 3 },
+	-- 按耐久百分比从高到低匹配（pct >= 阈值用该阶段）
+	-- 伤害：阶段1对齐普通镐；2/3 对齐铜棒阶段1/2，仍低于铜棒满锈
+	PHASES = {
+		{ PCT = 0.66, EFFICIENCY = 1, DAMAGE = TUNING.PICK_DAMAGE, STAGE = 1 },
+		{ PCT = 0.33, EFFICIENCY = 2, DAMAGE = 38, STAGE = 2 },
+		{ PCT = 0,    EFFICIENCY = 3, DAMAGE = 51, STAGE = 3 },
 	},
 }
 

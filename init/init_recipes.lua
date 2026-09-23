@@ -614,10 +614,10 @@ AddRecipe2("mountain_snowball_ice",
 )
 
 -- Tool recipies
-AddRecipe2("mountain_copper_pickaxe", { Ingredient("twigs", 2), Ingredient("ms_copper_detail", 1) }, TECH.SCIENCE_TWO, nil, {"TOOLS"})
+AddRecipe2("mountain_copper_pickaxe", { Ingredient("twigs", 2), Ingredient("ms_copper_detail", 1) }, TECH.SCIENCE_TWO, { image = "mountain_copper_pickaxe_1.tex" }, {"TOOLS"})
 AddRecipe2("mountain_aluminum_pickaxe", { Ingredient("twigs", 2), Ingredient("ms_alu_detail", 1) }, TECH.SCIENCE_TWO, nil, {"TOOLS"})
 AddRecipe2("mountain_super_gildedpickaxe", { Ingredient("goldenpickaxe", 1), Ingredient("ms_gold_detail", 1) }, TECH.SCIENCE_TWO, nil, {"TOOLS"})
-AddRecipe2("mountain_copper_axe", { Ingredient("twigs", 2), Ingredient("ms_copper_detail", 1) }, TECH.SCIENCE_TWO, nil, {"TOOLS"})
+AddRecipe2("mountain_copper_axe", { Ingredient("twigs", 2), Ingredient("ms_copper_detail", 1) }, TECH.SCIENCE_TWO, { image = "mountain_copper_axe_1.tex" }, {"TOOLS"})
 AddRecipe2("mountain_aluminum_axe", { Ingredient("twigs", 2), Ingredient("ms_alu_detail", 1) }, TECH.SCIENCE_TWO, nil, {"TOOLS"})
 AddRecipe2("mountain_super_gildedaxe", { Ingredient("goldenaxe", 1), Ingredient("ms_gold_detail", 1) }, TECH.SCIENCE_TWO, nil, {"TOOLS"})
 AddRecipe2("mountain_super_gildedshovel", { Ingredient("goldenshovel", 1), Ingredient("ms_gold_detail", 1) }, TECH.SCIENCE_TWO, nil, {"TOOLS"})

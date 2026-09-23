@@ -1,11 +1,74 @@
 local assets =
 {
 	Asset("ANIM", "anim/mountain_copper_pickaxe.zip"),
-	Asset("ANIM", "anim/swap_copper_pickaxe.zip"),
 }
 
+------------------------------------------------------------------------------------------------------------------------
+
+local function GetPhase(percent)
+	for _, phase in ipairs(TUNING.MOUNTAIN_COPPER_PICKAXE.PHASES) do
+		if percent >= phase.PCT then
+			return phase
+		end
+	end
+	return TUNING.MOUNTAIN_COPPER_PICKAXE.PHASES[#TUNING.MOUNTAIN_COPPER_PICKAXE.PHASES]
+end
+
+local function ApplySwapToOwner(inst, owner, stage)
+	if owner ~= nil and owner:IsValid() and owner.AnimState ~= nil then
+		owner.AnimState:OverrideSymbol("swap_object", "mountain_copper_pickaxe", "swap_pickaxe_"..stage)
+	end
+end
+
+local function ApplyPhaseVisuals(inst, stage)
+	local idle = "idle_"..stage
+	local swap = "swap_pickaxe_"..stage
+	local image = "mountain_copper_pickaxe_"..stage
+
+	if not inst.AnimState:IsCurrentAnimation(idle) then
+		inst.AnimState:PlayAnimation(idle)
+	end
+
+	if inst.components.inventoryitem ~= nil then
+		inst.components.inventoryitem:ChangeImageName(image)
+	end
+
+	if inst.components.floater ~= nil then
+		inst.components.floater:SetBankSwapOnFloat(true, -11, {
+			sym_build = "mountain_copper_pickaxe",
+			sym_name = swap,
+			anim = idle,
+		})
+		if inst.components.floater:IsFloating() then
+			inst.components.floater:SwitchToFloatAnim()
+		end
+	end
+
+	local owner = inst.components.equippable ~= nil and inst.components.equippable:IsEquipped()
+		and inst.components.inventoryitem ~= nil
+		and inst.components.inventoryitem.owner
+		or nil
+	ApplySwapToOwner(inst, owner, stage)
+end
+
+local function UpdatePhase(inst)
+	local percent = inst.components.finiteuses ~= nil and inst.components.finiteuses:GetPercent() or 1
+	local phase = GetPhase(percent)
+
+	inst.components.tool:SetAction(ACTIONS.MINE, phase.EFFICIENCY)
+	inst.components.weapon:SetDamage(phase.DAMAGE)
+
+	if inst._pickaxe_stage ~= phase.STAGE then
+		inst._pickaxe_stage = phase.STAGE
+		ApplyPhaseVisuals(inst, phase.STAGE)
+	end
+end
+
+------------------------------------------------------------------------------------------------------------------------
+
 local function onequip(inst, owner)
-	owner.AnimState:OverrideSymbol("swap_object", "swap_copper_pickaxe", "swap_pickaxe")
+	local stage = inst._pickaxe_stage or 1
+	ApplySwapToOwner(inst, owner, stage)
 	owner.AnimState:Show("ARM_carry")
 	owner.AnimState:Hide("ARM_normal")
 end
@@ -15,19 +78,20 @@ local function onunequip(inst, owner)
 	owner.AnimState:Show("ARM_normal")
 end
 
-local function GetWorkEfficiency(percent)
-	for _, phase in ipairs(TUNING.MOUNTAIN_COPPER_TOOL.EFFICIENCY_PHASES) do
-		if percent >= phase.PCT then
-			return phase.EFFICIENCY
-		end
+local function on_uses_finished(inst)
+	local owner = inst.components.inventoryitem ~= nil and inst.components.inventoryitem:GetGrandOwner() or nil
+	if owner ~= nil then
+		owner:PushEvent("toolbroke", { tool = inst })
 	end
-	return TUNING.MOUNTAIN_COPPER_TOOL.EFFICIENCY_PHASES[#TUNING.MOUNTAIN_COPPER_TOOL.EFFICIENCY_PHASES].EFFICIENCY
+	inst:Remove()
 end
 
-local function UpdateWorkEfficiency(inst)
-	local percent = inst.components.finiteuses ~= nil and inst.components.finiteuses:GetPercent() or 1
-	inst.components.tool:SetAction(ACTIONS.MINE, GetWorkEfficiency(percent))
+local function OnLoad(inst)
+	inst._pickaxe_stage = nil
+	UpdatePhase(inst)
 end
+
+------------------------------------------------------------------------------------------------------------------------
 
 local function fn()
 	local inst = CreateEntity()
@@ -41,13 +105,17 @@ local function fn()
 
 	inst.AnimState:SetBank("mountain_copper_pickaxe")
 	inst.AnimState:SetBuild("mountain_copper_pickaxe")
-	inst.AnimState:PlayAnimation("idle")
+	inst.AnimState:PlayAnimation("idle_1")
 
 	inst:AddTag("sharp")
 	inst:AddTag("tool")
 	inst:AddTag("weapon")
 
-	local floater_swap_data = { sym_build = "swap_copper_pickaxe", sym_name = "swap_pickaxe" }
+	local floater_swap_data = {
+		sym_build = "mountain_copper_pickaxe",
+		sym_name = "swap_pickaxe_1",
+		anim = "idle_1",
+	}
 	MakeInventoryFloatable(inst, "med", 0.05, { 0.75, 0.4, 0.75 }, true, -11, floater_swap_data)
 
 	inst.entity:SetPristine()
@@ -56,31 +124,35 @@ local function fn()
 		return inst
 	end
 
+	local uses = TUNING.MOUNTAIN_COPPER_PICKAXE.USES
+	local phase1 = GetPhase(1)
+
 	inst:AddComponent("inspectable")
 	inst:AddComponent("inventoryitem")
 	inst.components.inventoryitem.atlasname = MS_ITEMS_ATLAS
-	inst.components.inventoryitem.imagename = "mountain_copper_pickaxe"
+	inst.components.inventoryitem.imagename = "mountain_copper_pickaxe_1"
 
 	inst:AddComponent("equippable")
 	inst.components.equippable:SetOnEquip(onequip)
 	inst.components.equippable:SetOnUnequip(onunequip)
 
 	inst:AddComponent("weapon")
-	inst.components.weapon:SetDamage(TUNING.PICK_DAMAGE)
+	inst.components.weapon:SetDamage(phase1.DAMAGE)
 
 	inst:AddComponent("tool")
 	inst.components.tool:SetAction(ACTIONS.MINE, 1)
 
-	local uses = TUNING.MOUNTAIN_COPPER_PICKAXE.USES
-
 	inst:AddComponent("finiteuses")
 	inst.components.finiteuses:SetMaxUses(uses)
 	inst.components.finiteuses:SetUses(uses)
-	inst.components.finiteuses:SetOnFinished(inst.Remove)
+	inst.components.finiteuses:SetOnFinished(on_uses_finished)
 	inst.components.finiteuses:SetConsumption(ACTIONS.MINE, 1)
 
-	inst:ListenForEvent("percentusedchange", UpdateWorkEfficiency)
-	UpdateWorkEfficiency(inst)
+	inst._pickaxe_stage = 1
+	inst:ListenForEvent("percentusedchange", UpdatePhase)
+	UpdatePhase(inst)
+
+	inst.OnLoad = OnLoad
 
 	MakeHauntableLaunch(inst)
 
