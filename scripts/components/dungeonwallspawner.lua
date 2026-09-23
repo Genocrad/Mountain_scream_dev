@@ -477,12 +477,12 @@ function DungeonWallSpawner:SpawnWallsAroundPoint(level, wall, size, normal_tile
     -- No walls spawned on this level. Create some for visuals.
    
     if last_d + last_u + last_r + last_l == 0 then
-       print("EXTREME SPAWN 0 ",  level, last_entrance_x, last_entrance_y, last_exit_x, last_exit_y, last_r, last_l, last_d, last_u)
+      
       self.entrances[level] = SpawnPrefab("ms_climbing")
       self.entrances[level].Transform:SetPosition(last_entrance_x, 0, last_entrance_y+1.1)
       spawn_5x5_area(self, level, last_entrance_x, last_entrance_y-4, wall, normal_tile, technical_tile)
     else
-       print("EXTREME SPAWN", "level", level, "ex", last_entrance_x, "ey", last_entrance_y, "ox", last_exit_x, "oy", last_exit_y, "r", last_r, "l" ,last_l, "d", last_d, "u", last_u)
+      
       self.entrances[level] = SpawnPrefab("ms_climbing")
       self.entrances[level].Transform:SetPosition(last_entrance_x, 0, last_entrance_y)
       self.entrances[level].Transform:SetRotation((last_r == 1 or last_l == 1) and 90 or 0)
@@ -631,7 +631,7 @@ function DungeonWallSpawner:SpawnCaveLayout(start_x, start_y, amount, level, loo
   self.cave_doors[level].components.teleporter.teleport_offset = {x = 0, y = 0, z=2}
 
   for k,v in pairs(cords) do
-    print(v[1], v[2])
+
     local center_x, center_y = TheWorld.Map:GetTileXYAtPoint(v[1], 0, v[2])
 
     for i = -3, 3 do 
@@ -689,6 +689,7 @@ function DungeonWallSpawner:SanityCheck(entrance, exit)
   if not entrance or not exit then
     return
   end
+
   local x,y,z = entrance.Transform:GetWorldPosition()
   local x1,y1,z1 = exit.Transform:GetWorldPosition()
   local sanity_x, sanity_y = {}, {}
@@ -705,6 +706,7 @@ function DungeonWallSpawner:SanityCheck(entrance, exit)
       end
     end
   end
+
   for j = z, z1, math.abs(z1-z)/(z1-z) * 4 do 
     sanity_y[j] = 0
     local deltax = math.abs(x1-x)/(x1-x) * 4
@@ -715,23 +717,31 @@ function DungeonWallSpawner:SanityCheck(entrance, exit)
       end
     end
   end
+
   for k, v in pairs(sanity_x) do
     if v == 0 then insane_gen = true end
   end
   for k, v in pairs(sanity_y) do
     if v == 0 then insane_gen = true end
   end
+
   if insane_gen then
     local deltax, deltay = (x - x1)/math.max(math.abs(x-x1), math.abs(z-z1)), (z - z1)/math.max(math.abs(x-x1), math.abs(z-z1))
     for i = 0, math.max(math.abs(x-x1), math.abs(z-z1)) do
+
       local tile = TheWorld.Map:GetTileAtPoint(x - deltax * i, 0, z - deltay * i)
+
       if tile == 1 or tile == WORLD_TILES.CLOUDS_WHITE or tile == WORLD_TILES.CLOUDS_DARK then
         local tile_x, tile_y = TheWorld.Map:GetTileXYAtPoint(x - deltax * i, 0, z - deltay * i)
+
         for i = -7, 7 do
           for j = -7, 7 do
+            
+
             TheWorld.net.components.dungeonmapoverwatch.cloud_tiles_planned_cords[tile_x+i][tile_y+j] = true
           end
         end
+
         TheWorld.Map:SetTile(tile_x, tile_y, WORLD_TILES.MS_BRIDGE)
       end
     end
@@ -740,21 +750,27 @@ end
 
 function DungeonWallSpawner:SpawnClouds()
   local dungeonow  = TheWorld.net.components.dungeonmapoverwatch
+
   for level = 2, TUNING.MS_CAVES_START do
     local centerx, centery = dungeonow._map_points_level_x:value()[level], dungeonow._map_points_level_y:value()[level]
     local xp, xn, yp, yn = dungeonow.level_limits_xp[level], dungeonow.level_limits_xn[level], dungeonow.level_limits_yp[level], dungeonow.level_limits_yn[level]
     for i = -(xn+10), (xp+10) do
       for j = -(yn+10), (yp+10) do
+
         local tile = TheWorld.Map:GetTile(centerx + i, centery + j) 
-        
-        if dungeonow.cloud_tiles_planned_cords[centerx + i][centery + j] == true then
-          if (not TileGroupManager:IsLandTile(tile)) and not (tile == WORLD_TILES.CLOUDS_DARK) and not (tile == WORLD_TILES.VOID_TECHNICAL) then
-            TheWorld.Map:SetTile(centerx + i, centery + j, WORLD_TILES.CLOUDS_WHITE)
+
+        if centerx + i >= 0 and centery + j >= 0 then 
+          if dungeonow.cloud_tiles_planned_cords[centerx + i][centery + j] == true then
+            
+            if (not TileGroupManager:IsLandTile(tile)) and not (tile == WORLD_TILES.CLOUDS_DARK) and not (tile == WORLD_TILES.VOID_TECHNICAL) then
+              TheWorld.Map:SetTile(centerx + i, centery + j, WORLD_TILES.CLOUDS_WHITE)
+            end
           end
         end
       end
     end
   end
+
 end
 
 return DungeonWallSpawner
