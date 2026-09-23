@@ -9,6 +9,12 @@ local assets =
 	Asset("ANIM", "anim/mountain_golem_speed.zip"),
 }
 
+-- TEST: 防御受击火花（效果不好可整段删除）
+local defend_hit_fx_assets =
+{
+	Asset("ANIM", "anim/ms_golem_sparks_fx.zip"),
+}
+
 local prefabs =
 {
 	"vault_pillar_guard_swipe_fx",
@@ -16,6 +22,7 @@ local prefabs =
 	"mountain_sandspike_temp_tall",
 	"mountain_sandspike_charged_tall",
 	"mountain_beam_fx",
+	"mountain_golem_defend_hit_fx", -- TEST
 
 	"mountain_sandblock",
 	"mountain_sandblock_charged",
@@ -189,7 +196,34 @@ local function KeepTargetFn(inst, target)
 		and inst:IsNear(target, TUNING.MOUNTAIN_GOLEM.DEAGGRO_DIST)
 end
 
+-- TEST: 有充能沙块防护时受击播放火花
+local function SpawnDefendHitSparks(inst, data)
+	if (inst._numtowers or 0) <= 0 then
+		return
+	end
+
+	local fx = SpawnPrefab("mountain_golem_defend_hit_fx")
+	if fx == nil then
+		return
+	end
+
+	local x, y, z = inst.Transform:GetWorldPosition()
+	local ox, oz = 0, 0
+	if data and data.attacker and data.attacker:IsValid() then
+		local ax, ay, az = data.attacker.Transform:GetWorldPosition()
+		local dx, dz = ax - x, az - z
+		local dist = math.sqrt(dx * dx + dz * dz)
+		if dist > 0 then
+			local r = inst:GetPhysicsRadius(0.5)
+			ox, oz = dx / dist * r, dz / dist * r
+		end
+	end
+	fx.Transform:SetPosition(x + ox, 1.5, z + oz)
+end
+
 local function OnAttacked(inst, data)
+	SpawnDefendHitSparks(inst, data) -- TEST
+
 	if data and data.attacker and data.attacker:IsValid() then
 		local target = inst.components.combat.target
 		if target and (target.isplayer or target:HasTag("epic")) then
@@ -580,4 +614,51 @@ local function fn()
 	return inst
 end
 
-return Prefab("mountain_golem", fn, assets, prefabs)
+-- TEST: 防御受击火花 prefab（效果不好可整段删除）
+local function defend_hit_fx_fn()
+	local inst = CreateEntity()
+
+	inst.entity:AddTransform()
+	inst.entity:AddAnimState()
+	inst.entity:AddLight()
+	inst.entity:AddNetwork()
+
+	inst:AddTag("FX")
+	inst:AddTag("NOCLICK")
+
+	inst.AnimState:SetBank("ms_golem_sparks")
+	inst.AnimState:SetBuild("ms_golem_sparks_fx")
+	inst.AnimState:SetBloomEffectHandle("shaders/anim.ksh")
+	inst.AnimState:SetLightOverride(1)
+	inst.AnimState:PlayAnimation("hit_1")
+
+	inst.Light:SetIntensity(0.6)
+	inst.Light:SetRadius(1)
+	inst.Light:SetFalloff(0.7)
+	inst.Light:SetColour(0.1, 0.4, 1.0)
+	inst.Light:Enable(true)
+
+	inst.entity:SetPristine()
+
+	if not TheWorld.ismastersim then
+		return inst
+	end
+
+	inst:DoTaskInTime(4 * FRAMES, function(inst)
+		if inst:IsValid() then
+			inst.Light:SetRadius(0.5)
+		end
+	end)
+	inst:DoTaskInTime(5 * FRAMES, function(inst)
+		if inst:IsValid() then
+			inst.Light:Enable(false)
+		end
+	end)
+	inst:ListenForEvent("animover", inst.Remove)
+	inst.persists = false
+
+	return inst
+end
+
+return Prefab("mountain_golem", fn, assets, prefabs),
+	Prefab("mountain_golem_defend_hit_fx", defend_hit_fx_fn, defend_hit_fx_assets) -- TEST
