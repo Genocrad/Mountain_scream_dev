@@ -153,7 +153,7 @@ local function UpdateMapBoundsMask(self, level, use_base_cave_bounds)
     center_u, center_v = MapPositionToUV(self, center_x, center_z)
   end
   LogMapBoundsMask(self, target, "values", string.format(
-    "%s world_bounds=[x %.2f..%.2f, z %.2f..%.2f] corners_uv=[(%.4f,%.4f) (%.4f,%.4f) (%.4f,%.4f) (%.4f,%.4f)] mask_center=(%.4f, %.4f) half_x=(%.4f, %.4f) half_z=(%.4f, %.4f) map_center_world=(%s,%s) map_center_uv=(%s,%s) zoom=%.3f",
+    "%s bounds=[x %.1f..%.1f,z %.1f..%.1f] mask=[c %.4f,%.4f hx %.4f,%.4f hz %.4f,%.4f] zoom=%.2f",
     target, min_x, max_x, min_z, max_z,
     x0, y0, x1, y1, x2, y2, x3, y3,
     center_u, center_v, half_x_u, half_x_v, half_z_u, half_z_v,
