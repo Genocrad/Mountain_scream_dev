@@ -20,14 +20,19 @@ local function IsMsTechnicalTile(tile)
          tile == 3 -- Luigi: Sir, i have no idea how this tile is possible at the mountain, but whatever?
 end
   
+  
 function Drownable:ShouldFallInVoid()
   local x, y, z = self.inst.Transform:GetWorldPosition()
   if x == 0 and z == 0 then 
-    return false
+      return false
+    end
+  if TheWorld.net.components.dungeonmapoverwatch and TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(x, y, z) then
+    return (not TheWorld.Map:IsVisualGroundAtPoint(x, y, z) and not TileGroupManager:IsLandTile(TheWorld.Map:GetTileAtPoint(x, y, z))) or TheWorld.Map:GetTileAtPoint(x, y, z) == WORLD_TILES.VOID_TECHNICAL
+  else
+    return old_ShouldFallInVoid(self)
   end
-  return (not TheWorld.Map:IsVisualGroundAtPoint(x, y, z) and not TileGroupManager:IsLandTile(TheWorld.Map:GetTileAtPoint(x, y, z))) or TheWorld.Map:GetTileAtPoint(x, y, z) == WORLD_TILES.VOID_TECHNICAL 
-    or old_ShouldFallInVoid(self)
 end
+
 
 function Drownable:Teleport()
   if TheWorld.net.components.dungeonmapoverwatch and TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(self.src_x, self.src_y, self.src_z) then
