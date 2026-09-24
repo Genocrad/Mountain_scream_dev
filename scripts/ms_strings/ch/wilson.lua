@@ -198,3 +198,8 @@ ___________________________ANNOUNCE.MS_TORNADO_MILKSHAKE_ABILITY_READY = {
 ___________________________ANNOUNCE.MS_TORNADO_MILKSHAKE_END = {
 	"折腾完感觉有点晕……",
 }
+___________________________ANNOUNCE.MS_MOUNTAIN_GOLEM_DEFEND_ABSORB = {
+	"那些充能石塔在替它挡伤害！",
+	"那些充能石塔在给它回血！",
+	"这样下去不行，得把那些石塔拆掉！",
+}

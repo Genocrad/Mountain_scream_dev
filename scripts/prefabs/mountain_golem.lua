@@ -221,8 +221,34 @@ local function SpawnDefendHitSparks(inst, data)
 	fx.Transform:SetPosition(x + ox, 1.5, z + oz)
 end
 
+local function TryDefendAbsorbSay(inst, attacker)
+	if (inst._numtowers or 0) <= 0
+		or attacker == nil
+		or not attacker:IsValid()
+		or not attacker.isplayer
+		or attacker.components.talker == nil
+	then
+		return
+	end
+
+	local now = GetTime()
+	if (inst._defend_say_ready_at or 0) > now then
+		return
+	end
+	if math.random() >= TUNING.MOUNTAIN_GOLEM.DEFEND_SAY_CHANCE then
+		return
+	end
+
+	local cd = TUNING.MOUNTAIN_GOLEM.DEFEND_SAY_CD
+	inst._defend_say_ready_at = now + GetRandomMinMax(cd.MIN, cd.MAX)
+	attacker.components.talker:Say(GetString(attacker, "MS_MOUNTAIN_GOLEM_DEFEND_ABSORB"))
+end
+
 local function OnAttacked(inst, data)
 	SpawnDefendHitSparks(inst, data) -- TEST
+	if data ~= nil then
+		TryDefendAbsorbSay(inst, data.attacker)
+	end
 
 	if data and data.attacker and data.attacker:IsValid() then
 		local target = inst.components.combat.target
@@ -421,10 +447,10 @@ local function SpawnProtectionRing(inst)
 end
 
 local function OnLoadPostPass(inst)
-	if inst._ring == nil then
+	if (inst._numtowers or 0) > 0 then
 		SpawnProtectionRing(inst)
 	else
-		UpdateProtectionRingLevel(inst)
+		RemoveProtectionRing(inst)
 	end
 end
 
@@ -440,14 +466,16 @@ local function UpdateTowerBonuses(inst)
 				end
 			end)
 		end
+		SpawnProtectionRing(inst)
+		UpdateProtectionRingLevel(inst)
 	else
 		inst.components.health:SetAbsorptionAmount(inst._tower_base_absorb)
 		if inst._towerhealtask ~= nil then
 			inst._towerhealtask:Cancel()
 			inst._towerhealtask = nil
 		end
+		RemoveProtectionRing(inst)
 	end
-	UpdateProtectionRingLevel(inst)
 end
 
 local function OnUnlinkMountainTower(inst, tower)

@@ -1112,6 +1112,8 @@ TUNING.MOUNTAIN_GOLEM = {
 	RING_ANIM_SPEED = 0.7,       -- 防护光圈 idle 动画速度（SetDeltaTimeMultiplier）
 	TOWER_HEAL = 20,             -- 每个充能沙块每次治疗量（可叠加）
 	TOWER_HEAL_PERIOD = 2,       -- 充能沙块治疗间隔（秒）
+	DEFEND_SAY_CHANCE = 0.3,     -- 有充能防护时受击触发玩家台词概率
+	DEFEND_SAY_CD = { MIN = 8, MAX = 12 }, -- 玩家台词冷却（秒，随机）
 	SANDBLOCK_MINE_WORK = {      -- 沙块镐击次数（tall / med / short）
 		TALL = 3,
 		MED = 2,

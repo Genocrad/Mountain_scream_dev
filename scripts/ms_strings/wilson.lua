@@ -198,3 +198,8 @@ ___________________________ANNOUNCE.MS_TORNADO_MILKSHAKE_ABILITY_READY = {
 ___________________________ANNOUNCE.MS_TORNADO_MILKSHAKE_END = {
 	"I feel a little dizzy after all that...",
 }
+___________________________ANNOUNCE.MS_MOUNTAIN_GOLEM_DEFEND_ABSORB = {
+	"Those charged sandblocks are absorbing the damage for it!",
+	"Those charged sandblocks are healing it!",
+	"This can't go on; we need to destroy those blocks!",
+}

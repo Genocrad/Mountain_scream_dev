@@ -1058,9 +1058,6 @@ local states =
 			if inst.sg.mem.nofaced then
 				inst.sg:SetTimeout(1)
 			end
-			if inst._ring == nil and inst.SpawnProtectionRing ~= nil then
-				inst:SpawnProtectionRing()
-			end
 		end,
 
 		ontimeout = SwitchToFourFaced,
@@ -1405,9 +1402,6 @@ local states =
 			inst.DynamicShadow:Enable(true)
 			inst.Physics:SetMass(1000)
 			inst.Physics:SetCapsule(inst.physicsradiusoverride, 1)
-			if inst.sg.statemem.not_interrupted and inst.SpawnProtectionRing ~= nil then
-				inst:SpawnProtectionRing()
-			end
 		end,
 	},
 
