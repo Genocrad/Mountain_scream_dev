@@ -1,0 +1,199 @@
+// ============================================================================
+//   .\ShaderCompiler.exe -little "mountain_vertical_shader" "mountain_vertical_shader.vs" "mountain_vertical_shader.ps" "mountain_vertical_shader.ksh" -oglsl
+// ============================================================================
+
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+
+
+
+
+
+
+uniform mat4 MatrixW;
+
+
+#if defined( TRIPLE_ATLAS )
+    uniform sampler2D SAMPLER[6];
+#else
+    uniform sampler2D SAMPLER[5];
+#endif
+
+#ifndef LIGHTING_H
+#define LIGHTING_H
+
+#if !defined( UI_CC )
+// Lighting
+varying vec3 PS_POS;
+varying vec3 PS_FINAL_POS;
+#endif
+
+// xy = min, zw = max
+uniform vec4 LIGHTMAP_WORLD_EXTENTS;
+
+#define LIGHTMAP_TEXTURE SAMPLER[3]
+
+#ifndef LIGHTMAP_TEXTURE
+	#error If you use lighting, you must #define the sampler that the lightmap belongs to
+#endif
+
+#if defined( UI_CC )
+vec3 CalculateLightingContribution(vec2 pos)
+{
+	vec2 uv = ( pos - LIGHTMAP_WORLD_EXTENTS.xy ) * LIGHTMAP_WORLD_EXTENTS.zw;
+	return texture2D( LIGHTMAP_TEXTURE, uv.xy ).rgb;
+}
+#else
+vec3 CalculateLightingContribution()
+{
+	vec2 uv = ( PS_POS.xz - LIGHTMAP_WORLD_EXTENTS.xy ) * LIGHTMAP_WORLD_EXTENTS.zw;
+	return texture2D( LIGHTMAP_TEXTURE, uv.xy ).rgb;
+}
+
+vec3 CalculateLightingContribution( vec3 normal )
+{
+	return vec3( 1, 1, 1 );
+}
+#endif
+
+#endif //LIGHTING.h
+
+
+varying vec3 PS_TEXCOORD;
+
+uniform vec4 TIMEPARAMS;
+
+uniform mat4 COLOUR_XFORM;
+uniform vec3 PARAMS;
+uniform vec3 FLOAT_PARAMS;
+uniform vec4 HAUNTPARAMS;
+uniform vec4 HAUNTPARAMS2;
+uniform vec4 OCEAN_BLEND_PARAMS;
+uniform vec3 CAMERARIGHT;
+
+#define ALPHA_TEST PARAMS.x
+#define LIGHT_OVERRIDE PARAMS.y
+#define BLOOM_TOGGLE PARAMS.z
+
+#if defined( FADE_OUT ) || defined( HAUNT )
+    varying vec2 FADE_UV;
+#endif
+
+
+#if defined( FADE_OUT )
+	uniform vec4 EROSION_PARAMS; 
+
+	#if defined( HOLO )
+		#define HOLO_SAMPLER			SAMPLER[2]
+		#define HOLO_ERODE_INTENSITY	EROSION_PARAMS.x
+		#define HOLO_Y_CUTOFF			EROSION_PARAMS.y
+		#define NEGATIVE_HOLO_LERP		EROSION_PARAMS.z
+	#else
+    	#define ERODE_SAMPLER			SAMPLER[2]
+		#define EROSION_MIN				EROSION_PARAMS.x
+		#define EROSION_RANGE			EROSION_PARAMS.y
+		#define EROSION_LERP			EROSION_PARAMS.z
+	#endif
+#endif
+
+uniform vec4 OCEAN_WORLD_EXTENTS;
+#define OCEAN_SAMPLER SAMPLER[4]
+
+#if defined( HOLO )
+	float filmSkipRand() // This should match the function with the same name in anim.vs
+	{
+		float steps = 12.;
+		float c = fract(sin(ceil(TIMEPARAMS.x * steps) / steps) * 10000.);
+		return (c * -.36) * step(.78, c);
+	}
+#endif
+
+void main()
+{
+    vec4 colour;
+
+#if defined( TRIPLE_ATLAS )
+    if( PS_TEXCOORD.z < 0.5 )
+    {
+        colour.rgba = texture2D( SAMPLER[0], PS_TEXCOORD.xy );
+    }
+    else if( PS_TEXCOORD.z < 1.5 )
+    {
+        colour.rgba = texture2D( SAMPLER[1], PS_TEXCOORD.xy );
+    }
+    else
+    {
+        colour.rgba = texture2D( SAMPLER[5], PS_TEXCOORD.xy );
+    }
+#else
+    if( PS_TEXCOORD.z < 0.5 )
+    {
+        colour.rgba = texture2D( SAMPLER[0], PS_TEXCOORD.xy );
+    }
+    else
+    {
+        colour.rgba = texture2D( SAMPLER[1], PS_TEXCOORD.xy );
+    }
+#endif
+
+	if (colour.a < 1.0)
+	{
+		discard;
+	}
+
+	if (BLOOM_TOGGLE == 1.0)
+	{
+		gl_FragColor.rgba = vec4(0, 0, 0, colour.a);
+		return;
+	}
+
+    if(FLOAT_PARAMS.y > 0.0)
+    {
+    	if(PS_POS.y < FLOAT_PARAMS.x)
+    	{
+    		discard;
+    	}
+    }
+
+#if defined ( FADE_OUT )
+	if (colour.a >= ALPHA_TEST)
+#else
+	if (ALPHA_TEST > 0.0)
+	{
+		if (colour.a >= ALPHA_TEST)
+		{
+			gl_FragColor = colour.rgba;	
+		}
+		else
+		{
+			discard;
+		}
+	}
+    else
+#endif
+	if (colour.a >= 0.1) 
+    {
+		gl_FragColor.rgba = colour.rgba;
+		gl_FragColor.rgb = min(gl_FragColor.rgb, gl_FragColor.a);
+
+
+		
+		vec2 world_uv = ( PS_POS.xz - OCEAN_WORLD_EXTENTS.xy ) * OCEAN_WORLD_EXTENTS.zw;
+		vec3 world_tint = texture2D( OCEAN_SAMPLER, world_uv ).rgb;
+		gl_FragColor.rgb = mix(gl_FragColor.rgb, gl_FragColor.rgb * world_tint.rgb, OCEAN_BLEND_PARAMS.x);
+
+        vec3 light = CalculateLightingContribution();
+		float opac = 1.0;
+        if (sqrt(pow(PS_FINAL_POS.x, 2.0) + pow(PS_FINAL_POS.y, 2.0)) < 10.0) {
+            opac = clamp(1.0 - clamp(((PS_POS.y-PS_FINAL_POS.y+5.0)/10.0), 0.0, 0.6) + sqrt(pow(PS_FINAL_POS.x, 2.0) + pow(PS_FINAL_POS.y, 2.0))/20.0, 0.1, 1.0);
+        }
+        gl_FragColor.rgb *= light.rgb;
+		gl_FragColor.rgba *= vec4(opac, opac, opac, opac);
+	}
+	else
+		{
+			discard;
+		}
+}

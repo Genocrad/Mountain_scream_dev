@@ -16,7 +16,7 @@ local assets = {
       inst:AddTag("NOCLICK")
       inst:AddTag("ms_wall")
       
-      inst.Transform:SetScale(1.01,4,1.01)
+      inst.Transform:SetScale(1.00,4,1.00)
       inst.AnimState:SetBuild("ms_mountain_wall")
       inst.AnimState:SetBank("ms_mountain_wall")
       inst.AnimState:SetSymbolAddColour("filler", 1,1, 1, 1)
