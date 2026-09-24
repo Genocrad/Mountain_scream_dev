@@ -127,6 +127,20 @@ TUNING.MS_LEVEL_CONTENTS = {
 		herds = {
 			{ prefab = "mountain_goat", size = 6, count = 1 },
 		},
+		-- Dense flower patches (scatter flowers above still apply).
+		communities = {
+			{
+				min_count = 3,
+				max_count = 5,
+				radius = 5,
+				fill = "disk",
+				clear_radius = 1,
+				member_clear_radius = 0.4, -- flowers are small; pack tighter than default 1.75
+				members = {
+					{ prefab = "mountain_plants_flower", min = 10, max = 12 },
+				},
+			},
+		},
 	},
 	[2] = {
 		distributepercent = 0.12,
@@ -153,6 +167,19 @@ TUNING.MS_LEVEL_CONTENTS = {
 		},
 		herds = {
 			{ prefab = "mountain_goat", size = 6, count = 1 },
+		},
+		communities = {
+			{
+				min_count = 3,
+				max_count = 5,
+				radius = 5,
+				fill = "disk",
+				clear_radius = 1,
+				member_clear_radius = 0.4,
+				members = {
+					{ prefab = "mountain_plants_flower", min = 10, max = 12 },
+				},
+			},
 		},
 	},
 	[3] = {

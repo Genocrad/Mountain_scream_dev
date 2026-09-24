@@ -70,6 +70,28 @@ local function FindMemberPosition(cx, cz, radius, index, count)
 	return cx, cz
 end
 
+-- Uniform fill over the disk [0, radius] (area-weighted via sqrt).
+local function FindMemberPositionInDisk(cx, cz, radius)
+	local map = TheWorld.Map
+	for _ = 1, 8 do
+		local a = math.random() * TWOPI
+		local r = radius * math.sqrt(math.random())
+		local x = cx + math.cos(a) * r
+		local z = cz + math.sin(a) * r
+		if IsSpawnableMountainTile(map:GetTileAtPoint(x, 0, z)) and map:IsPassableAtPoint(x, 0, z) then
+			return x, z
+		end
+	end
+	return cx, cz
+end
+
+local function PickMemberPosition(cx, cz, radius, index, count, fill)
+	if fill == "disk" then
+		return FindMemberPositionInDisk(cx, cz, radius)
+	end
+	return FindMemberPosition(cx, cz, radius, index, count)
+end
+
 local function SpawnHerdAt(cx, cz, def)
 	local member_prefab = def.prefab or "mountain_goat"
 	local size = def.size or (TUNING.MOUNTAIN_GOATHERD and TUNING.MOUNTAIN_GOATHERD.MAX_SIZE) or 8
@@ -134,6 +156,7 @@ local function SpawnCommunityAt(cx, cz, def)
 	local member_clear = def.member_clear_radius
 		or (community_tuning and community_tuning.MEMBER_CLEAR_RADIUS)
 		or 1.75
+	local fill = def.fill -- nil/"ring" (default) or "disk"
   
   if preplacefn then
     preplacefn(cx, cz)
@@ -150,14 +173,14 @@ local function SpawnCommunityAt(cx, cz, def)
 		local x, z
 		local placed = false
 		for _ = 1, 8 do
-			x, z = FindMemberPosition(cx, cz, radius, i, count)
+			x, z = PickMemberPosition(cx, cz, radius, i, count, fill)
 			if IsValidSpawnPoint(x, z, member_clear) then
 				placed = true
 				break
 			end
 		end
 		if not placed then
-			x, z = FindMemberPosition(cx, cz, radius, i, count)
+			x, z = PickMemberPosition(cx, cz, radius, i, count, fill)
 			if not (IsSpawnableMountainTile(TheWorld.Map:GetTileAtPoint(x, 0, z))
 					and TheWorld.Map:IsPassableAtPoint(x, 0, z)) then
 				x, z = cx, cz
@@ -319,7 +342,12 @@ function DungeonContentSpawner:SpawnLevelCommunities(level)
 	local spawned = 0
 
 	for _, def in ipairs(contents.communities) do
-		local count = def.count or 1
+		local count = def.count
+		if count == nil and def.min_count ~= nil then
+			count = math.random(def.min_count, def.max_count or def.min_count)
+		else
+			count = count or 1
+		end
 		local center_clear = def.clear_radius or clear_radius
 		for _ = 1, count do
 			local placed = false
