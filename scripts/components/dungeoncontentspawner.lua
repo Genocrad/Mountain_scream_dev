@@ -426,12 +426,12 @@ end
 
 function DungeonContentSpawner:SpawnOnWallEntities(level)
   local contents = TUNING.MS_LEVEL_WALL_CONTENTS[level]
-  local chance = contents.distributepercent
   local map = TheWorld.Map
   local points = TheWorld.net ~= nil and TheWorld.net.components.dungeonmapoverwatch and TheWorld.net.components.dungeonmapoverwatch:GetOnWallSpawnPoints(level)
   if not points or not contents then
     return 0
   end
+  local chance = contents.distributepercent
   local spawned = 0
   for _, point in ipairs(points) do
     local x, y, z, angle = point.x, point.y, point.z, point.angle

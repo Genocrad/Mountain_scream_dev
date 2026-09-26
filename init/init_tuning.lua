@@ -143,6 +143,48 @@ TUNING.MS_LEVEL_CONTENTS = {
 		},
 	},
 	[2] = {
+		distributepercent = 0.14,
+		distributeprefabs = {
+			any = {
+				mountain_green_stone = 1.5,
+				mountain_plants_grass = 0.25,
+				mountain_plants_branches = 0.08,
+			},
+			ms_mountain_low = {
+				rock1 = 0.5,
+				rocks = 0.1,
+				ms_copper_rock = 0.04,
+				ms_coal_rock = 0.04,
+				ms_giant_boulder_grass = 0.01,
+			},
+			ms_mountain_low_2 = {
+				mountain_plants_bush = 0.55,
+				mountain_plants_tree = 0.1,
+				mountain_plants_flower = 0.8,
+				mountain_bush = 0.1,
+				mountain_plants_pomegranate = 0.2,
+			},
+			
+			},
+		herds = {
+			{ prefab = "mountain_goat", size = 6, count = 1 },
+		},
+		-- Dense flower patches (scatter flowers above still apply).
+		communities = {
+			{
+				min_count = 3,
+				max_count = 5,
+				radius = 5,
+				fill = "disk",
+				clear_radius = 1,
+				member_clear_radius = 0.4, -- flowers are small; pack tighter than default 1.75
+				members = {
+					{ prefab = "mountain_plants_flower", min = 10, max = 12 },
+				},
+			},
+		},
+	},
+	[3] = {
 		distributepercent = 0.12,
 		distributeprefabs = {
 			any = {
@@ -182,7 +224,7 @@ TUNING.MS_LEVEL_CONTENTS = {
 			},
 		},
 	},
-	[3] = {
+	[4] = {
 		distributepercent = 0.12,
 		distributeprefabs = {
 			any = {
@@ -221,7 +263,7 @@ TUNING.MS_LEVEL_CONTENTS = {
 			},
 		},
 	},
-	[4] = {
+	[5] = {
 		distributepercent = 0.12,
 		distributeprefabs = {
 			any = { 
@@ -256,7 +298,7 @@ TUNING.MS_LEVEL_CONTENTS = {
 			},
 		},
 	},
-	[5] = {
+	[6] = {
 		distributepercent = 0.1,
 		distributeprefabs = {
 			any = {
@@ -307,7 +349,7 @@ TUNING.MS_LEVEL_CONTENTS = {
 			},
 		},
 	},
-	[6] = {
+	[7] = {
 		distributepercent = 0.1,
 		distributeprefabs = {
 			any = {
@@ -337,7 +379,7 @@ TUNING.MS_LEVEL_CONTENTS = {
 			},
 		},
 	},
-	[7] = {
+	[8] = {
 		distributepercent = 0.1,
 		distributeprefabs = {
 			any = {
@@ -434,6 +476,13 @@ TUNING.MS_LEVEL_WALL_CONTENTS = {
 			ms_wall_stone = 1.0,
 			ms_wall_bush = 0,
 		},  
+  },
+  [8] = {
+    distributepercent = 0.2,
+		distributeprefabs = {
+			ms_wall_stone = 1.0,
+			ms_wall_bush = 0,
+		},
   },
   [9] = {
     distributepercent = 0.2,
