@@ -96,10 +96,26 @@ end
 -- Runtime mountain-floor decoration (pseudo-Room distributeprefabs).
 -- mob_spawn_points stores ~1–5 candidates per tile; POINT_SAMPLE scales
 -- distributepercent down so effective density stays near vanilla rocky (~0.1/tile).
+--
+-- EN: Keys here are DESTINATION geographic levels, not terraformer prefab numbers.
+--     terraformers_mountain_dungeon.lua SetTileOrNoiseOrNoise does `level = level + 1`
+--     because terraformer_level_N sits on floor N but paints / registers spawn points
+--     onto floor N+1 (via MS_TERRAFORMER_OFFSET). So content for the first green
+--     foothills floor is [2], the second green floor is [3], ore starts at [4], etc.
+--     Keep SpawnCaveLayout(..., level) in caves.lua and MS_LEVEL_WALL_CONTENTS
+--     cavedistributeprefabs on the same keys as the `.cave` blocks below.
+-- 中文：这里的层号是「铺地目标层 / 地理层」，不是 terraformer prefab 名里的数字。
+--     terraformers_mountain_dungeon.lua 的 SetTileOrNoiseOrNoise 有 `level = level + 1`：
+--     terraformer_level_N 站在第 N 层，但用偏移把地铺到第 N+1 层并登记刷怪点。
+--     因此第一层绿丘内容是 [2]，第二层绿丘是 [3]，矿石从 [4] 开始，以此类推。
+--     caves.lua 的 SpawnCaveLayout(..., level) 以及 MS_LEVEL_WALL_CONTENTS 的
+--     cavedistributeprefabs 必须与下方 `.cave` 块使用同一套层号，否则洞穴会空或报错。
 TUNING.MS_CONTENT_POINT_SAMPLE = 1 / 3
 TUNING.MS_CONTENT_CLEAR_RADIUS = 2
 TUNING.MS_LEVEL_CONTENTS = {
-	-- Level 1–2: MS_MOUNTAIN_LOW / LOW_2 (green foothills)
+	-- [1] unused by terraform destination floors (entrance / leftover).
+	-- Geographic L2–L3: MS_MOUNTAIN_LOW / LOW_2 (green foothills; after level+1 shift)
+	-- 地理第 2–3 层：绿丘（对应 terraformer_level_1 / _2，因 level+1 登记到此）
 	[1] = {
 		distributepercent = 0.14,
 		distributeprefabs = {
@@ -245,7 +261,8 @@ TUNING.MS_LEVEL_CONTENTS = {
 				cutgrass = 0.08,
 			}
 		},
-		-- Side cave rooms linked to this floor (SpawnCaveLayout level arg).
+		-- Side cave rooms. Key must equal SpawnCaveLayout(..., level) in caves.lua (currently 4).
+		-- 侧洞房间。层号须与 caves.lua 中 SpawnCaveLayout(..., level) 一致（当前为 4）。
 		cave = {
 			distributepercent = 0.22,
 			distributeprefabs = {
@@ -332,6 +349,8 @@ TUNING.MS_LEVEL_CONTENTS = {
 				},
 			},
 		},
+		-- Side cave rooms. Key must equal SpawnCaveLayout(..., level) in caves.lua (currently 6).
+		-- 侧洞房间。层号须与 caves.lua 中 SpawnCaveLayout(..., level) 一致（当前为 6）。
 		cave = {
 			distributepercent = 0.22,
 			distributeprefabs = {
@@ -421,6 +440,11 @@ TUNING.MS_LEVEL_CONTENTS = {
 	},
 }
 
+-- EN: Wall / cave-wall decor keys must match MS_LEVEL_CONTENTS geographic levels
+--     (same level+1 destination indexing). Put cavedistributeprefabs only on floors
+--     that SpawnCaveLayout registers (currently 4 and 6).
+-- 中文：墙饰层号须与 MS_LEVEL_CONTENTS 的地理层一致（同样受 level+1 影响）。
+--     cavedistributeprefabs 只应配在 SpawnCaveLayout 登记的层（当前为 4 与 6）。
 TUNING.MS_LEVEL_WALL_CONTENTS = {
   [1] = {
     distributepercent = 0.15,
@@ -441,34 +465,38 @@ TUNING.MS_LEVEL_WALL_CONTENTS = {
 		distributeprefabs = {
 			ms_wall_stone = 0.4,
 			ms_wall_bush = 0.5,
-		},  
-    cavedistributeprefabs = {
-			ms_wall_stone = 1.0,
-		},  
+		},
   },
   [4] = {
     distributepercent =  0.15,
 		distributeprefabs = {
 			ms_wall_stone = 1.0,
 			ms_wall_bush = 0.5,
-		},  
+		},
+    -- EN: Cave-wall props; level must match SpawnCaveLayout(..., 4) in caves.lua.
+    -- 中文：洞穴墙饰；层号须与 caves.lua 中 SpawnCaveLayout(..., 4) 一致。
+    cavedistributeprefabs = {
+			ms_wall_stone = 1.0,
+		},
   },
   [5] = {
     distributepercent = 0.15,
 		distributeprefabs = {
 			ms_wall_stone = 1.0,
 			ms_wall_bush = 0.5,
-		},  
-    cavedistributeprefabs = {
-			ms_wall_stone = 1.0,
-		},  
+		},
   },
   [6] = {
     distributepercent = 0.2,
 		distributeprefabs = {
 			ms_wall_stone = 1.0,
 			ms_wall_bush = 0,
-		},  
+		},
+    -- EN: Cave-wall props; level must match SpawnCaveLayout(..., 6) in caves.lua.
+    -- 中文：洞穴墙饰；层号须与 caves.lua 中 SpawnCaveLayout(..., 6) 一致。
+    cavedistributeprefabs = {
+			ms_wall_stone = 1.0,
+		},
   },
   [7] = {
     distributepercent = 0.2,
