@@ -58,6 +58,7 @@ PrefabFiles = {
 	"mountain_icegoat",
 	"mountain_cockroach",
 	"mountain_cockroach_nest",
+	"mountain_butterfly",
 	"mountain_stalactite",
 	"mountain_stalagmite",
 	"mountain_bush",

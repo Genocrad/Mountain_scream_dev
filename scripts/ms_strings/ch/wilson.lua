@@ -115,6 +115,7 @@ ___________________________DESCRIBE.MOUNTAIN_FALCON_BASE = "鹰的巢丘。最�
 ___________________________DESCRIBE.MOUNTAIN_WINDHORN = "能召唤风本身的号角。"
 ___________________________DESCRIBE.MOUNTAIN_COCKROACH = "呃。一只石蟑螂。"
 ___________________________DESCRIBE.MOUNTAIN_COCKROACH_NEST = "蟑螂聚集的地方。真美妙。"
+___________________________DESCRIBE.MOUNTAIN_BUTTERFLY = "你是风儿我是沙。"
 ___________________________DESCRIBE.MOUNTAIN_STALACTITE = "石钟乳。撑着……不，挂着。"
 ___________________________DESCRIBE.MOUNTAIN_STALAGMITE = "石笋。从地上往上长。"
 ___________________________DESCRIBE.MOUNTAIN_GOAT = "固执的驼羊"

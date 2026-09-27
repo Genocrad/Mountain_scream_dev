@@ -19,6 +19,10 @@ function d_spawn_tools()
 	c_give("mountain_goapaca_horn")
 end
 
+function d_spawn_butterfly()
+	c_spawn("mountain_butterfly")
+end
+
 function d_spawn_plants()
 	local plants = {
 		"mountain_plants_bush_1",

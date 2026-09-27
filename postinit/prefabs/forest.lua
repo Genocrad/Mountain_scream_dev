@@ -2,6 +2,8 @@
 
 AddPrefabPostInit("forest", function(inst)
   if TheWorld.ismastersim then
+    inst:AddComponent("mountainbutterflyspawner")
+
     inst:DoTaskInTime(5, function(inst)
       if inst.ms_worldmigrator_down == nil then
         local ents = TheSim:FindEntities(0,0,0, 2000, {"CLASSIFIED"})

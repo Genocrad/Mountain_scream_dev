@@ -115,6 +115,7 @@ ___________________________DESCRIBE.MOUNTAIN_FALCON_BASE = "Ястребиное
 ___________________________DESCRIBE.MOUNTAIN_WINDHORN = "Призывает вихри."
 ___________________________DESCRIBE.MOUNTAIN_COCKROACH = "Фу. Каменный таракан."
 ___________________________DESCRIBE.MOUNTAIN_COCKROACH_NEST = "Место сбора тараканов. Восхитительно."
+___________________________DESCRIBE.MOUNTAIN_BUTTERFLY = "Бабочка с высоких гор."
 ___________________________DESCRIBE.MOUNTAIN_STALACTITE = "Держится... ну, висит."
 ___________________________DESCRIBE.MOUNTAIN_STALAGMITE = "Растёт снизу вверх."
 ___________________________DESCRIBE.MOUNTAIN_GOAT = "Упрямая."

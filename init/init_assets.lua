@@ -158,7 +158,8 @@ local MOUNTAIN_ITEMS = {
 	"ms_apple_pie",
 	"ms_caramel_apple",
 	"ms_poisoned_apple",
-  "ms_geode_ore",
+	"ms_geode_ore",
+	"ms_butterfly", -- placeholder inv icon; replace art in mountain_items atlas later
 }
 for _, v in ipairs(MOUNTAIN_ITEMS) do
 	RegisterInventoryItemAtlas(MOUNTAIN_ITEMS_ATLAS, v..".tex")

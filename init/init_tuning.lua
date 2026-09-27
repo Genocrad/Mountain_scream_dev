@@ -1097,6 +1097,11 @@ TUNING.MOUNTAIN_COCKROACH = {
 	SEE_FOOD_DIST = 10,
 }
 
+-- mountain_butterfly（高山蝴蝶）
+TUNING.MOUNTAIN_BUTTERFLY = {
+	MAX = 4, -- nearby cap, same order as TUNING.MAX_BUTTERFLIES
+}
+
 -- mountain_cockroach_nest（蟑螂巢）
 TUNING.MOUNTAIN_COCKROACH_NEST = {
 	WORK_1 = TUNING.ROCKS_MINE,     -- 6：nest1 full → med → short

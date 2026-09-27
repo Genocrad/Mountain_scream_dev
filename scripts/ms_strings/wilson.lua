@@ -115,6 +115,7 @@ ___________________________DESCRIBE.MOUNTAIN_FALCON_BASE = "A hawk's mound. Best
 ___________________________DESCRIBE.MOUNTAIN_WINDHORN = "A horn that summons the wind itself."
 ___________________________DESCRIBE.MOUNTAIN_COCKROACH = "Ugh. A stone cockroach."
 ___________________________DESCRIBE.MOUNTAIN_COCKROACH_NEST = "That's where the cockroaches gather. Delightful."
+___________________________DESCRIBE.MOUNTAIN_BUTTERFLY = "A butterfly from the high mountains."
 ___________________________DESCRIBE.MOUNTAIN_STALACTITE = "A stalactite. Holds up... well, hangs up."
 ___________________________DESCRIBE.MOUNTAIN_STALAGMITE = "A stalagmite. Growing from the ground up."
 ___________________________DESCRIBE.MOUNTAIN_GOAT = "Stubborn goatpaca"

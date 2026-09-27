@@ -92,8 +92,11 @@ local function MakeFlower()
 		inst.AnimState:SetRayTestOnBB(true)
 		inst.scrapbook_anim = "flower_1"
 
+		inst:SetDeploySmartRadius(DEPLOYSPACING_RADIUS[DEPLOYSPACING.LESS] / 2)
+
 		inst:AddTag("plant")
 		inst:AddTag("flower")
+		inst:AddTag("mountain_flower")
 		inst:AddTag("cattoy")
 
 		inst.entity:SetPristine()
