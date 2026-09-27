@@ -83,13 +83,15 @@ local function fn()
     local rng = math.random
     local tick_time = TheSim:GetTickTime()
 
-    local desired_particles_per_second = 300--300
+    local desired_particles_per_second = 1000
     inst.particles_per_tick = desired_particles_per_second * tick_time
 
+    -- Accumulator drained in the emit loop, topped up by particles_per_tick each tick.
     inst.num_particles_to_emit = inst.particles_per_tick
 
-    local bx, by, bz = 0, 20, 0
-    local emitter_shape = CreateBoxEmitter(bx, by, bz, bx + 20, by, bz + 20)
+    -- Centered, wider than the old 0..20 box so zoomed mountain views stay filled.
+    local emitter_half = 45
+    local emitter_shape = CreateBoxEmitter(-emitter_half, 20, -emitter_half, emitter_half, 20, emitter_half)
 
     local use_uv_offset = false
     local particle_mult = 1
@@ -126,9 +128,12 @@ local function fn()
     local function update_fn()
       
       if ThePlayer then
-        if ThePlayer.map_level_current and ThePlayer.map_level_current > 6 and ThePlayer.map_level_current <= 10 then
-          inst.particles_per_tick = desired_particles_per_second * tick_time  * TheWorld.state.precipitationrate
-          inst.num_particles_to_emit = inst.particles_per_tick  * TheWorld.state.precipitationrate
+        if ThePlayer.map_level_current
+            and ThePlayer.map_level_current > TUNING.MS_RAIN_MAX_LEVEL
+            and ThePlayer.map_level_current <= TUNING.MS_CAVES_START then
+          -- Only update per-tick rate; num_particles_to_emit is accumulated below.
+          local rate = TheWorld.state.precipitationrate or 0
+          inst.particles_per_tick = desired_particles_per_second * tick_time * rate
           local x, y, z = ThePlayer.Transform:GetWorldPosition()
           inst.Transform:SetPosition(x,y,z)
         else

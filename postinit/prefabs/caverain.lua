@@ -22,7 +22,7 @@ AddPrefabPostInit("caverain", function(inst)
         local x,y,z = ThePlayer.Transform:GetWorldPosition()
         local level = TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(x,y,z)
         if level then
-          if level <= 10 then
+          if level <= TUNING.MS_CAVES_START then
             return
           end
         end

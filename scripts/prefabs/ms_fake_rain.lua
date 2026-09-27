@@ -126,17 +126,22 @@ local function fn()
     local rng = math.random
     local tick_time = TheSim:GetTickTime()
 
-    local desired_particles_per_second = 1000
-    local desired_splashes_per_second = 100
+    -- Base density at precipitationrate == 1; actual rate scales with TheWorld.state.precipitationrate.
+    -- Not locked — raise/lower these two to tune how hard mountain rain looks.
+    local desired_particles_per_second = 1500
+    local desired_splashes_per_second = 200
 
     inst.particles_per_tick = desired_particles_per_second * tick_time
     inst.splashes_per_tick = desired_splashes_per_second * tick_time
 
+    -- Accumulators: emit while > 0, then add per_tick at end of update (same as vanilla rain).
     inst.num_particles_to_emit = inst.particles_per_tick
-    inst.num_splashes_to_emit = 100
+    inst.num_splashes_to_emit = inst.splashes_per_tick
 
-    local bx, by, bz = 0, 20, 0
-    local emitter_shape = CreateBoxEmitter(bx, by, bz, bx + 30, by, bz + 30)
+    -- Centered box around the player. Old 0..30 was small + offset, so zoomed-out
+    -- mountain camera could see dry edges of the screen.
+    local emitter_half = 45
+    local emitter_shape = CreateBoxEmitter(-emitter_half, 20, -emitter_half, emitter_half, 20, emitter_half)
 
     local angle = 0
     local dx = math.cos(angle * PI / 180)
@@ -168,7 +173,8 @@ local function fn()
 		end
     end
 
-    local raindrop_offset = CreateDiscEmitter(20)
+    -- Splash radius should track the airborne emitter so ground hits cover the same view.
+    local raindrop_offset = CreateDiscEmitter(emitter_half)
 
     local map = TheWorld.Map
 
@@ -177,11 +183,12 @@ local function fn()
 
     local function updateFunc(fastforward)
     if ThePlayer then
-      if ThePlayer.map_level_current and ThePlayer.map_level_current <= 6 then
-        inst.particles_per_tick = desired_particles_per_second * tick_time * TheWorld.state.precipitationrate
-        inst.splashes_per_tick = desired_splashes_per_second * tick_time * TheWorld.state.precipitationrate
-        inst.num_particles_to_emit = inst.particles_per_tick * TheWorld.state.precipitationrate
-        inst.num_splashes_to_emit = 100 * TheWorld.state.precipitationrate
+      if ThePlayer.map_level_current and ThePlayer.map_level_current <= TUNING.MS_RAIN_MAX_LEVEL then
+        -- Only refresh per-tick rates here. Do NOT assign num_* = rate (that was
+        -- multiplying precipitation twice and setting ~100 splashes per frame).
+        local rate = TheWorld.state.precipitationrate or 0
+        inst.particles_per_tick = desired_particles_per_second * tick_time * rate
+        inst.splashes_per_tick = desired_splashes_per_second * tick_time * rate
         local x, y, z = ThePlayer.Transform:GetWorldPosition()
         inst.Transform:SetPosition(x,y,z)
       else
@@ -266,6 +273,7 @@ local function fn()
             inst.num_splashes_to_emit = inst.num_splashes_to_emit - 1
         end
 
+        -- Top up accumulators for the next tick (fractional remainder carries over).
         inst.num_particles_to_emit = inst.num_particles_to_emit + inst.particles_per_tick
 
 		if inst.splashes_per_tick > 0 then

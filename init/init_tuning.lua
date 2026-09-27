@@ -26,6 +26,8 @@ TUNING.MS_TERRAFORMER_OFFSET_X = {0, 140, 140, 140, 140, 0,     0,    0,  0,   0
 TUNING.MS_TERRAFORMER_OFFSET_Y = {0, 0,   0,   0,   0,   140  , 140 , 70, 70,  140,  0,       0,    0}
 
 TUNING.MS_CAVES_START = 10
+-- Surface-style rain on floors 1..MS_RAIN_MAX_LEVEL; snowfall on floors above that through MS_CAVES_START.
+TUNING.MS_RAIN_MAX_LEVEL = 5
 
 TUNING.MS_TERRAFORMER_SIZE = {50, 35, 25, 22, 20, 20, 20, 20, 20, 20}
 

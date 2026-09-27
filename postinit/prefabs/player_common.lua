@@ -80,6 +80,15 @@ AddPlayerPostInit(function(inst)
       -- Not changearea, as it needs a node, and our artificial islands do not have it...
       inst:DoTaskInTime(0, CheckMountainLevel) 
       inst:DoPeriodicTask(0.3, function(inst) CheckMountainLevel(inst) end)
+      -- Client-only surface rain/snow FX for green vs snow mountain floors.
+      if TheWorld:HasTag("mountain_scream_dungeons") then
+        if ThePlayer.ms_fake_rain == nil or not ThePlayer.ms_fake_rain:IsValid() then
+          ThePlayer.ms_fake_rain = SpawnPrefab("ms_fake_rain")
+        end
+        if ThePlayer.ms_fake_snow == nil or not ThePlayer.ms_fake_snow:IsValid() then
+          ThePlayer.ms_fake_snow = SpawnPrefab("ms_fake_snow")
+        end
+      end
     end  
     end)
   end

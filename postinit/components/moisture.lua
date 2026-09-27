@@ -9,7 +9,7 @@ Moisture._GetMoistureRateAssumingRain = function(self)
 	local x,y,z = self.inst.Transform:GetWorldPosition() 
   if TheWorld.net.components.dungeonmapoverwatch then
     local level = TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(x,y,z)
-    if level and (level <= TUNING.MS_CAVES_START and level > 6) then
+    if level and level > TUNING.MS_RAIN_MAX_LEVEL and level <= TUNING.MS_CAVES_START then
       return 0
     end
   end
