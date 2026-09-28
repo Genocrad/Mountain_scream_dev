@@ -24,6 +24,9 @@ TileGroups.MS_CLOUDS = TileGroupManager:AddTileGroup()
 TileGroups.MS_NON_CLOUDS = TileGroupManager:AddTileGroup()
 TileGroups.MS_TECHNICAL = TileGroupManager:AddTileGroup()
 TileGroups.MS_ICE_BRIDGE = TileGroupManager:AddTileGroup()
+TileGroups.MS_FALLOFF_1 = TileGroupManager:AddTileGroup()
+TileGroups.MS_FALLOFF_2 = TileGroupManager:AddTileGroup()
+TileGroups.MS_FALLOFF_3 = TileGroupManager:AddTileGroup()
 
 TileManager.AddTile(
     "CLOUDS_DARK",
@@ -367,13 +370,19 @@ TileManager.ChangeTileRenderOrder(WORLD_TILES.MS_PERMAFROST_TECHNICAL, WORLD_TIL
 TileGroupManager:AddValidTile(TileGroups.MS_CLOUDS, WORLD_TILES.CLOUDS_WHITE)
 TileGroupManager:AddValidTile(TileGroups.MS_CLOUDS, WORLD_TILES.CLOUDS_DARK)
 
+-- Default mountain_falloff for tiles not given a dedicated falloff.
 TileGroupManager:AddValidTile(TileGroups.MS_NON_CLOUDS, WORLD_TILES.MS_HIGHLAND)
-TileGroupManager:AddValidTile(TileGroups.MS_NON_CLOUDS, WORLD_TILES.MS_MOUNTAIN_LOW)
-TileGroupManager:AddValidTile(TileGroups.MS_NON_CLOUDS, WORLD_TILES.MS_MOUNTAIN_LOW_2)
-TileGroupManager:AddValidTile(TileGroups.MS_NON_CLOUDS, WORLD_TILES.MS_MOUNTAIN_HIGH)
 TileGroupManager:AddValidTile(TileGroups.MS_NON_CLOUDS, WORLD_TILES.MS_SNOW)
-TileGroupManager:AddValidTile(TileGroups.MS_NON_CLOUDS, WORLD_TILES.MS_PERMAFROST)
 TileGroupManager:AddValidTile(TileGroups.MS_NON_CLOUDS, WORLD_TILES.ROCKY)
+
+TileGroupManager:AddValidTile(TileGroups.MS_FALLOFF_1, WORLD_TILES.MS_BRICK)
+TileGroupManager:AddValidTile(TileGroups.MS_FALLOFF_1, WORLD_TILES.MS_MOUNTAIN_LOW)
+TileGroupManager:AddValidTile(TileGroups.MS_FALLOFF_1, WORLD_TILES.MS_MOUNTAIN_LOW_2)
+TileGroupManager:AddValidTile(TileGroups.MS_FALLOFF_1, WORLD_TILES.MS_CAVE)
+
+TileGroupManager:AddValidTile(TileGroups.MS_FALLOFF_2, WORLD_TILES.MS_MOUNTAIN_HIGH)
+
+TileGroupManager:AddValidTile(TileGroups.MS_FALLOFF_3, WORLD_TILES.MS_PERMAFROST)
 
 TileGroupManager:AddValidTile(TileGroups.MS_ICE_BRIDGE, WORLD_TILES.MS_BRIDGE)
 
