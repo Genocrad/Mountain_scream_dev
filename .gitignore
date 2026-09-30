@@ -6021,3 +6021,6 @@ DST_scripts/mods/Porkland/strings/wx78.lua
 anim/DST Mod Tool.exe
 
 tmp_ref/
+
+# Local mountain wall sources, intermediate files, backups, and tools
+/anim/ms_mountain_wall_work/
