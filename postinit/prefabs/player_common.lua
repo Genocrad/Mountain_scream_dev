@@ -35,6 +35,20 @@ local function IsUsingMSDoorDirty(inst)
     end
 end
 
+-- Client-local: mountain floors use surface reverb; side caves / base cave keep cave echo.
+local function UpdateMountainReverb(level)
+  local ambientsound = TheWorld.components.ambientsound
+  if ambientsound == nil then
+    return
+  end
+
+  local preset = (level ~= nil and level <= TUNING.MS_CAVES_START) and "default" or "cave"
+  if TheWorld.ms_reverb_preset ~= preset then
+    TheWorld.ms_reverb_preset = preset
+    ambientsound:SetReverbPreset(preset)
+  end
+end
+
 local function CheckMountainLevel(inst)
   local x,y,z = ThePlayer.Transform:GetWorldPosition()
   if TheWorld.net.components.dungeonmapoverwatch then
@@ -56,6 +70,7 @@ local function CheckMountainLevel(inst)
     ThePlayer.map_level_current = level
     
     ThePlayer.components.playervision:UpdateCCTable()
+    UpdateMountainReverb(level)
   end
 end
 
