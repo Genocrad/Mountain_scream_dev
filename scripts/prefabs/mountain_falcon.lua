@@ -254,6 +254,8 @@ local CLIMB_HOLD_SG = {
 	ms_door_use = true,
 	ms_door_use_pre = true,
 	abyss_drop = true,
+	ms_umbrella_glide = true,
+	ms_umbrella_glide_pst = true,
 }
 
 local function IsPursuitTargetScreenReady(target)

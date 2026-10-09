@@ -259,9 +259,202 @@ AddStategraphState("wilson",
   }
 )
 
+local function EnsureUmbrellaGlideBuild(inst)
+  if not inst._ms_umbrella_glide_build then
+    inst.AnimState:AddOverrideBuild("player_actions_ms_umbrella_glide")
+    inst._ms_umbrella_glide_build = true
+  end
+end
+
+local function GetEquippedUmbrella(inst)
+  local item = inst.components.inventory ~= nil and inst.components.inventory:GetEquippedItem(EQUIPSLOTS.HANDS) or nil
+  if item ~= nil and item:HasTag("umbrella") then
+    return item
+  end
+  return nil
+end
+
+local function CanUmbrellaGlide(inst)
+  if GetEquippedUmbrella(inst) == nil then
+    return false
+  end
+  local x, y, z = inst.Transform:GetWorldPosition()
+  return TheWorld.net.components.dungeonmapoverwatch ~= nil
+    and TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(x, y, z) ~= nil
+end
+
+local function ConsumeUmbrellaForGlide(inst)
+  local item = GetEquippedUmbrella(inst)
+  if item == nil then
+    return
+  end
+  local cost = TUNING.MS_UMBRELLA_GLIDE_COST or 0.25
+  if item.components.fueled ~= nil then
+    item.components.fueled:SetPercent(math.max(0, item.components.fueled:GetPercent() - cost))
+  elseif item.components.perishable ~= nil then
+    item.components.perishable:ReducePercent(cost)
+  end
+end
+
+local function ClearGlideMotor(inst)
+  if inst.Physics ~= nil then
+    inst.Physics:ClearMotorVelOverride()
+    inst.Physics:Stop()
+  end
+end
+
+local function LandUmbrellaGlide(inst)
+  local x, y, z = inst.Transform:GetWorldPosition()
+  ClearGlideMotor(inst)
+  if inst.Physics ~= nil then
+    inst.Physics:Teleport(x, 0, z)
+  else
+    inst.Transform:SetPosition(x, 0, z)
+  end
+  ConsumeUmbrellaForGlide(inst)
+  inst.sg.statemem.gliding = true
+  inst.sg:GoToState("ms_umbrella_glide_pst")
+end
+
+-- 下层落地段：从高处播 loop 缓降，落地播 pst。出发仍走 abyss_fall；攀爬绳仍走 abyss_drop。
+AddStategraphState("wilson",
+  State{
+    name = "ms_umbrella_glide",
+    tags = { "busy", "nopredict", "nomorph", "noattack", "nointerrupt", "nodangle", "falling" },
+
+    onenter = function(inst)
+      EnsureUmbrellaGlideBuild(inst)
+      inst.components.locomotor:Stop()
+      inst.components.locomotor:Clear()
+      inst:ClearBufferedAction()
+
+      inst.AnimState:PlayAnimation("umbrella_glide_loop", true)
+
+      -- 穿过地面下落，由高度判定落地，避免 GROUND 碰撞把人立刻贴地。
+      inst.sg.statemem.isphysicstoggle = true
+      inst.Physics:ClearCollisionMask()
+      inst.Physics:Stop()
+
+      local x, y, z = inst.Transform:GetWorldPosition()
+      local height = TUNING.MS_UMBRELLA_GLIDE_HEIGHT or 10
+      local speed = TUNING.MS_UMBRELLA_GLIDE_SPEED or 4
+      inst.Physics:Teleport(x, height, z)
+      inst.Physics:SetMotorVelOverride(0, -speed, 0)
+      inst:SnapCamera()
+
+      if inst.components.playercontroller ~= nil then
+        inst.components.playercontroller:Enable(false)
+      end
+      inst.components.health:SetInvincible(true)
+
+      inst.sg:SetTimeout(height / math.max(speed, 0.1) + 1)
+    end,
+
+    onupdate = function(inst)
+      local speed = TUNING.MS_UMBRELLA_GLIDE_SPEED or 4
+      inst.Physics:SetMotorVelOverride(0, -speed, 0)
+      local x, y, z = inst.Transform:GetWorldPosition()
+      if y <= 0.1 then
+        LandUmbrellaGlide(inst)
+      end
+    end,
+
+    ontimeout = function(inst)
+      LandUmbrellaGlide(inst)
+    end,
+
+    onexit = function(inst)
+      ClearGlideMotor(inst)
+      if not inst.sg.statemem.gliding then
+        if inst.sg.statemem.isphysicstoggle then
+          ToggleOnPhysics(inst)
+        end
+        inst.components.health:SetInvincible(false)
+        if inst.components.playercontroller ~= nil then
+          inst.components.playercontroller:Enable(true)
+        end
+      end
+    end,
+  }
+)
+
+AddStategraphState("wilson",
+  State{
+    name = "ms_umbrella_glide_pst",
+    tags = { "busy", "nopredict", "nomorph", "nodangle", "falling" },
+
+    onenter = function(inst)
+      EnsureUmbrellaGlideBuild(inst)
+      inst.components.locomotor:Stop()
+      inst.AnimState:PlayAnimation("umbrella_glide_pst")
+
+      ToggleOnPhysics(inst)
+      inst.components.health:SetInvincible(false)
+      if inst.components.playercontroller ~= nil then
+        inst.components.playercontroller:Enable(false)
+      end
+    end,
+
+    timeline =
+    {
+      TimeEvent(10 * FRAMES, function(inst)
+        inst.sg:RemoveStateTag("busy")
+      end),
+    },
+
+    events =
+    {
+      EventHandler("animover", function(inst)
+        if inst.AnimState:AnimDone() then
+          inst.sg:GoToState("idle")
+        end
+      end),
+    },
+
+    onexit = function(inst)
+      if inst.sg.statemem.isphysicstoggle then
+        ToggleOnPhysics(inst)
+      end
+      if inst.components.playercontroller ~= nil then
+        inst.components.playercontroller:Enable(true)
+      end
+    end,
+  }
+)
+
 AddStategraphPostInit("wilson", function(sg)
+  local abyss_fall = sg.states["abyss_fall"]
+  if abyss_fall ~= nil then
+    local old_onenter = abyss_fall.onenter
+    abyss_fall.onenter = function(inst, teleport_pt)
+      inst.sg.statemem.ms_umbrella_glide = CanUmbrellaGlide(inst)
+      old_onenter(inst, teleport_pt)
+    end
+
+    if abyss_fall.timeline ~= nil then
+      for _, v in ipairs(abyss_fall.timeline) do
+        if v.time == 2.5 then
+          local old_fn = v.fn
+          v.fn = function(inst)
+            if inst.sg.statemem.ms_umbrella_glide then
+              inst.sg.statemem.falling = true
+              if inst.components.drownable ~= nil then
+                inst.components.drownable:Teleport()
+              else
+                inst:PutBackOnGround()
+              end
+              inst.sg:GoToState("ms_umbrella_glide")
+              return
+            end
+            old_fn(inst)
+          end
+        end
+      end
+    end
+  end
+
   for k, v in pairs(sg.states["abyss_drop"].timeline) do
-    if v.time == 0.5 then 
+    if v.time == 0.5 then
       local old_fn = v.fn
       v.fn = function(inst)
         old_fn(inst)
