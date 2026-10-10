@@ -248,6 +248,20 @@ function DungeonWallSpawner:SpawnWallsAroundPoint(level, wall, size, normal_tile
   center_x = center_x
   center_y = center_y
 
+  -- With four technical neighbours, a three-sided tip in an adjacent tile
+  -- supplies both a slope and a closing wall here. Corner walls would be internal.
+  local function IsSlopeBase(x, y, ru, rd, lu, ld)
+    local world_x, world_z = center_x + x * 4, center_y + y * 4
+    return (x < size and ru == 1 and rd == 1
+        and not IsMsTechnicalTile(TheWorld.Map:GetTileAtPoint(world_x + 8, 0, world_z)))
+      or (x > -size and lu == 1 and ld == 1
+        and not IsMsTechnicalTile(TheWorld.Map:GetTileAtPoint(world_x - 8, 0, world_z)))
+      or (y < size and ru == 1 and lu == 1
+        and not IsMsTechnicalTile(TheWorld.Map:GetTileAtPoint(world_x, 0, world_z + 8)))
+      or (y > -size and rd == 1 and ld == 1
+        and not IsMsTechnicalTile(TheWorld.Map:GetTileAtPoint(world_x, 0, world_z - 8)))
+  end
+
 
   -- First, we check for holes, cavities and other stuff that messes our wall placement.
   for x = -size , size  do 
@@ -341,7 +355,8 @@ function DungeonWallSpawner:SpawnWallsAroundPoint(level, wall, size, normal_tile
         end
 
 
-        if (ru == 1 or rd == 1 or lu == 1 or ld == 1) and l == 0 and r == 0 and u == 0 and d == 0 then
+        if (ru == 1 or rd == 1 or lu == 1 or ld == 1) and l == 0 and r == 0 and u == 0 and d == 0
+          and not IsSlopeBase(x, y, ru, rd, lu, ld) then
           local new_wall_r = SpawnPrefab("ms_mountain_corner_wall_right" .. wall)
           new_wall_r.Transform:SetPosition(center_x+x*4 , 0, center_y+y*4)
           local new_wall_l = SpawnPrefab("ms_mountain_corner_wall_left" .. wall)

@@ -24,8 +24,8 @@ local WALL_COLLISION_POINTS = {
     wall = { { -2, 0 }, { 2, 0 } },
     right = { { 0, 0 }, { 2, 0 } },
     left = { { -2, 0 }, { 0, 0 } },
-    -- Slopes use the center baseline, without following the shader's deformation.
-    slope = { { -2, 0 }, { 2, 0 } },
+    -- Two sides meet at the tip and connect to the closing wall one tile behind it.
+    slope = { { -2, 4 }, { 0, 0 }, { 2, 4 } },
 }
 local WALL_COLLISION_HEIGHT = 4
 
@@ -38,18 +38,34 @@ local function UpdateWallPhysics(inst)
     local angle = rotation * DEGREES
     local cos, sin = math.cos(angle), math.sin(angle)
     local points = WALL_COLLISION_POINTS[inst._collision_shape]
-    local p0, p1 = points[1], points[2]
-    local x0, z0 = p0[1] * cos + p0[2] * sin, p0[2] * cos - p0[1] * sin
-    local x1, z1 = p1[1] * cos + p1[2] * sin, p1[2] * cos - p1[1] * sin
-    inst.Physics:SetTriangleMesh({
-        x0, 0, z0, x0, WALL_COLLISION_HEIGHT, z0, x1, 0, z1,
-        x1, 0, z1, x0, WALL_COLLISION_HEIGHT, z0, x1, WALL_COLLISION_HEIGHT, z1,
-    })
+    local mesh = {}
+    for i = 1, #points - 1 do
+        local p0, p1 = points[i], points[i + 1]
+        local x0, z0 = p0[1] * cos + p0[2] * sin, p0[2] * cos - p0[1] * sin
+        local x1, z1 = p1[1] * cos + p1[2] * sin, p1[2] * cos - p1[1] * sin
+        local offset = #mesh
+        mesh[offset + 1], mesh[offset + 2], mesh[offset + 3] = x0, 0, z0
+        mesh[offset + 4], mesh[offset + 5], mesh[offset + 6] = x0, WALL_COLLISION_HEIGHT, z0
+        mesh[offset + 7], mesh[offset + 8], mesh[offset + 9] = x1, 0, z1
+        mesh[offset + 10], mesh[offset + 11], mesh[offset + 12] = x1, 0, z1
+        mesh[offset + 13], mesh[offset + 14], mesh[offset + 15] = x0, WALL_COLLISION_HEIGHT, z0
+        mesh[offset + 16], mesh[offset + 17], mesh[offset + 18] = x1, WALL_COLLISION_HEIGHT, z1
+    end
+    inst.Physics:SetTriangleMesh(mesh)
     inst._wall_mesh_rotation = rotation
 end
 
 local function UpdateSortWorldOffset(inst)
-    inst.AnimState:SetSortWorldOffset(inst._mountain_sort_x:value(), 0, inst._mountain_sort_z:value())
+    local dx, dz = inst._mountain_sort_x:value(), inst._mountain_sort_z:value()
+    if inst._collision_shape == "slope" then
+        -- Rotate the base midpoint into world space, using the same rotation as physics.
+        local points = WALL_COLLISION_POINTS.slope
+        local x = (points[1][1] + points[#points][1]) * 0.5
+        local z = (points[1][2] + points[#points][2]) * 0.5
+        local angle = inst._mountain_wall_rotation:value() * DEGREES
+        dx, dz = x * math.cos(angle) + z * math.sin(angle), z * math.cos(angle) - x * math.sin(angle)
+    end
+    inst.AnimState:SetSortWorldOffset(dx, 0, dz)
     UpdateWallPhysics(inst)
 end
 
