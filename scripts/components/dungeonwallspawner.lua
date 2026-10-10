@@ -216,6 +216,7 @@ local function spawn_5x5_area(self, level, x,y, wall, normal_tile, technical_til
     local new_wall = SpawnPrefab("ms_mountain_wall" .. wall)
     new_wall.Transform:SetPosition(x+dx , 0, y+dy)
     new_wall.Transform:SetRotation(angle)
+    new_wall:SetMountainSortDirection(-dx, -dy)
   end
   spawnwall(4.82, 0, 90)
   spawnwall(-4.82, 0, 90)
@@ -348,21 +349,29 @@ function DungeonWallSpawner:SpawnWallsAroundPoint(level, wall, size, normal_tile
           if ru == 1 then
             new_wall_r.Transform:SetRotation(270)
             new_wall_l.Transform:SetRotation(180)
+            new_wall_r:SetMountainSortDirection(-1, 0)
+            new_wall_l:SetMountainSortDirection(0, -1)
             new_wall_l.debuginfo = "outer_ru"
           end
           if rd == 1 then
             new_wall_r.Transform:SetRotation(90)
             new_wall_l.Transform:SetRotation(180)
+            new_wall_r:SetMountainSortDirection(-1, 0)
+            new_wall_l:SetMountainSortDirection(0, 1)
             new_wall_l.debuginfo = "outer_rd"
           end 
           if lu == 1 then
             new_wall_r.Transform:SetRotation(270)
             new_wall_l.Transform:SetRotation(0)
+            new_wall_r:SetMountainSortDirection(1, 0)
+            new_wall_l:SetMountainSortDirection(0, -1)
             new_wall_l.debuginfo = "outer_lu"
           end 
           if ld == 1 then
             new_wall_r.Transform:SetRotation(90)
             new_wall_l.Transform:SetRotation(0)
+            new_wall_r:SetMountainSortDirection(1, 0)
+            new_wall_l:SetMountainSortDirection(0, 1)
             new_wall_l.debuginfo = "outer_ld"
           end 
         elseif u+r+l+d > 2 then 
@@ -385,14 +394,18 @@ function DungeonWallSpawner:SpawnWallsAroundPoint(level, wall, size, normal_tile
             new_slope.Transform:SetRotation(180)
             new_wall.Transform:SetPosition(center_x+x*4, 0, center_y+y*4 - 4)
           end
+          new_slope:SetMountainSortDirection(l - r, u - d)
+          new_wall:SetMountainSortDirection(l - r, u - d)
         elseif u+r+l+d > 1 then 
           local function spawnwallcorner(angle1, angle2)
             local new_wall_r = SpawnPrefab("ms_mountain_corner_wall_right" .. wall)
             new_wall_r.Transform:SetPosition(center_x+x*4 , 0, center_y+y*4)
             new_wall_r.Transform:SetRotation(angle1)          
+            new_wall_r:SetMountainSortDirection(math.sin(angle1 * DEGREES), math.cos(angle1 * DEGREES))
             local new_wall_l = SpawnPrefab("ms_mountain_corner_wall_left" .. wall)
             new_wall_l.Transform:SetPosition(center_x+x*4 , 0, center_y+y*4)
             new_wall_l.Transform:SetRotation(angle2)
+            new_wall_l:SetMountainSortDirection(math.sin(angle2 * DEGREES), math.cos(angle2 * DEGREES))
           end
           TheWorld.net.components.dungeonmapoverwatch:AddSpawnPointsForWall(level, center_x+x*4, center_y+y*4, r-l, d-u)
           if l == 1 and d == 1 then
@@ -447,24 +460,28 @@ function DungeonWallSpawner:SpawnWallsAroundPoint(level, wall, size, normal_tile
             local new_wall = SpawnPrefab("ms_mountain_wall" .. wall)
             new_wall.Transform:SetPosition(center_x+x*4 , 0, center_y+y*4)
             new_wall.Transform:SetRotation(90)
+            new_wall:SetMountainSortDirection(-1, 0)
             new_wall.debuginfo = {center_x+x*4 , 0, center_y+y*4, "+x"}
           end
           if l == 1 then 
             local new_wall = SpawnPrefab("ms_mountain_wall" .. wall)
             new_wall.Transform:SetPosition(center_x+x*4 , 0, center_y+y*4)
             new_wall.Transform:SetRotation(90)
+            new_wall:SetMountainSortDirection(1, 0)
             new_wall.debuginfo = {center_x+x*4 , 0, center_y+y*4, "-x"}
           end
           if d == 1 then 
             local new_wall = SpawnPrefab("ms_mountain_wall" .. wall)
             new_wall.Transform:SetPosition(center_x+x*4, 0, center_y+y*4)
             new_wall.Transform:SetRotation(0)
+            new_wall:SetMountainSortDirection(0, -1)
             new_wall.debuginfo = {center_x+x*4, 0, center_y+y*4, "+y"}
           end
           if u == 1 then
             local new_wall = SpawnPrefab("ms_mountain_wall" .. wall)
             new_wall.Transform:SetPosition(center_x+x*4, 0, center_y+y*4)
             new_wall.Transform:SetRotation(0)
+            new_wall:SetMountainSortDirection(0, 1)
             new_wall.debuginfo = {center_x+x*4, 0, center_y+y*4, "-y"}
           end
 
