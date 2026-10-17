@@ -49,22 +49,53 @@ local function UpdateMountainReverb(level)
   end
 end
 
+-- Another client-side. Is different from IsUsingMSDoorDirty as it handles camera control
+
+local function UpdateCameraHeightToCave()
+  TheCamera.mindist = 15
+  TheCamera.maxdist = 35
+  TheCamera.mindistpitch = 25
+  TheCamera.maxdistpitch = 40
+  TheCamera.distancetarget = 25
+end
+
+local function UpdateCameraHeightToOverworld()
+  TheCamera.mindist = 15
+  TheCamera.maxdist = 35
+  TheCamera.mindistpitch = 25
+  TheCamera.maxdistpitch = 40
+  TheCamera.distancetarget = 30
+end
+
+local function UpdateCameraHeightToMSCave()
+  TheCamera.mindist = 15
+  TheCamera.maxdist = 35
+  TheCamera.mindistpitch = 25
+  TheCamera.maxdistpitch = 40
+end
+
 local function CheckMountainLevel(inst)
   local x,y,z = ThePlayer.Transform:GetWorldPosition()
   if TheWorld.net.components.dungeonmapoverwatch then
     local level = TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(x,y,z)
     if level then
-      if TheWorld.wavemanager_on == false then
+      if TheWorld.wavemanager_on == false then -- General caves to mountain transition
         TheWorld:PushEvent("wavemanager_on")
+        UpdateCameraHeightToOverworld()
       end
-      if level < 10 and TheCamera.target ~= TheFocalPoint then
+      if level <= TUNING.MS_CAVES_START and TheCamera.target ~= TheFocalPoint then -- Ms caves to mountain transition
         IsUsingMSDoorDirty(inst)
-      else
+        UpdateCameraHeightToOverworld()
+      end
+      if level > TUNING.MS_CAVES_START and TheCamera.target == TheFocalPoint then -- Mountain to ms caves transition
+        UpdateCameraHeightToMSCave()
+        TheWorld:PushEvent("wavemanager_off")
         IsUsingMSDoorDirty(inst)
       end
-    elseif level== nil and TheWorld.wavemanager_on == true then
+    elseif level== nil and TheWorld.wavemanager_on == true then -- Ms anything to general caves
       TheWorld:PushEvent("wavemanager_off")
       IsUsingMSDoorDirty(inst)
+      UpdateCameraHeightToCave()
     end
     
     ThePlayer.map_level_current = level
