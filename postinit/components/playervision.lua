@@ -59,6 +59,8 @@ local mountain_cc =
     },
   }      
     
+local blendtime = 100
+
 local old_updatecc = PlayerVision.UpdateCCTable
 
 local NIGHTVISION_COLOURCUBES = UpvalueHacker.GetUpvalue(old_updatecc, "NIGHTVISION_COLOURCUBES")
@@ -76,21 +78,19 @@ local MS_CAVE_PHASEFN =
 
 function PlayerVision:UpdateCCTable()
   old_updatecc(self)
-  
   -- So other can actually get those from us.
-  
   local hook = NIGHTVISION_COLOURCUBES
   hook = GHOSTVISION_COLOURCUBES
   hook = NIGHTVISION_PHASEFN
-  
   if not (self.ghostvision or self.overridecctable or self.nightvision or self.forcenightvision or self.nightmarevision) and self.inst.map_level_current then
-    if mountain_cc[self.inst.map_level_current] ~= self.currentcctable then
-        self.currentcctable = mountain_cc[self.inst.map_level_current]
+    if self.ms_cctable == nil or (self.ms_cctable ~= nil and mountain_cc[self.inst.map_level_current] ~= self.ms_cctable) then
+        self.ms_cctable = mountain_cc[self.inst.map_level_current]
         self.inst:PushEvent("ccoverrides", mountain_cc[self.inst.map_level_current])
         self.inst:PushEvent("ccphasefn", MS_CAVE_PHASEFN)
     end
-  end  
-
+  else
+    self.ms_cctable = nil
+  end
 end
 
 
