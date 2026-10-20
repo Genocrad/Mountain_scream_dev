@@ -324,3 +324,18 @@ function MapScreen:OnBecomeInactive()
   end
 end
 
+local old_OnControl = MapScreen.OnControl
+  
+function MapScreen:OnControl(control, down)
+  if self.mapcontrolsdungeon then
+    if down then
+      if control == CONTROL_FOCUS_UP then
+        self.mapcontrolsdungeon.OnLevelPressedUp()
+      end
+      if control == CONTROL_FOCUS_DOWN then
+        self.mapcontrolsdungeon.OnLevelPressedDown()
+      end
+    end
+  end
+  old_OnControl(self, control, down)
+end

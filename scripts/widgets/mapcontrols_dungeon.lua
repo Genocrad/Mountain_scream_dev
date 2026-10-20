@@ -30,23 +30,23 @@ local MapControlsDungeon = Class(Widget, function(self)
     if ThePlayer then
         ThePlayer.map_level_shown = ThePlayer.map_level_current
     end
+    
+    self.OnLevelPressedUp = OnLevelPressedUp
     self.level1 = self:AddChild(ImageButton("images/hud.xml", "craft_end_normal.tex", nil, nil, nil, nil, {1,1}, {0,0}))
     self.level1:SetPosition(-60, 240, 0)
     self.level1:SetScale(-.7, -.7, .7)
-    self.level1:SetOnClick(OnLevelPressedUp)
+    self.level1:SetOnClick(self.OnLevelPressedUp)
 
+    self.OnLevelPressedDown = OnLevelPressedDown
     self.level2 = self:AddChild(ImageButton("images/hud.xml", "craft_end_normal.tex", nil, nil, nil, nil, {1,1}, {0,0}))
     self.level2:SetPosition(-60, 160, 0)
     self.level2:SetScale(-.7, .7, .7)
-    self.level2:SetOnClick(OnLevelPressedDown)
+    self.level2:SetOnClick(self.OnLevelPressedDown)
     
     if not TheWorld:HasTag("mountain_scream_dungeons") or not HasCurrentLevel() then
       self:Hide()
     end
     --self:RefreshTooltips(mountain_scream_dungeons)
 end)
-
-
-
 
 return MapControlsDungeon
