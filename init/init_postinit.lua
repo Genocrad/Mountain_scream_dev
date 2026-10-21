@@ -27,6 +27,7 @@ modimport("postinit/components/dynamicmusic")
 modimport("postinit/components/hounded")
 modimport("postinit/components/stackable")
 modimport("postinit/components/moisture")
+modimport("postinit/components/sleepingbaguser")
 
 modimport("postinit/widgets/mapwidget")
 modimport("postinit/widgets/uiclock")

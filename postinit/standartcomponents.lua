@@ -154,3 +154,17 @@ function IsTeleportingPermittedFromPointToPoint(fx, fy, fz, tx, ty, tz, ...)
   end
   return old_IsTeleportingPermittedFromPointToPoint(fx, fy, fz, tx, ty, tz, ...)
 end
+
+function IsInstInMSOverWorld(inst)  
+  local x,y,z = inst.Transform:GetWorldPosition()
+  if TheWorld.net.components.dungeonmapoverwatch and TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(x,y,z) ~= nil and TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(x,y,z) <= TUNING.MS_CAVES_START then
+    return true
+  end
+end
+
+function IsInstInMSCaves(inst)  
+  local x,y,z = inst.Transform:GetWorldPosition()
+  if TheWorld.net.components.dungeonmapoverwatch and TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(x,y,z) ~= nil and TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(x,y,z) > TUNING.MS_CAVES_START then
+    return true
+  end
+end

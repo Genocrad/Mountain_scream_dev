@@ -34,6 +34,27 @@ local function ToggleOnPhysics(inst)
   end
 end
 
+-- Im a bit lazy today, no desire to mess with upvaluehacker
+local function SetSleeperSleepState(inst)
+    if inst.components.grue ~= nil then
+        inst.components.grue:AddImmunity("sleeping")
+    end
+    if inst.components.talker ~= nil then
+        inst.components.talker:IgnoreAll("sleeping")
+    end
+    if inst.components.firebug ~= nil then
+        inst.components.firebug:Disable()
+    end
+    if inst.components.playercontroller ~= nil then
+        inst.components.playercontroller:EnableMapControls(false)
+        inst.components.playercontroller:Enable(false)
+    end
+    inst:OnSleepIn()
+    inst.components.inventory:Hide()
+    inst:PushEvent("ms_closepopups")
+    inst:ShowActions(false)
+end
+
 -- 竞技场传送：自写进出状态，直接生成雪特效（不碰官方 entertownportal）
 AddStategraphState("wilson",
 	State{
@@ -467,6 +488,89 @@ AddStategraphPostInit("wilson", function(sg)
           inst.sg:GoToState("hit")
           end)
         end
+      end
+    end
+  end
+end)
+
+
+AddStategraphPostInit("wilson", function(sg)
+  local tent = sg.states["tent"]
+  if tent ~= nil then
+    local old_onenter = tent.onenter
+    tent.onenter = function(inst)
+      if IsInstInMSOverWorld(inst) then
+        inst.components.locomotor:Stop()
+
+        local target = inst:GetBufferedAction().target
+        local siesta = target:HasTag("siestahut")
+        local failreason =
+          (siesta ~= TheWorld.state.iscaveday and
+          (siesta and "ANNOUNCE_NONIGHTSIESTA" or "ANNOUNCE_NODAYSLEEP"))
+          or (target.components.burnable ~= nil and
+              target.components.burnable:IsBurning() and
+              "ANNOUNCE_NOSLEEPONFIRE")
+          or (inst.IsNearDanger(inst) and "ANNOUNCE_NODANGERSLEEP")
+          -- you can still sleep if your hunger will bottom out, but not absolutely
+          or (inst.components.hunger.current < TUNING.CALORIES_MED and "ANNOUNCE_NOHUNGERSLEEP")
+          or nil
+          print("fail?", failreason)
+          if failreason ~= nil then
+            inst:PushEvent("performaction", { action = inst.bufferedaction })
+            inst:ClearBufferedAction()
+            inst.sg:GoToState("idle")
+            if inst.components.talker ~= nil then
+              inst.components.talker:Say(GetString(inst, failreason))
+            end
+            return
+          end
+
+          inst.AnimState:PlayAnimation("pickup")
+          inst.sg:SetTimeout(6 * FRAMES)
+
+          SetSleeperSleepState(inst)
+        else
+          old_onenter(inst)
+        end
+    end
+    local old_ontimeout = tent.ontimeout
+    tent.ontimeout = function(inst)
+      if IsInstInMSOverWorld(inst) then
+        local bufferedaction = inst:GetBufferedAction()
+        if bufferedaction == nil then
+          inst.AnimState:PlayAnimation("pickup_pst")
+          inst.sg:GoToState("idle", true)
+          return
+        end
+        local tent = bufferedaction.target
+        if tent == nil or
+        not tent.components.sleepingbag or
+        not tent:HasTag("tent") or
+        tent:HasTag("hassleeper") or
+        tent:HasTag("siestahut") ~= TheWorld.state.iscaveday or
+        (tent.components.burnable ~= nil and tent.components.burnable:IsBurning()) then
+          inst:PushEvent("performaction", { action = inst.bufferedaction })
+          inst:ClearBufferedAction()
+          inst.AnimState:PlayAnimation("pickup_pst")
+          inst.sg:GoToState("idle", true)
+        else
+          inst:PerformBufferedAction()
+          inst.components.health:SetInvincible(true)
+          inst:Hide()
+          if inst.Physics ~= nil then
+            inst.Physics:Teleport(inst.Transform:GetWorldPosition())
+          end
+          if inst.DynamicShadow ~= nil then
+            inst.DynamicShadow:Enable(false)
+          end
+          inst.sg:AddStateTag("sleeping")
+          inst.sg:RemoveStateTag("busy")
+          if inst.components.playercontroller ~= nil then
+            inst.components.playercontroller:Enable(true)
+          end
+        end
+      else
+        old_ontimeout(inst)
       end
     end
   end
