@@ -7,9 +7,11 @@ local FLOWER_SANITY = 10
 local FLOWER_NAMES = { "flower_1", "flower_2", "flower_3", "flower_4", "flower_5", "flower_6", "flower_7" }
 
 local function OnPickedFlower(inst, picker)
-	if picker ~= nil and picker.components.sanity ~= nil then
-		picker.components.sanity:DoDelta(FLOWER_SANITY)
-	end
+  local pos = inst:GetPosition()
+  if picker ~= nil and picker.components.sanity ~= nil and not picker:HasTag("plantkin") then
+    picker.components.sanity:DoDelta(FLOWER_SANITY)
+  end
+  TheWorld:PushEvent("plantkilled", { doer = picker, pos = pos })
 end
 
 local function SetFlowerType(inst, name)
@@ -132,6 +134,11 @@ local function MakeFlower()
 	return Prefab("mountain_plants_flower", fn, assets, { "petals" })
 end
 
+local function OnPickedSendEvent(inst, picker)
+  local pos = inst:GetPosition()
+  TheWorld:PushEvent("plantkilled", { doer = picker, pos = pos })
+end
+
 local PLANTS =
 {
 	{
@@ -141,6 +148,7 @@ local PLANTS =
 		num = 1,
 		picksound = "dontstarve/wilson/harvest_sticks",
 		nameoverride = "mountain_plants_bush",
+    onpickedfn = OnPickedSendEvent,
 	},
 	{
 		name = "mountain_plants_bush_2",
@@ -149,6 +157,7 @@ local PLANTS =
 		num = 2,
 		picksound = "dontstarve/wilson/harvest_sticks",
 		nameoverride = "mountain_plants_bush",
+    onpickedfn = OnPickedSendEvent,
 	},
 	{
 		name = "mountain_plants_bush_3",
@@ -157,6 +166,7 @@ local PLANTS =
 		num = 4,
 		picksound = "dontstarve/wilson/harvest_sticks",
 		nameoverride = "mountain_plants_bush",
+    onpickedfn = OnPickedSendEvent,
 	},
 	{
 		name = "mountain_plants_tree",
@@ -164,6 +174,7 @@ local PLANTS =
 		product = "log",
 		num = 1,
 		picksound = "dontstarve/wilson/harvest_sticks",
+    onpickedfn = OnPickedSendEvent,
 	},
 	{
 		name = "mountain_plants_grass",
@@ -172,6 +183,7 @@ local PLANTS =
 		num = 1,
 		picksound = "dontstarve/wilson/pickup_reeds",
 		quickpick = true,
+    onpickedfn = OnPickedSendEvent,
 	},
 	{
 		name = "mountain_plants_branches",
@@ -179,6 +191,7 @@ local PLANTS =
 		product = "twigs",
 		num = 1,
 		picksound = "dontstarve/wilson/harvest_sticks",
+    onpickedfn = OnPickedSendEvent,
 	},
 	{
 		name = "mountain_plants_pomegranate",
@@ -186,6 +199,7 @@ local PLANTS =
 		product = "pomegranate",
 		num = 1,
 		quickpick = true,
+    --onpickedfn = OnPickedSendEvent, Wormwood should not get -sanity for this one, imo.
 	},
 }
 
