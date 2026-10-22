@@ -1,5 +1,6 @@
 modimport("postinit/standartcomponents")
 modimport("postinit/containers")
+modimport("postinit/wx78_moduledefs")
 
 modimport("postinit/prefabs/player_common")
 modimport("postinit/prefabs/wortox")
