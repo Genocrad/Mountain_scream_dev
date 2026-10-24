@@ -123,6 +123,7 @@ ___________________________DESCRIBE.MOUNTAIN_ICEGOAT = "The cold clearly makes h
 ___________________________DESCRIBE.MOUNTAIN_GOLEM = "It wasn't worth waking him up."
 ___________________________DESCRIBE.MOUNTAIN_GOLEM_PILLAR = "It holds a great charge of energy."
 ___________________________DESCRIBE.MOUNTAIN_GOLEM_PLATFORM = "A foundation for something enormous."
+___________________________DESCRIBE.MOUNTAIN_SCREAMER = "That scream drains more than just courage."
 ___________________________DESCRIBE.MOUNTAIN_SANDBLOCK = "That tower is blocking the way."
 ___________________________DESCRIBE.MOUNTAIN_SANDBLOCK_CHARGED = "His power lies in the tower."
 ___________________________DESCRIBE.MOUNTAIN_SANDSPIKE_TALL = "Sharp spike!"

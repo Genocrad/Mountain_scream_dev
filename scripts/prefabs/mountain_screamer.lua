@@ -1,0 +1,236 @@
+local assets =
+{
+	Asset("ANIM", "anim/mountain_screamer.zip"),
+}
+
+local prefabs =
+{
+	"boneshard",
+	"rocks",
+	"warningshadow",
+}
+
+local brain = require("brains/mountain_screamerbrain")
+
+SetSharedLootTable("mountain_screamer",
+{
+	{ "rocks", 1 },
+	{ "rocks", 1 },
+	{ "rocks", 1 },
+	{ "boneshard", 1 },
+	{ "boneshard", 0.5 },
+})
+
+--------------------------------------------------------------------------
+
+local TARGET_MUST_TAGS = { "_combat" }
+local TARGET_CANT_TAGS = { "INLIMBO", "flight", "invisible", "notarget", "playerghost", "mountain_screamer" }
+
+local SKELETON_MUST_TAGS = { "skeleton" }
+local SKELETON_CANT_TAGS = { "INLIMBO", "NOCLICK" }
+
+local function GetHomePos(inst)
+	return inst.components.knownlocations ~= nil
+		and inst.components.knownlocations:GetLocation("spawnpoint")
+		or nil
+end
+
+local function IsTargetInCombatRange(inst, target)
+	local home = GetHomePos(inst)
+	if home == nil then
+		return true
+	end
+	local range = TUNING.MOUNTAIN_SCREAMER.COMBAT_RANGE
+	return target:GetDistanceSqToPoint(home) < range * range
+end
+
+local function RetargetFn(inst)
+	return FindEntity(inst, TUNING.MOUNTAIN_SCREAMER.DEAGGRO_DIST, function(guy)
+		return inst.components.combat:CanTarget(guy)
+			and IsTargetInCombatRange(inst, guy)
+	end, TARGET_MUST_TAGS, TARGET_CANT_TAGS)
+end
+
+local function KeepTargetFn(inst, target)
+	return inst.components.combat:CanTarget(target)
+		and inst:IsNear(target, TUNING.MOUNTAIN_SCREAMER.DEAGGRO_DIST)
+		and IsTargetInCombatRange(inst, target)
+end
+
+local function OnAttacked(inst, data)
+	if data == nil or data.attacker == nil or not data.attacker:IsValid() then
+		return
+	end
+
+	-- 尖啸期间：仅玩家攻击可打断
+	if inst.sg ~= nil and inst.sg:HasStateTag("screaming") then
+		if data.attacker:HasTag("player") then
+			inst.components.combat:SetTarget(data.attacker)
+			inst:PushEvent("ms_screamer_screambreak", { attacker = data.attacker })
+		end
+		return
+	end
+
+	local target = inst.components.combat.target
+	if target ~= nil and (target.isplayer or target:HasTag("epic")) then
+		local x, y, z = inst.Transform:GetWorldPosition()
+		local range = TUNING.MOUNTAIN_SCREAMER.ATTACK_RANGE + target:GetPhysicsRadius(0)
+		if target:GetDistanceSqToPoint(x, y, z) < range * range then
+			return
+		end
+	end
+
+	inst.components.combat:SetTarget(data.attacker)
+end
+
+local function OnNewTarget(inst, data)
+	if data ~= nil and data.target ~= nil then
+		inst._engaged = true
+		inst._wants_despawn = false
+	end
+end
+
+local function OnDroppedTarget(inst)
+	if inst._engaged then
+		inst._wants_despawn = true
+	end
+end
+
+local function FindSkeleton(inst)
+	if inst.components.health:IsDead() or inst.components.health:GetPercent() >= 1 then
+		return nil
+	end
+	return FindEntity(inst, TUNING.MOUNTAIN_SCREAMER.EAT_RANGE, function(guy)
+		return guy:IsValid() and not guy:IsInLimbo()
+	end, SKELETON_MUST_TAGS, SKELETON_CANT_TAGS)
+end
+
+-- 正式开战（出场动画为 appear；瞬移再用 disappear / appearbig）
+local function StartBattle(inst, pos)
+	if inst.components.health:IsDead() then
+		return
+	end
+	inst._engaged = true
+	inst._wants_despawn = false
+	if pos ~= nil then
+		inst.Physics:Teleport(pos.x, 0, pos.z)
+	end
+	if not inst.sg:HasStateTag("busy") then
+		inst.sg:GoToState("appear")
+	end
+end
+
+local function OnSave(inst, data)
+	data.engaged = inst._engaged or nil
+	data.wants_despawn = inst._wants_despawn or nil
+end
+
+local function OnLoad(inst, data)
+	if data ~= nil then
+		inst._engaged = data.engaged
+		inst._wants_despawn = data.wants_despawn
+	end
+end
+
+--------------------------------------------------------------------------
+
+local function fn()
+	local inst = CreateEntity()
+
+	inst.entity:AddTransform()
+	inst.entity:AddAnimState()
+	inst.entity:AddSoundEmitter()
+	inst.entity:AddDynamicShadow()
+	inst.entity:AddNetwork()
+
+	inst:AddTag("monster")
+	inst:AddTag("hostile")
+	inst:AddTag("scarytoprey")
+	inst:AddTag("largecreature")
+	inst:AddTag("epic")
+	inst:AddTag("mountain_screamer")
+
+	inst.DynamicShadow:SetSize(4, 2.5)
+	inst.Transform:SetFourFaced()
+
+	inst.AnimState:SetBank("mountain_screamer")
+	inst.AnimState:SetBuild("mountain_screamer")
+	inst.AnimState:PlayAnimation("idle", true)
+
+	inst:SetPhysicsRadiusOverride(1.2)
+	MakeGiantCharacterPhysics(inst, 500, inst.physicsradiusoverride)
+
+	inst.entity:SetPristine()
+
+	if not TheWorld.ismastersim then
+		return inst
+	end
+
+	inst._engaged = false
+	inst._wants_despawn = false
+
+	inst:AddComponent("inspectable")
+
+	inst:AddComponent("locomotor")
+	inst.components.locomotor.walkspeed = TUNING.MOUNTAIN_SCREAMER.SPEED
+	inst.components.locomotor.runspeed = TUNING.MOUNTAIN_SCREAMER.SPEED
+
+	inst:AddComponent("health")
+	inst.components.health:SetMaxHealth(TUNING.MOUNTAIN_SCREAMER.HEALTH)
+	inst.components.health.nofadeout = true
+
+	inst:AddComponent("combat")
+	inst.components.combat.playerdamagepercent = 0.5
+	inst.components.combat:SetDefaultDamage(TUNING.MOUNTAIN_SCREAMER.DAMAGE)
+	inst.components.combat:SetRange(TUNING.MOUNTAIN_SCREAMER.ATTACK_RANGE)
+	inst.components.combat:SetAttackPeriod(TUNING.MOUNTAIN_SCREAMER.ATTACK_PERIOD)
+	inst.components.combat:SetRetargetFunction(3, RetargetFn)
+	inst.components.combat:SetKeepTargetFunction(KeepTargetFn)
+	-- 官方方案：ChaseAndAttack → BattleCry → SG "taunt"；CD = interval + 0~3s
+	inst.components.combat.battlecryenabled = true
+	inst.components.combat.battlecryinterval = TUNING.MOUNTAIN_SCREAMER.TAUNT_CD
+
+	inst:AddComponent("timer")
+
+	inst:AddComponent("lootdropper")
+	inst.components.lootdropper:SetChanceLootTable("mountain_screamer")
+
+	inst:AddComponent("knownlocations")
+
+	inst:AddComponent("sanityaura")
+	inst.components.sanityaura.aura = -TUNING.SANITYAURA_MED
+
+	MakeHauntable(inst)
+
+	inst.FindSkeleton = FindSkeleton
+	inst.GetHomePos = GetHomePos
+	inst.StartBattle = StartBattle
+
+	inst:ListenForEvent("attacked", OnAttacked)
+	inst:ListenForEvent("newcombattarget", OnNewTarget)
+	inst:ListenForEvent("droppedtarget", OnDroppedTarget)
+
+	-- 走近骷髅时触发进食
+	inst:DoPeriodicTask(0.5, function(inst)
+		if inst.components.health:IsDead()
+			or inst._wants_despawn
+			or inst.sg:HasStateTag("busy")
+		then
+			return
+		end
+		local skel = FindSkeleton(inst)
+		if skel ~= nil and inst:IsNear(skel, TUNING.MOUNTAIN_SCREAMER.EAT_DIST) then
+			inst:PushEvent("ms_screamer_eat", { target = skel })
+		end
+	end)
+
+	inst:SetStateGraph("SGmountain_screamer")
+	inst:SetBrain(brain)
+
+	inst.OnSave = OnSave
+	inst.OnLoad = OnLoad
+
+	return inst
+end
+
+return Prefab("mountain_screamer", fn, assets, prefabs)

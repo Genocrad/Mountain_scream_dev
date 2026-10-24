@@ -123,6 +123,7 @@ ___________________________DESCRIBE.MOUNTAIN_ICEGOAT = "寒冷显然让他更暴
 ___________________________DESCRIBE.MOUNTAIN_GOLEM = "真不该把他吵醒。"
 ___________________________DESCRIBE.MOUNTAIN_GOLEM_PILLAR = "蕴藏着巨大的能量。"
 ___________________________DESCRIBE.MOUNTAIN_GOLEM_PLATFORM = "给某种庞然大物准备的地基。"
+___________________________DESCRIBE.MOUNTAIN_SCREAMER = "那尖啸吸走的可不只是勇气。"
 ___________________________DESCRIBE.MOUNTAIN_SANDBLOCK = "那座塔挡住了路。"
 ___________________________DESCRIBE.MOUNTAIN_SANDBLOCK_CHARGED = "他的力量就在塔里。"
 ___________________________DESCRIBE.MOUNTAIN_SANDSPIKE_TALL = "尖刺！"

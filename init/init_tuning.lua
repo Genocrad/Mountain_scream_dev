@@ -1249,3 +1249,39 @@ TUNING.MOUNTAIN_GOLEM = {
 	LASER_DOT_HIT_INTERVAL = 0.4, -- 激光持续伤害受击反馈间隔（秒）
 
 }
+
+--------------------------------------------------------------------------
+-- Mountain Screamer（尖啸者）
+--------------------------------------------------------------------------
+TUNING.MOUNTAIN_SCREAMER = {
+	HEALTH = 6000,               -- 最大生命
+	DAMAGE = 50,                -- 右手近战伤害
+	ATTACK_PERIOD = 3,           -- 攻击间隔（秒）
+	ATTACK_RANGE = 4,            -- 近战攻击距离
+	HIT_RECOVERY = 1.5,          -- 受击硬直间隔（秒）
+	SPEED = 2,                 	 -- 基础移动速度
+	COMBAT_RANGE = 20,           -- 活动范围（距苏醒点）
+	DEAGGRO_DIST = 35,           -- 脱战距离
+
+	TAUNT_CD = 12,               -- BattleCry 间隔（秒）；实际 CD ≈ 该值 + 0~3 随机
+
+	SCREAM_CD = 20,              -- 尖啸冷却（秒）
+	SCREAM_RANGE = 12,           -- 尖啸汲取范围
+	SCREAM_DRAIN_DAMAGE = 5,     -- 每次汲取对目标造成的伤害
+	SCREAM_DRAIN_HEAL = 15,      -- 每次从单个目标汲取的回血量
+	SCREAM_DRAIN_PERIOD = 0.5,   -- 尖啸 loop 期间汲取间隔（秒）
+	SCREAM_LOOP_COUNT = 4,       -- scream_loop 重复次数（可被打断）
+
+	BLINK_CD = 14,               -- 瞬移闪烁冷却（秒）
+	BLINK_RANGE = 18,            -- 瞬移技能最大锁定距离
+	BLINK_MIN_DIST = 4,          -- 目标太近不使用瞬移
+	BLINK_DAMAGE = 50,           -- 闪烁出现命中伤害
+	BLINK_HIT_RADIUS = 3,        -- 落地冲击半径
+	BLINK_KNOCKBACK_RADIUS = 3,  -- 击飞判定半径
+	BLINK_KNOCKBACK_STRENGTH = 1.5, -- 击飞力度
+	BLINK_WARNING_SCALE = 1.8,   -- warningshadow 缩放（对齐命中半径，进游戏可再调）
+
+	EAT_HEAL = 500,              -- 吃骷髅回血量
+	EAT_RANGE = 15,              -- 搜寻骷髅范围
+	EAT_DIST = 2.5,              -- 开始进食的距离
+}

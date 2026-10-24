@@ -123,6 +123,7 @@ ___________________________DESCRIBE.MOUNTAIN_ICEGOAT = "Её  явно злит 
 ___________________________DESCRIBE.MOUNTAIN_GOLEM = "Не стояло его будить."
 ___________________________DESCRIBE.MOUNTAIN_GOLEM_PILLAR = "Таит в себе большой заряд энергии."
 ___________________________DESCRIBE.MOUNTAIN_GOLEM_PLATFORM = "Основание для чего-то громадного."
+___________________________DESCRIBE.MOUNTAIN_SCREAMER = "Этот крик высасывает куда больше, чем храбрость."
 ___________________________DESCRIBE.MOUNTAIN_SANDBLOCK = "Башня мешает проходу."
 ___________________________DESCRIBE.MOUNTAIN_SANDBLOCK_CHARGED = "В башне находится его сила."
 ___________________________DESCRIBE.MOUNTAIN_SANDSPIKE_TALL = "Острый!"

@@ -23,6 +23,18 @@ function d_spawn_butterfly()
 	c_spawn("mountain_butterfly")
 end
 
+function d_spawn_screamer()
+	c_spawn("mountain_screamer")
+end
+
+function d_spawn_screamer_battle()
+	local inst = c_spawn("mountain_screamer")
+	if inst ~= nil then
+		inst._engaged = true
+		inst._wants_despawn = false
+	end
+end
+
 function d_spawn_plants()
 	local plants = {
 		"mountain_plants_bush_1",
