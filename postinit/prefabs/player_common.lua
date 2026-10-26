@@ -18,9 +18,7 @@ end
 
 local function IsUsingMSDoorDirty(inst)
     if TheNet:IsDedicated() then return end
-   
-    local x,y,z = ThePlayer.Transform:GetWorldPosition() 
-    if TheWorld.net.components.dungeonmapoverwatch and TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(x,y,z) ~= nil and TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(x,y,z) > TUNING.MS_CAVES_START then  
+    if IsInstInMSCaves(ThePlayer) then  
         TheCamera.target = findnearestfloor(inst) and findnearestfloor(inst) or TheFocalPoint
         TheCamera.targetoffset.z = -12
         TheCamera.targetoffset.y = 2
@@ -74,35 +72,57 @@ local function UpdateCameraHeightToMSCave()
   TheCamera.maxdistpitch = 40
 end
 
-local function CheckMountainLevel(inst)
-  local x,y,z = ThePlayer.Transform:GetWorldPosition()
-  if TheWorld.net.components.dungeonmapoverwatch then
-    local level = TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(x,y,z)
-    if level then
-      if TheWorld.wavemanager_on == false then -- General caves to mountain transition
-        TheWorld:PushEvent("wavemanager_on")
-        UpdateCameraHeightToOverworld()
+local function LevelUpdateMaster(inst, level)
+  if inst.fake_light then inst.fake_light:UpdateLevel(level) end
+  if inst.fake_light2 then inst.fake_light2:UpdateLevel(level) end
+  if level and level <= TUNING.MS_CAVES_START then
+    if TheWorld.state.iscaveday then
+      inst.components.sanity:SetLightDrainImmune(true, inst)
+    else
+      inst.components.sanity:SetLightDrainImmune(false, inst)
+    end
+  else
+    inst.components.sanity:SetLightDrainImmune(false, inst)
+  end
+end
+
+local old_announce = {}
+local old_announce_boss = {} 
+
+local chars = {"GENERIC", "WILLOW", "WOLFGANG", "WENDY", "WX78", "WAXWELL", "WICKERBOTTOM", "WOODIE", "WES", "WAXWELL", "WATHGRITHR", "WEBBER", "WINONA", "WARLY", "WORTOX", "WORMWOOD", "WURT", "WALTER", "WANDA"}
+
+local function CheckMountainLevel(inst, level)
+  if level then
+    if level <= TUNING.MS_CAVES_START then -- General caves to mountain transition
+      for _, char in ipairs(chars) do 
+        old_announce[char] = STRINGS.CHARACTERS.GENERIC.ANNOUNCE_WORMS
+        old_announce_boss[char] = STRINGS.CHARACTERS.GENERIC.ANNOUNCE_WORMS_BOSS
+        STRINGS.CHARACTERS.GENERIC.ANNOUNCE_WORMS = STRINGS.CHARACTERS.GENERIC.ANNOUNCE_FALCON
+        STRINGS.CHARACTERS.GENERIC.ANNOUNCE_WORMS_BOSS = STRINGS.CHARACTERS.GENERIC.ANNOUNCE_FALCON
       end
-      if level <= TUNING.MS_CAVES_START and TheCamera.target ~= TheFocalPoint then -- Ms caves to mountain transition
-        IsUsingMSDoorDirty(inst)
-        UpdateCameraHeightToOverworld()
-      end
-      if level > TUNING.MS_CAVES_START and TheCamera.target == TheFocalPoint then -- Mountain to ms caves transition
-        UpdateCameraHeightToMSCave()
-        TheWorld:PushEvent("wavemanager_off")
-        IsUsingMSDoorDirty(inst)
-      end
-    elseif level== nil and TheWorld.wavemanager_on == true then -- Ms anything to general caves
+      TheWorld:PushEvent("wavemanager_on")
+      IsUsingMSDoorDirty(inst)
+      UpdateCameraHeightToOverworld()
+    else -- Mountain to ms caves transition
+      UpdateCameraHeightToMSCave()
       TheWorld:PushEvent("wavemanager_off")
       IsUsingMSDoorDirty(inst)
-      UpdateCameraHeightToCave()
     end
-    
-    ThePlayer.map_level_current = level
-    
-    ThePlayer.components.playervision:UpdateCCTable()
-    UpdateMountainReverb(level)
+  else -- Ms anything to general caves
+    for _, char in ipairs(chars) do 
+      if old_announce[char] then
+        STRINGS.CHARACTERS.GENERIC.ANNOUNCE_WORMS = old_announce[char] 
+        STRINGS.CHARACTERS.GENERIC.ANNOUNCE_WORMS_BOSS = old_announce_boss[char]
+      end
+    end
+    TheWorld:PushEvent("wavemanager_off")
+    IsUsingMSDoorDirty(inst)
+    UpdateCameraHeightToCave()
   end
+  
+  ThePlayer.map_level_current = level
+  ThePlayer.components.playervision:UpdateCCTable()
+  UpdateMountainReverb(level)
 end
 
 AddPlayerPostInit(function(inst)
@@ -116,34 +136,37 @@ AddPlayerPostInit(function(inst)
         COLLISION.GIANTS
       )
   end
+  
   inst._isusingmsdoor = net_ushortint(inst.GUID, "inst._isusingmsdoor", "isusingmsdoordirty")
   inst._isusingmsdoor:set(2)
+  
+  inst:AddComponent("dungeonplayertracker")
+  
   if not TheNet:IsDedicated() then
     inst:ListenForEvent("setowner", function(inst)
       if inst == ThePlayer then
-      IsUsingMSDoorDirty(inst)
-      inst:ListenForEvent("isusingmsdoordirty", IsUsingMSDoorDirty)
-      -- Not changearea, as it needs a node, and our artificial islands do not have it...
-      inst:DoTaskInTime(0, CheckMountainLevel) 
-      inst:DoPeriodicTask(0.3, function(inst) CheckMountainLevel(inst) end)
-      -- Client-only surface rain/snow FX for green vs snow mountain floors.
-      if TheWorld:HasTag("mountain_scream_dungeons") then
-        if ThePlayer.ms_fake_rain == nil or not ThePlayer.ms_fake_rain:IsValid() then
-          ThePlayer.ms_fake_rain = SpawnPrefab("ms_fake_rain")
+        inst:ListenForEvent("mslevelchanged", CheckMountainLevel)
+        inst:ListenForEvent("isusingmsdoordirty", IsUsingMSDoorDirty)
+        inst:DoTaskInTime(0, CheckMountainLevel) 
+        -- Client-only surface rain/snow FX for green vs snow mountain floors.
+        if TheWorld:HasTag("mountain_scream_dungeons") then
+          if ThePlayer.ms_fake_rain == nil or not ThePlayer.ms_fake_rain:IsValid() then
+            ThePlayer.ms_fake_rain = SpawnPrefab("ms_fake_rain")
+          end
+          if ThePlayer.ms_fake_snow == nil or not ThePlayer.ms_fake_snow:IsValid() then
+            ThePlayer.ms_fake_snow = SpawnPrefab("ms_fake_snow")
+          end
         end
-        if ThePlayer.ms_fake_snow == nil or not ThePlayer.ms_fake_snow:IsValid() then
-          ThePlayer.ms_fake_snow = SpawnPrefab("ms_fake_snow")
-        end
-      end
-    end  
+      end  
     end)
   end
+  
   if TheWorld.ismastersim and  TheWorld:HasTag("mountain_scream_dungeons") then
     inst.fake_light = SpawnPrefab("light_fake_overworld")
     inst.fake_light._target = inst   
     -- Otherwise not intensive enough. No, internsity > 1 does not fix this.
     inst.fake_light2 = SpawnPrefab("light_fake_overworld")
     inst.fake_light2._target = inst  
+    inst:ListenForEvent("mslevelchanged", LevelUpdateMaster)
   end
-
 end)

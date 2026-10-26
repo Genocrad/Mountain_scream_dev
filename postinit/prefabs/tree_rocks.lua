@@ -81,10 +81,8 @@ AddSimPostInit(function(inst)
             local weighted_total = CountWeightedTotal(weighted_table)
             return weighted_table
           end
-          print("No levels?")
         end
       end
-      print("No dungeonmapoverwatch?")
       return old_GetLootWeightedTable(inst)
     end
     

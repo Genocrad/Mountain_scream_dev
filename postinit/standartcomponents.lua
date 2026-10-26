@@ -156,15 +156,37 @@ function IsTeleportingPermittedFromPointToPoint(fx, fy, fz, tx, ty, tz, ...)
 end
 
 function IsInstInMSOverWorld(inst)  
-  local x,y,z = inst.Transform:GetWorldPosition()
-  if TheWorld.net.components.dungeonmapoverwatch and TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(x,y,z) ~= nil and TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(x,y,z) <= TUNING.MS_CAVES_START then
-    return true
+  if inst.components.dungeonplayertracker then
+    return inst.components.dungeonplayertracker:IsInMsOverWorld()
+  else
+    local x,y,z = inst.Transform:GetWorldPosition()
+    if TheWorld.net.components.dungeonmapoverwatch and TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(x,y,z) ~= nil and TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(x,y,z) <=  TUNING.MS_CAVES_START then
+      return true
+    end
   end
+  return false
 end
 
 function IsInstInMSCaves(inst)  
-  local x,y,z = inst.Transform:GetWorldPosition()
-  if TheWorld.net.components.dungeonmapoverwatch and TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(x,y,z) ~= nil and TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(x,y,z) > TUNING.MS_CAVES_START then
-    return true
+  if inst.components.dungeonplayertracker then
+    return inst.components.dungeonplayertracker:IsInMsCave()
+  else
+    local x,y,z = inst.Transform:GetWorldPosition()
+    if TheWorld.net.components.dungeonmapoverwatch and TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(x,y,z) ~= nil and TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(x,y,z) > TUNING.MS_CAVES_START then
+      return true
+    end
+    return false
+  end
+end
+
+function IsInstInMSLevel(inst)  
+  if inst.components.dungeonplayertracker then
+    return inst.components.dungeonplayertracker:IsInMsLevel()
+  else
+    local x,y,z = inst.Transform:GetWorldPosition()
+    if TheWorld.net.components.dungeonmapoverwatch and TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(x,y,z) ~= nil then
+      return true
+    end
+    return false
   end
 end

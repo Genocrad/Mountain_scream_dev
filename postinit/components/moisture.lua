@@ -6,9 +6,8 @@ GLOBAL.setfenv(1, GLOBAL)
 
 
 Moisture._GetMoistureRateAssumingRain = function(self)
-	local x,y,z = self.inst.Transform:GetWorldPosition() 
-  if TheWorld.net.components.dungeonmapoverwatch then
-    local level = TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(x,y,z)
+	if self.inst.components.dungeonplayertracker then
+    local level = self.inst.components.dungeonplayertracker:GetLevel()
     if level and level > TUNING.MS_RAIN_MAX_LEVEL and level <= TUNING.MS_CAVES_START then
       return 0
     end

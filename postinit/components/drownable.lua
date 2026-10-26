@@ -26,7 +26,7 @@ function Drownable:ShouldFallInVoid()
   if x == 0 and z == 0 then 
       return false
     end
-  if TheWorld.net.components.dungeonmapoverwatch and TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(x, y, z) then
+  if IsInstInMSLevel(self.inst) then
     return (not TheWorld.Map:IsVisualGroundAtPoint(x, y, z) and not TileGroupManager:IsLandTile(TheWorld.Map:GetTileAtPoint(x, y, z))) or TheWorld.Map:GetTileAtPoint(x, y, z) == WORLD_TILES.VOID_TECHNICAL
   else
     return old_ShouldFallInVoid(self)
@@ -35,7 +35,7 @@ end
 
 
 function Drownable:Teleport()
-  if TheWorld.net.components.dungeonmapoverwatch and TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(self.src_x, self.src_y, self.src_z) then
+  if IsInstInMSLevel(self.inst) then
     local target_x, target_y, target_z = self.dest_x, self.dest_y, self.dest_z
     if self.inst.Physics ~= nil then
         self.inst.Physics:Teleport(target_x, target_y, target_z)

@@ -316,8 +316,7 @@ function MapScreen:OnBecomeInactive()
     GLOBAL.TheCamera:SetHeadingTarget(GLOBAL.TheCamera.saved_camera_rotation)
     GLOBAL.TheCamera.heading = GLOBAL.TheCamera.saved_camera_rotation
   end
-  local x,y,z = GLOBAL.ThePlayer.Transform:GetWorldPosition()
-  if GLOBAL.TheWorld.net.components.dungeonmapoverwatch and GLOBAL.TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(x,y,z) ~= nil and GLOBAL.TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(x,y,z) > GLOBAL.TUNING.MS_CAVES_START then
+  if IsInstInMSCaves(GLOBAL.ThePlayer) then
     GLOBAL.TheCamera.controllable = false
   else
     GLOBAL.TheCamera.controllable = true

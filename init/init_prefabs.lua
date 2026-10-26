@@ -105,4 +105,5 @@ PrefabFiles = {
   "ms_giant_boulder",
   "ms_fake_rain",
   "ms_fake_snow",
+  "ms_falconwarning",
 }

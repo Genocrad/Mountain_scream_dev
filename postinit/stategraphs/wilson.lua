@@ -299,9 +299,7 @@ local function CanUmbrellaGlide(inst)
   if GetEquippedUmbrella(inst) == nil then
     return false
   end
-  local x, y, z = inst.Transform:GetWorldPosition()
-  return TheWorld.net.components.dungeonmapoverwatch ~= nil
-    and TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(x, y, z) ~= nil
+  return IsInstInMSLevel(inst)
 end
 
 local function ConsumeUmbrellaForGlide(inst)
@@ -480,7 +478,7 @@ AddStategraphPostInit("wilson", function(sg)
       v.fn = function(inst)
         old_fn(inst)
         local x,y,z = inst.Transform:GetWorldPosition()
-        if TheWorld.net.components.dungeonmapoverwatch and TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(x,y,z) then
+        if IsInstInMSLevel(inst) then
           inst:DoTaskInTime(0.029, function(inst)
             if inst.components.health then
               inst.components.health:DoDelta(-TUNING.MS_FALL_DAMAGE, false, "falling", true, nil, true)

@@ -19,12 +19,8 @@ AddPrefabPostInit("caverain", function(inst)
   if old_updatefn then
     local function updateFunc(fastforward, ...)
       if ThePlayer then  
-        local x,y,z = ThePlayer.Transform:GetWorldPosition()
-        local level = TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(x,y,z)
-        if level then
-          if level <= TUNING.MS_CAVES_START then
-            return
-          end
+        if IsInstInMSCaves(ThePlayer) then
+          return
         end
       end
       old_updatefn(fastforward, ...)

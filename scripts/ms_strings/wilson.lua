@@ -205,3 +205,5 @@ ___________________________ANNOUNCE.MS_MOUNTAIN_GOLEM_DEFEND_ABSORB = {
 	"Those charged sandblocks are healing it!",
 	"This can't go on; we need to destroy those blocks!",
 }
+
+STRINGS.CHARACTERS.GENERIC.ANNOUNCE_FALCON = "Is that falcon?"

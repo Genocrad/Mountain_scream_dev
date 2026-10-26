@@ -11,6 +11,7 @@ modimport("postinit/prefabs/butterfly")
 modimport("postinit/prefabs/goldnugget")
 modimport("postinit/prefabs/tree_rocks")
 modimport("postinit/prefabs/caverain")
+modimport("postinit/prefabs/player_classified")
 
 modimport("postinit/stategraphs/wilson")
 modimport("postinit/stategraphs/wilson_client")

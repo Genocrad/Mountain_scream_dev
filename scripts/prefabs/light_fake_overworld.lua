@@ -176,8 +176,7 @@ end
 
 local function UpdatePosition(inst)
   if inst._target == nil then
-    inst:Remove()
-    
+    inst:Remove()    
   else
 	local x, y, z = inst._target.Transform:GetWorldPosition()
   if x ~= nil then
@@ -186,27 +185,25 @@ local function UpdatePosition(inst)
         inst._z = z
         inst.Transform:SetPosition(x, 0, z)
     end
-    if TheWorld.net.components.dungeonmapoverwatch then
-      
-      local level = TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(x,y,z)
-      if level and level <= TUNING.MS_CAVES_START then
-        inst._lightswitch:set(true)
-        inst.Light:SetIntensity(light_params[TheWorld.state.cavephase].intensity)
-        inst.Light:Enable(true)
-      else
-        inst._lightswitch:set(false)
-        inst.Light:Enable(false)
-        inst.Light:SetIntensity(0)
-      end
-    else
-      inst:Remove()
-    end
+    
   else
     inst:Remove()
   end
   end
 end
-
+local function UpdateLevel(inst, level)
+  print(inst, level)
+  if level and level <= TUNING.MS_CAVES_START then
+    inst._lightswitch:set(true)
+    inst.Light:SetIntensity(light_params[TheWorld.state.cavephase].intensity)
+    inst.Light:Enable(true)
+  else
+    inst._lightswitch:set(false)
+    inst.Light:Enable(false)
+    inst.Light:SetIntensity(0)
+  end
+end
+    
 local function lightswitchdirty(inst)
   if inst._lightswitch:value() then
     inst.Light:SetIntensity(light_params[TheWorld.state.cavephase].intensity)
@@ -260,7 +257,9 @@ local function common_fn()
     
     inst:AddComponent("updatelooper")
     inst.components.updatelooper:AddOnUpdateFn(UpdatePosition)
-
+    
+    inst.UpdateLevel = UpdateLevel
+        
     return inst
 end
 
