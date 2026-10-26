@@ -1,3 +1,8 @@
+
+-- Falcon 应该监听目标的 mslevelchanged，而不是只靠 0.25s 轮询相应玩家换层
+-- 不过目前逻辑没有功能问题，先不做变动
+-- 这应该被列入待办事项（优化项）
+
 local assets =
 {
 	Asset("ANIM", "anim/mountain_falcon.zip"),

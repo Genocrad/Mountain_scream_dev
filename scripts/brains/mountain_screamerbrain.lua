@@ -12,7 +12,7 @@ local function GetHomePos(inst)
 end
 
 local function ShouldChase(inst)
-	if inst._wants_despawn then
+	if inst._wants_despawn or inst._wants_victory_laugh then
 		return false
 	end
 	local home = GetHomePos(inst)
@@ -24,8 +24,9 @@ local function ShouldChase(inst)
 		and target:GetDistanceSqToPoint(home) < TUNING.MOUNTAIN_SCREAMER.COMBAT_RANGE * TUNING.MOUNTAIN_SCREAMER.COMBAT_RANGE
 end
 
+-- 胜利笑播完后再回巢
 local function ShouldReturnHome(inst)
-	return inst._wants_despawn == true
+	return inst._wants_despawn == true and not inst._wants_victory_laugh
 end
 
 local function GetEatTarget(inst)
@@ -33,7 +34,7 @@ local function GetEatTarget(inst)
 end
 
 local function ShouldEat(inst)
-	if inst._wants_despawn or inst.sg:HasStateTag("busy") then
+	if inst._wants_despawn or inst._wants_victory_laugh or inst.sg:HasStateTag("busy") then
 		return false
 	end
 	if inst.components.health:GetPercent() >= 1 then
@@ -49,7 +50,7 @@ end
 
 local function ShouldPointAtTarget(inst)
 	local target = inst.components.combat.target
-	if target == nil or inst._wants_despawn then
+	if target == nil or inst._wants_despawn or inst._wants_victory_laugh then
 		return false
 	end
 	local home = GetHomePos(inst)
@@ -101,33 +102,37 @@ function Mountain_ScreamerBrain:OnStart()
 		WhileNode(
 			function() return not self.inst.sg:HasAnyStateTag("busy", "dead") end,
 			"<not busy>",
-			PriorityNode({
-				-- 脱战回巢（到家后由 idle 触发 disappear）
-				WhileNode(function() return ShouldReturnHome(self.inst) end, "return home",
-					Leash(self.inst, GetHomePos, 2, 0.5)),
+			-- 胜利笑等待中由 SG/periodic 切入，brain 停手
+			WhileNode(function() return not self.inst._wants_victory_laugh end, "not awaiting victory",
+				PriorityNode({
+					-- 脱战回巢（胜利笑播完后；到家由 idle 触发 disappear）
+					WhileNode(function() return ShouldReturnHome(self.inst) end, "return home",
+						Leash(self.inst, GetHomePos, 2, 0.5)),
 
-				-- 走近骷髅；贴近后由 idle/事件进入 eat
-				WhileNode(function() return ShouldEat(self.inst) end, "eat skeleton",
-					PriorityNode({
-						Leash(self.inst, GetSkeletonPos, TUNING.MOUNTAIN_SCREAMER.EAT_DIST * 0.9, 0.5),
-					}, 0.25)),
+					-- 走近骷髅；贴近后由 idle/事件进入 eat
+					WhileNode(function() return ShouldEat(self.inst) end, "eat skeleton",
+						PriorityNode({
+							Leash(self.inst, GetSkeletonPos, TUNING.MOUNTAIN_SCREAMER.EAT_DIST * 0.9, 0.5),
+						}, 0.25)),
 
-				WhileNode(function() return ShouldChase(self.inst) end, "chase and attack",
-					ChaseAndAttack(self.inst)),
+					WhileNode(function() return ShouldChase(self.inst) end, "chase and attack",
+						ChaseAndAttack(self.inst)),
 
-				WhileNode(function() return ShouldPointAtTarget(self.inst) end, "point at target",
-					PriorityNode({
-						Leash(self.inst, GetPointAtTargetPos, 6, 0.5),
-						FaceEntity(self.inst, GetPointAtTargetFn, KeepPointAtTargetFn),
-					}, 0.25)),
+					WhileNode(function() return ShouldPointAtTarget(self.inst) end, "point at target",
+						PriorityNode({
+							Leash(self.inst, GetPointAtTargetPos, 6, 0.5),
+							FaceEntity(self.inst, GetPointAtTargetFn, KeepPointAtTargetFn),
+						}, 0.25)),
 
-				Wander(self.inst, GetHomePos, 4, {
-					minwalktime = 2,
-					randwalktime = 1.5,
-					minwaittime = 3,
-					randwaittime = 2,
-				}),
-			}, 0.25)),
+					Wander(self.inst, GetHomePos, 4, {
+						minwalktime = 2,
+						randwalktime = 1.5,
+						minwaittime = 3,
+						randwaittime = 2,
+					}),
+				}, 0.25)
+			)
+		),
 	}, 0.25)
 
 	self.bt = BT(self.inst, root)

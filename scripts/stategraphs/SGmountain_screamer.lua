@@ -216,6 +216,17 @@ local events =
 			inst.sg:GoToState("disappear")
 		end
 	end),
+
+	-- 胜利笑：busy 时由 prefab 置 _wants_victory_laugh，idle/periodic 再进
+	EventHandler("ms_screamer_victory", function(inst)
+		if inst.components.health:IsDead() or inst.sg:HasStateTag("dead") then
+			return
+		end
+		if not inst.sg:HasStateTag("busy") then
+			inst._wants_victory_laugh = false
+			inst.sg:GoToState("laugh_pre", true)
+		end
+	end),
 }
 
 --------------------------------------------------------------------------
@@ -285,6 +296,7 @@ local states =
 					end
 					inst._engaged = false
 					inst._wants_despawn = false
+					inst._wants_victory_laugh = false
 					inst.sg:GoToState("idle", "idolidle")
 				end
 			end),
@@ -423,6 +435,13 @@ local states =
 		onenter = function(inst, playanim)
 			inst.components.locomotor:Stop()
 
+			-- 胜利笑优先于回巢/进食
+			if inst._wants_victory_laugh then
+				inst._wants_victory_laugh = false
+				inst.sg:GoToState("laugh_pre", true)
+				return
+			end
+
 			-- 脱战回巢到位 → 消失
 			if inst._wants_despawn and IsNearHome(inst, 3) then
 				inst.sg:GoToState("disappear")
@@ -444,11 +463,7 @@ local states =
 		end,
 
 		ontimeout = function(inst)
-			if math.random() < 0.2 then
-				inst.sg:GoToState("laugh_pre")
-			else
-				inst.sg:GoToState("idle")
-			end
+			inst.sg:GoToState("idle")
 		end,
 	},
 
@@ -571,12 +586,15 @@ local states =
 		},
 	},
 
+	-- data/victory=true：战斗胜利笑（略长）；播完后走回巢 disappear
 	State{
 		name = "laugh_pre",
 		tags = { "busy" },
 
-		onenter = function(inst)
+		onenter = function(inst, victory)
 			inst.components.locomotor:Stop()
+			inst.sg.statemem.victory = victory == true
+			inst._wants_victory_laugh = false
 			inst.AnimState:PlayAnimation("laugh_pre")
 		end,
 
@@ -584,7 +602,7 @@ local states =
 		{
 			EventHandler("animover", function(inst)
 				if inst.AnimState:AnimDone() then
-					inst.sg:GoToState("laugh_loop")
+					inst.sg:GoToState("laugh_loop", inst.sg.statemem.victory)
 				end
 			end),
 		},
@@ -594,14 +612,15 @@ local states =
 		name = "laugh_loop",
 		tags = { "busy" },
 
-		onenter = function(inst)
+		onenter = function(inst, victory)
+			inst.sg.statemem.victory = victory == true
 			inst.AnimState:PlayAnimation("laugh_loop", true)
-			inst.sg.statemem.loops = math.random(1, 2)
+			inst.sg.statemem.loops = victory and 2 or math.random(1, 2)
 			inst.sg:SetTimeout(inst.AnimState:GetCurrentAnimationLength() * inst.sg.statemem.loops)
 		end,
 
 		ontimeout = function(inst)
-			inst.sg:GoToState("laugh_pst")
+			inst.sg:GoToState("laugh_pst", inst.sg.statemem.victory)
 		end,
 	},
 
@@ -609,7 +628,8 @@ local states =
 		name = "laugh_pst",
 		tags = { "busy" },
 
-		onenter = function(inst)
+		onenter = function(inst, victory)
+			inst.sg.statemem.victory = victory == true
 			inst.AnimState:PlayAnimation("laugh_pst")
 		end,
 
@@ -617,6 +637,7 @@ local states =
 		{
 			EventHandler("animover", function(inst)
 				if inst.AnimState:AnimDone() then
+					-- 胜利笑后交回 idle → brain 回巢 / 近家 disappear
 					inst.sg:GoToState("idle")
 				end
 			end),
@@ -793,11 +814,7 @@ local states =
 		{
 			EventHandler("animover", function(inst)
 				if inst.AnimState:AnimDone() then
-					if inst.sg.statemem.ate and math.random() < 0.5 then
-						inst.sg:GoToState("laugh_pre")
-					else
-						inst.sg:GoToState("idle")
-					end
+					inst.sg:GoToState("idle")
 				end
 			end),
 		},

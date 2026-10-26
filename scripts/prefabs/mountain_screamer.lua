@@ -83,16 +83,57 @@ local function OnAttacked(inst, data)
 	inst.components.combat:SetTarget(data.attacker)
 end
 
+local function IsTargetDefeated(target)
+	if target == nil then
+		return false
+	end
+	if not target:IsValid() then
+		return true
+	end
+	if target:HasTag("playerghost") then
+		return true
+	end
+	return target.components.health ~= nil and target.components.health:IsDead()
+end
+
+local function TryVictoryLaugh(inst)
+	if not inst._wants_victory_laugh or inst.components.health:IsDead() then
+		return
+	end
+	if inst.sg:HasStateTag("busy") or inst.sg:HasStateTag("dead") then
+		return
+	end
+	inst._wants_victory_laugh = false
+	inst.sg:GoToState("laugh_pre", true)
+end
+
 local function OnNewTarget(inst, data)
 	if data ~= nil and data.target ~= nil then
 		inst._engaged = true
 		inst._wants_despawn = false
+		inst._wants_victory_laugh = false
 	end
 end
 
-local function OnDroppedTarget(inst)
-	if inst._engaged then
-		inst._wants_despawn = true
+local function OnDroppedTarget(inst, data)
+	if not inst._engaged or inst.components.health:IsDead() then
+		return
+	end
+
+	-- 仍有领地内可打目标 → 立即换仇，不算脱战/胜利
+	local next_target = RetargetFn(inst)
+	if next_target ~= nil then
+		inst.components.combat:SetTarget(next_target)
+		return
+	end
+
+	inst._wants_despawn = true
+
+	-- 旧目标阵亡且无人可接战 → 胜利笑，再回巢
+	if IsTargetDefeated(data ~= nil and data.target or nil) then
+		inst._wants_victory_laugh = true
+		inst:PushEvent("ms_screamer_victory")
+		TryVictoryLaugh(inst)
 	end
 end
 
@@ -112,6 +153,7 @@ local function StartBattle(inst, pos)
 	end
 	inst._engaged = true
 	inst._wants_despawn = false
+	inst._wants_victory_laugh = false
 	if pos ~= nil then
 		inst.Physics:Teleport(pos.x, 0, pos.z)
 	end
@@ -168,6 +210,7 @@ local function fn()
 
 	inst._engaged = false
 	inst._wants_despawn = false
+	inst._wants_victory_laugh = false
 
 	inst:AddComponent("inspectable")
 
@@ -210,10 +253,14 @@ local function fn()
 	inst:ListenForEvent("newcombattarget", OnNewTarget)
 	inst:ListenForEvent("droppedtarget", OnDroppedTarget)
 
-	-- 走近骷髅时触发进食
+	-- 胜利笑补触发；走近骷髅时触发进食
 	inst:DoPeriodicTask(0.5, function(inst)
-		if inst.components.health:IsDead()
-			or inst._wants_despawn
+		if inst.components.health:IsDead() then
+			return
+		end
+		TryVictoryLaugh(inst)
+		if inst._wants_despawn
+			or inst._wants_victory_laugh
 			or inst.sg:HasStateTag("busy")
 		then
 			return
