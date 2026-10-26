@@ -125,6 +125,16 @@ local function CheckMountainLevel(inst, level)
   UpdateMountainReverb(level)
 end
 
+local function OnPhase(inst, phase)
+  if IsInstInMSOverWorld(inst) then
+    if phase == "day" then
+      inst.components.sanity:SetLightDrainImmune(true, inst)
+    else
+      inst.components.sanity:SetLightDrainImmune(false, inst)
+    end
+  end
+end
+
 AddPlayerPostInit(function(inst)
   -- To cancel stuff we did in MakeCharacterPhysics, as it does not have a name or prefab at loading. (?)
   if not enable_collision_for_player then
@@ -168,5 +178,6 @@ AddPlayerPostInit(function(inst)
     inst.fake_light2 = SpawnPrefab("light_fake_overworld")
     inst.fake_light2._target = inst  
     inst:ListenForEvent("mslevelchanged", LevelUpdateMaster)
+    inst:WatchWorldState("cavephase", OnPhase)
   end
 end)
