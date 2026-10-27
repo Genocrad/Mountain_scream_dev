@@ -84,6 +84,7 @@ AddPrefabPostInit("cave", function(inst)
   inst:AddComponent("dungeonwallspawner")
   inst:AddComponent("dungeoncontentspawner")
   inst:AddComponent("mountainbutterflyspawner")
+  inst:AddComponent("mountainscreamerspawner")
 
   inst.onterraformingfinished = onterraformingfinished
   inst:ListenForEvent("terraforming_finished", inst.onterraformingfinished)

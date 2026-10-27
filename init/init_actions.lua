@@ -166,8 +166,9 @@ AddComponentAction("EQUIPPED", "aoetargeting", function(inst, doer, target, acti
 		return
 	end
 
-	-- 铝镐：只对石钟乳「开采」
-	if inst:HasTag("ms_aluminum_pickaxe") and target:HasTag("mountain_stalactite") then
+	-- 铝镐：石钟乳 / 仅投掷可挖目标（如骨灯）「开采」
+	if inst:HasTag("ms_aluminum_pickaxe")
+			and (target:HasTag("mountain_stalactite") or target:HasTag("ms_aluminum_throw_mine")) then
 		table.insert(actions, ACTIONS.MS_MINE_STALACTITE)
 		return
 	end

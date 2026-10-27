@@ -70,16 +70,41 @@ end
 
 ------------------------------------------------------------------------------------------------------------------------
 
+local function MineThrowOnly(doer, target, efficiency)
+	if target == nil or not target:IsValid() or target.components.workable == nil then
+		return
+	end
+	if target.components.workable:GetWorkAction() ~= ACTIONS.MINE then
+		return
+	end
+	if target.components.workable.workleft == nil or target.components.workable.workleft <= 0 then
+		return
+	end
+
+	target.components.workable:SetWorkable(true)
+	PlayMiningFX(doer, target)
+	target.components.workable:WorkedBy(doer, efficiency)
+
+	if target:IsValid()
+			and target.components.workable ~= nil
+			and target:HasTag("ms_aluminum_throw_mine") then
+		target.components.workable:SetWorkable(false)
+	end
+end
+
 local function MineAt(doer, x, y, z)
 	local efficiency = TUNING.MOUNTAIN_ALUMINUM_PICKAXE.MINE_EFFICIENCY
 	local radius = TUNING.MOUNTAIN_ALUMINUM_PICKAXE.MINE_RADIUS
 	local ents = TheSim:FindEntities(x, y, z, radius, nil, { "INLIMBO", "NOCLICK", "FX", "player", "companion", "mountain_stalactite" })
 	for _, v in ipairs(ents) do
-		if v.components.workable ~= nil
-				and v.components.workable:CanBeWorked()
-				and v.components.workable:GetWorkAction() == ACTIONS.MINE then
-			PlayMiningFX(doer, v)
-			v.components.workable:WorkedBy(doer, efficiency)
+		if v.components.workable ~= nil then
+			if v:HasTag("ms_aluminum_throw_mine") then
+				MineThrowOnly(doer, v, efficiency)
+			elseif v.components.workable:CanBeWorked()
+					and v.components.workable:GetWorkAction() == ACTIONS.MINE then
+				PlayMiningFX(doer, v)
+				v.components.workable:WorkedBy(doer, efficiency)
+			end
 		end
 	end
 end
@@ -151,8 +176,12 @@ local function DropItem(proj, thrower, target)
 end
 
 local function OnHitStalactite(proj, thrower, target)
-	if target ~= nil and target:IsValid() and target:HasTag("mountain_stalactite") then
-		MineStalactite(thrower, target)
+	if target ~= nil and target:IsValid() then
+		if target:HasTag("mountain_stalactite") then
+			MineStalactite(thrower, target)
+		elseif target:HasTag("ms_aluminum_throw_mine") then
+			MineThrowOnly(thrower, target, TUNING.MOUNTAIN_ALUMINUM_PICKAXE.MINE_EFFICIENCY)
+		end
 	end
 	-- 从命中高度落下，而不是直接放到地面
 	ReturnItemToWorld(proj, thrower, false, true)
@@ -192,8 +221,14 @@ local function SpellFn(inst, doer, pos)
 	return true
 end
 
+local function CanThrowMineAt(target)
+	return target ~= nil
+		and target:IsValid()
+		and (target:HasTag("mountain_stalactite") or target:HasTag("ms_aluminum_throw_mine"))
+end
+
 local function ThrowAtStalactite(inst, doer, target)
-	if doer == nil or target == nil or not target:IsValid() or not target:HasTag("mountain_stalactite") then
+	if doer == nil or not CanThrowMineAt(target) then
 		return false
 	end
 
@@ -212,6 +247,7 @@ local function ThrowAtStalactite(inst, doer, target)
 
 	-- 钟乳石：实体 Y=0，用 throw_hit_height（天花板）
 	-- 墙面可疑矿石(ms_wall_stone)：生成时已有真实 Y，直接飞向实体位置
+	-- 骨灯等地面 throw_mine：飞向实体位置
 	local tx, ty, tz = target.Transform:GetWorldPosition()
 	local hit_y = target.throw_hit_height or ty
 	local dest = Vector3(tx, hit_y, tz)

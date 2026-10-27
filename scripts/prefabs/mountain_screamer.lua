@@ -29,36 +29,91 @@ local TARGET_CANT_TAGS = { "INLIMBO", "flight", "invisible", "notarget", "player
 local SKELETON_MUST_TAGS = { "skeleton" }
 local SKELETON_CANT_TAGS = { "INLIMBO", "NOCLICK" }
 
-local function GetHomePos(inst)
-	return inst.components.knownlocations ~= nil
-		and inst.components.knownlocations:GetLocation("spawnpoint")
-		or nil
-end
-
-local function IsTargetInCombatRange(inst, target)
-	local home = GetHomePos(inst)
-	if home == nil then
-		return true
-	end
-	local range = TUNING.MOUNTAIN_SCREAMER.COMBAT_RANGE
-	return target:GetDistanceSqToPoint(home) < range * range
-end
-
 local function RetargetFn(inst)
+	if inst._stalking then
+		return nil
+	end
 	return FindEntity(inst, TUNING.MOUNTAIN_SCREAMER.DEAGGRO_DIST, function(guy)
 		return inst.components.combat:CanTarget(guy)
-			and IsTargetInCombatRange(inst, guy)
 	end, TARGET_MUST_TAGS, TARGET_CANT_TAGS)
 end
 
 local function KeepTargetFn(inst, target)
+	if inst._stalking then
+		return false
+	end
 	return inst.components.combat:CanTarget(target)
 		and inst:IsNear(target, TUNING.MOUNTAIN_SCREAMER.DEAGGRO_DIST)
-		and IsTargetInCombatRange(inst, target)
+end
+
+local function IsValidStalkTarget(target)
+	return target ~= nil
+		and target:IsValid()
+		and target:HasTag("player")
+		and not target:HasTag("playerghost")
+		and IsInstInMSOverWorld(target)
+end
+
+local function GetStalkRelocatePos(inst, target)
+	if target == nil or not target:IsValid() then
+		return nil
+	end
+	local x, y, z = target.Transform:GetWorldPosition()
+	local min = TUNING.MOUNTAIN_SCREAMER.STALK_SPAWN_DIST_MIN
+	local max = TUNING.MOUNTAIN_SCREAMER.STALK_SPAWN_DIST_MAX
+	local dist = GetRandomMinMax(min, max)
+	local offset = FindWalkableOffset(
+		Vector3(x, 0, z),
+		math.random() * TWOPI,
+		dist,
+		12,
+		false,
+		true
+	)
+	if offset ~= nil then
+		return Vector3(x + offset.x, 0, z + offset.z)
+	end
+	local theta = math.random() * TWOPI
+	return Vector3(x + dist * math.cos(theta), 0, z + dist * math.sin(theta))
+end
+
+local function LeaveNow(inst)
+	if inst.components.health:IsDead() then
+		return
+	end
+	inst:PushEvent("ms_screamer_leave")
+end
+
+local function EngageFromStalk(inst, attacker)
+	if not inst._stalking or inst.components.health:IsDead() then
+		return
+	end
+
+	inst._stalking = false
+	inst._stalk_target = nil
+	inst._engaged = true
+	inst._wants_despawn = false
+	inst._wants_victory_laugh = false
+	inst.persists = true
+
+	if attacker ~= nil and attacker:IsValid() then
+		inst.components.combat:SetTarget(attacker)
+	end
+
+	-- 同帧 SG attacked 处理器可能仍会跑到，避免把 taunt 顶成 hit
+	inst._just_engaged_from_stalk = true
+	if not inst.sg:HasStateTag("dead") then
+		inst.sg:GoToState("taunt")
+	end
 end
 
 local function OnAttacked(inst, data)
 	if data == nil or data.attacker == nil or not data.attacker:IsValid() then
+		return
+	end
+
+	if inst._stalking then
+		EngageFromStalk(inst, data.attacker)
 		return
 	end
 
@@ -108,6 +163,10 @@ local function TryVictoryLaugh(inst)
 end
 
 local function OnNewTarget(inst, data)
+	if inst._stalking then
+		inst.components.combat:DropTarget()
+		return
+	end
 	if data ~= nil and data.target ~= nil then
 		inst._engaged = true
 		inst._wants_despawn = false
@@ -116,24 +175,26 @@ local function OnNewTarget(inst, data)
 end
 
 local function OnDroppedTarget(inst, data)
-	if not inst._engaged or inst.components.health:IsDead() then
+	if inst._stalking or not inst._engaged or inst.components.health:IsDead() then
 		return
 	end
 
-	-- 仍有领地内可打目标 → 立即换仇，不算脱战/胜利
+	-- 仍有可打目标 → 立即换仇
 	local next_target = RetargetFn(inst)
 	if next_target ~= nil then
 		inst.components.combat:SetTarget(next_target)
 		return
 	end
 
-	inst._wants_despawn = true
-
-	-- 旧目标阵亡且无人可接战 → 胜利笑，再回巢
+	-- 脱战：白天直接离开；夜晚原地闲逛等天亮（玩家可复活继续挑战）
+	inst._loiter_pos = inst:GetPosition()
 	if IsTargetDefeated(data ~= nil and data.target or nil) then
 		inst._wants_victory_laugh = true
 		inst:PushEvent("ms_screamer_victory")
 		TryVictoryLaugh(inst)
+	end
+	if not TheWorld.state.iscavenight then
+		inst:PushEvent("ms_screamer_leave")
 	end
 end
 
@@ -151,6 +212,8 @@ local function StartBattle(inst, pos)
 	if inst.components.health:IsDead() then
 		return
 	end
+	inst._stalking = false
+	inst._stalk_target = nil
 	inst._engaged = true
 	inst._wants_despawn = false
 	inst._wants_victory_laugh = false
@@ -162,9 +225,28 @@ local function StartBattle(inst, pos)
 	end
 end
 
+local function StartStalk(inst, player)
+	if inst.components.health:IsDead() or player == nil or not player:IsValid() then
+		return
+	end
+
+	inst._stalking = true
+	inst._stalk_target = player
+	inst._engaged = false
+	inst._wants_despawn = false
+	inst._wants_victory_laugh = false
+	inst.persists = false
+	inst.components.combat:DropTarget()
+
+	if not inst.sg:HasStateTag("busy") then
+		inst.sg:GoToState("appear")
+	end
+end
+
 local function OnSave(inst, data)
 	data.engaged = inst._engaged or nil
 	data.wants_despawn = inst._wants_despawn or nil
+	-- stalk encounters do not persist
 end
 
 local function OnLoad(inst, data)
@@ -172,6 +254,28 @@ local function OnLoad(inst, data)
 		inst._engaged = data.engaged
 		inst._wants_despawn = data.wants_despawn
 	end
+end
+
+local function HasActiveCombatTarget(inst)
+	local target = inst.components.combat ~= nil and inst.components.combat.target or nil
+	if target == nil or not target:IsValid() or target:HasTag("playerghost") then
+		return false
+	end
+	if target.components.health ~= nil and target.components.health:IsDead() then
+		return false
+	end
+	return true
+end
+
+-- 天亮离开：注视态，或已开战但当前没在打（闲逛等待中）
+local function OnIsCaveNight(inst, iscavenight)
+	if iscavenight or inst.components.health:IsDead() then
+		return
+	end
+	if HasActiveCombatTarget(inst) then
+		return
+	end
+	inst:PushEvent("ms_screamer_leave")
 end
 
 --------------------------------------------------------------------------
@@ -209,6 +313,8 @@ local function fn()
 	end
 
 	inst._engaged = false
+	inst._stalking = false
+	inst._stalk_target = nil
 	inst._wants_despawn = false
 	inst._wants_victory_laugh = false
 
@@ -238,31 +344,48 @@ local function fn()
 	inst:AddComponent("lootdropper")
 	inst.components.lootdropper:SetChanceLootTable("mountain_screamer")
 
-	inst:AddComponent("knownlocations")
-
 	inst:AddComponent("sanityaura")
 	inst.components.sanityaura.aura = -TUNING.SANITYAURA_MED
 
 	MakeHauntable(inst)
 
 	inst.FindSkeleton = FindSkeleton
-	inst.GetHomePos = GetHomePos
 	inst.StartBattle = StartBattle
+	inst.StartStalk = StartStalk
+	inst.EngageFromStalk = EngageFromStalk
+	inst.GetStalkRelocatePos = GetStalkRelocatePos
+	inst.IsValidStalkTarget = IsValidStalkTarget
 
 	inst:ListenForEvent("attacked", OnAttacked)
 	inst:ListenForEvent("newcombattarget", OnNewTarget)
 	inst:ListenForEvent("droppedtarget", OnDroppedTarget)
 
-	-- 胜利笑补触发；走近骷髅时触发进食
+	inst:WatchWorldState("iscavenight", OnIsCaveNight)
+
+	-- 注视态：目标失效/离开表层 → 离开；距离过远 → 跟随瞬移
 	inst:DoPeriodicTask(0.5, function(inst)
 		if inst.components.health:IsDead() then
 			return
 		end
+
+		if inst._stalking then
+			local target = inst._stalk_target
+			if not IsValidStalkTarget(target) then
+				LeaveNow(inst)
+				return
+			end
+			if inst.sg:HasStateTag("busy") then
+				return
+			end
+			local follow = TUNING.MOUNTAIN_SCREAMER.STALK_FOLLOW_DIST
+			if not inst:IsNear(target, follow) then
+				inst:PushEvent("ms_screamer_stalkrelocate")
+			end
+			return
+		end
+
 		TryVictoryLaugh(inst)
-		if inst._wants_despawn
-			or inst._wants_victory_laugh
-			or inst.sg:HasStateTag("busy")
-		then
+		if inst._wants_victory_laugh or inst.sg:HasStateTag("busy") then
 			return
 		end
 		local skel = FindSkeleton(inst)

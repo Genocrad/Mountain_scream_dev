@@ -851,6 +851,7 @@ TUNING.MOUNTAIN_SUSPICIOUS_ORE = {
 }
 
 -- XK, ill make those individual in case zeroguzok wants to adjust loots even more.
+-- Got it
 TUNING.MS_GEODE_ORE = {
   WORK_LEFT = 1,
   LOOTS = {
@@ -1000,6 +1001,14 @@ TUNING.MOUNTAIN_ALUMINUM_PICKAXE = {
 	THROW_SPEED = 30,
 	THROW_RANGE = 15,
 	HIT_DIST = 0.75,
+}
+
+-- ms_bone_pile / ms_bone_throne / ms_bone_chandelier
+TUNING.MS_BONE_STRUCTURES = {
+	WORK_LEFT = 6,
+	CHANDELIER_WORK_LEFT = 3,
+	RESTORE_TIME = TUNING.TOTAL_DAY_TIME * 2,
+	LOOT = "goldnugget",
 }
 
 -- mountain_aluminum_dagger（铝剑；只能投掷；落地自捡）
@@ -1279,7 +1288,17 @@ TUNING.MOUNTAIN_SCREAMER = {
 	BLINK_HIT_RADIUS = 3,        -- 落地冲击半径
 	BLINK_KNOCKBACK_RADIUS = 3,  -- 击飞判定半径
 	BLINK_KNOCKBACK_STRENGTH = 1.5, -- 击飞力度
-	BLINK_WARNING_SCALE = 1.8,   -- warningshadow 缩放（对齐命中半径，进游戏可再调）
+	BLINK_WARNING_SCALE = 1.8,   -- warningshadow 缩放
+
+	-- 近战击飞（不含尖啸汲取）
+	ATTACK_KNOCKBACK_RADIUS = 3,
+	ATTACK_KNOCKBACK_STRENGTH = 1.25,
+
+	-- 夜间注视遭遇（仅山表层 IsInstInMSOverWorld；同晚最多一只）
+	STALK_SPAWN_CHANCE = 0.9,    -- 入夜基础出现概率，默认20%，测试阶段调的比较大
+	STALK_SPAWN_DIST_MIN = 6,    -- 刷出/跟随落点距玩家最小
+	STALK_SPAWN_DIST_MAX = 10,   -- 刷出/跟随落点距玩家最大
+	STALK_FOLLOW_DIST = 15,      -- 走出该距离后 disappear→appear 跟上
 
 	EAT_HEAL = 500,              -- 吃骷髅回血量
 	EAT_RANGE = 15,              -- 搜寻骷髅范围

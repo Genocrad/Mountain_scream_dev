@@ -718,6 +718,7 @@ local function master_postinit(inst)
     inst:AddComponent("mutatedbirdmanager")
     
     inst:AddComponent("dungeonwallspawner")
+    inst:AddComponent("mountainscreamerspawner")
     inst:ListenForEvent("terraforming_finished", onterraformingfinished)
 end
 

@@ -7,26 +7,11 @@ local Mountain_ScreamerBrain = Class(Brain, function(self, inst)
 	Brain._ctor(self, inst)
 end)
 
-local function GetHomePos(inst)
-	return inst.components.knownlocations:GetLocation("spawnpoint")
-end
-
 local function ShouldChase(inst)
-	if inst._wants_despawn or inst._wants_victory_laugh then
+	if inst._stalking or inst._wants_victory_laugh then
 		return false
 	end
-	local home = GetHomePos(inst)
-	if home == nil then
-		return inst.components.combat.target ~= nil
-	end
-	local target = inst.components.combat.target
-	return target ~= nil
-		and target:GetDistanceSqToPoint(home) < TUNING.MOUNTAIN_SCREAMER.COMBAT_RANGE * TUNING.MOUNTAIN_SCREAMER.COMBAT_RANGE
-end
-
--- 胜利笑播完后再回巢
-local function ShouldReturnHome(inst)
-	return inst._wants_despawn == true and not inst._wants_victory_laugh
+	return inst.components.combat.target ~= nil
 end
 
 local function GetEatTarget(inst)
@@ -34,7 +19,7 @@ local function GetEatTarget(inst)
 end
 
 local function ShouldEat(inst)
-	if inst._wants_despawn or inst._wants_victory_laugh or inst.sg:HasStateTag("busy") then
+	if inst._stalking or inst._wants_victory_laugh or inst.sg:HasStateTag("busy") then
 		return false
 	end
 	if inst.components.health:GetPercent() >= 1 then
@@ -48,53 +33,25 @@ local function GetSkeletonPos(inst)
 	return skel ~= nil and skel:GetPosition() or nil
 end
 
-local function ShouldPointAtTarget(inst)
-	local target = inst.components.combat.target
-	if target == nil or inst._wants_despawn or inst._wants_victory_laugh then
-		return false
-	end
-	local home = GetHomePos(inst)
-	if home == nil then
-		return false
-	end
-	local x1, y1, z1 = target.Transform:GetWorldPosition()
-	local dsq = distsq(x1, z1, home.x, home.z)
-	local range = TUNING.MOUNTAIN_SCREAMER.COMBAT_RANGE
-	if dsq >= range * range then
-		return true
-	end
-	range = range - 4
-	if dsq < range * range then
-		return false
-	elseif inst:GetDistanceSqToPoint(x1, y1, z1) < 16 then
-		return false
-	end
-	return true
+local function ShouldStalk(inst)
+	return inst._stalking == true
+		and inst._stalk_target ~= nil
+		and (inst.IsValidStalkTarget == nil or inst:IsValidStalkTarget(inst._stalk_target))
 end
 
-local function GetPointAtTargetFn(inst)
-	return inst.components.combat.target
+local function GetStalkTarget(inst)
+	return inst._stalk_target
 end
 
-local function KeepPointAtTargetFn(inst, target)
-	return inst.components.combat:TargetIs(target)
+local function KeepStalkTarget(inst, target)
+	return inst._stalking
+		and target == inst._stalk_target
+		and (inst.IsValidStalkTarget == nil or inst:IsValidStalkTarget(target))
 end
 
-local function GetPointAtTargetPos(inst)
-	local target = inst.components.combat.target
-	if target then
-		local home = GetHomePos(inst)
-		if home then
-			local x1, y1, z1 = target.Transform:GetWorldPosition()
-			local dx = x1 - home.x
-			local dz = z1 - home.z
-			local len_sq = dx * dx + dz * dz
-			if len_sq > 0 then
-				local len = (TUNING.MOUNTAIN_SCREAMER.COMBAT_RANGE - 10) / math.sqrt(len_sq)
-				return Vector3(home.x + dx * len, 0, home.z + dz * len)
-			end
-		end
-	end
+-- 脱战后以脱战点为中心闲逛（无 home）
+local function GetLoiterPos(inst)
+	return inst._loiter_pos or inst:GetPosition()
 end
 
 function Mountain_ScreamerBrain:OnStart()
@@ -102,44 +59,37 @@ function Mountain_ScreamerBrain:OnStart()
 		WhileNode(
 			function() return not self.inst.sg:HasAnyStateTag("busy", "dead") end,
 			"<not busy>",
-			-- 胜利笑等待中由 SG/periodic 切入，brain 停手
-			WhileNode(function() return not self.inst._wants_victory_laugh end, "not awaiting victory",
-				PriorityNode({
-					-- 脱战回巢（胜利笑播完后；到家由 idle 触发 disappear）
-					WhileNode(function() return ShouldReturnHome(self.inst) end, "return home",
-						Leash(self.inst, GetHomePos, 2, 0.5)),
+			PriorityNode({
+				-- 夜间注视：只面向玩家
+				WhileNode(function() return ShouldStalk(self.inst) end, "stalk stare",
+					FaceEntity(self.inst, GetStalkTarget, KeepStalkTarget)),
 
-					-- 走近骷髅；贴近后由 idle/事件进入 eat
-					WhileNode(function() return ShouldEat(self.inst) end, "eat skeleton",
+				WhileNode(function() return not self.inst._stalking end, "not stalking",
+					WhileNode(function() return not self.inst._wants_victory_laugh end, "not awaiting victory",
 						PriorityNode({
-							Leash(self.inst, GetSkeletonPos, TUNING.MOUNTAIN_SCREAMER.EAT_DIST * 0.9, 0.5),
-						}, 0.25)),
+							WhileNode(function() return ShouldEat(self.inst) end, "eat skeleton",
+								PriorityNode({
+									Leash(self.inst, GetSkeletonPos, TUNING.MOUNTAIN_SCREAMER.EAT_DIST * 0.9, 0.5),
+								}, 0.25)),
 
-					WhileNode(function() return ShouldChase(self.inst) end, "chase and attack",
-						ChaseAndAttack(self.inst)),
+							WhileNode(function() return ShouldChase(self.inst) end, "chase and attack",
+								ChaseAndAttack(self.inst)),
 
-					WhileNode(function() return ShouldPointAtTarget(self.inst) end, "point at target",
-						PriorityNode({
-							Leash(self.inst, GetPointAtTargetPos, 6, 0.5),
-							FaceEntity(self.inst, GetPointAtTargetFn, KeepPointAtTargetFn),
-						}, 0.25)),
-
-					Wander(self.inst, GetHomePos, 4, {
-						minwalktime = 2,
-						randwalktime = 1.5,
-						minwaittime = 3,
-						randwaittime = 2,
-					}),
-				}, 0.25)
-			)
+							-- 脱战等待天亮：在脱战点附近闲逛，复活的玩家可被重新索敌
+							Wander(self.inst, GetLoiterPos, 8, {
+								minwalktime = 2,
+								randwalktime = 1.5,
+								minwaittime = 3,
+								randwaittime = 2,
+							}),
+						}, 0.25)
+					)
+				),
+			}, 0.25)
 		),
 	}, 0.25)
 
 	self.bt = BT(self.inst, root)
-end
-
-function Mountain_ScreamerBrain:OnInitializationComplete()
-	self.inst.components.knownlocations:RememberLocation("spawnpoint", self.inst:GetPosition(), true)
 end
 
 return Mountain_ScreamerBrain

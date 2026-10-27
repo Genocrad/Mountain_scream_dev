@@ -6,6 +6,9 @@ local SCREAM_DRAIN_MUST = { "_combat", "_health" }
 local SCREAM_DRAIN_CANT = { "INLIMBO", "flight", "invisible", "notarget", "playerghost", "mountain_screamer", "FX", "DECOR", "epic" }
 
 local function ChooseIdleAnim(inst)
+	if inst._stalking then
+		return "idolidle"
+	end
 	if not inst._engaged then
 		local r = math.random()
 		if r < 0.55 then
@@ -24,19 +27,20 @@ local function ChooseIdleAnim(inst)
 	return "idolidle"
 end
 
-local function GetHomePos(inst)
-	return inst.components.knownlocations ~= nil
-		and inst.components.knownlocations:GetLocation("spawnpoint")
-		or nil
-end
-
-local function IsNearHome(inst, dist)
-	local home = GetHomePos(inst)
-	if home == nil then
-		return true
+local function KnockbackTarget(inst, target)
+	if target == nil or not target:IsValid() or not target:HasTag("player") then
+		return
 	end
-	dist = dist or 3
-	return inst:GetDistanceSqToPoint(home) < dist * dist
+	if target.components.health ~= nil and target.components.health:IsDead() then
+		return
+	end
+	-- heavyarmor / heavybody：由玩家 SG 自行把 knockback 转为 knockbacklanded
+	target:PushEvent("knockback", {
+		knocker = inst,
+		radius = TUNING.MOUNTAIN_SCREAMER.ATTACK_KNOCKBACK_RADIUS,
+		strengthmult = TUNING.MOUNTAIN_SCREAMER.ATTACK_KNOCKBACK_STRENGTH,
+		forcelanded = false,
+	})
 end
 
 local function DoScreamDrain(inst)
@@ -176,13 +180,19 @@ local events =
 	CommonHandlers.OnDeath(),
 
 	EventHandler("doattack", function(inst, data)
-		if not (inst.sg:HasStateTag("busy") or inst.components.health:IsDead()) then
-			ChooseAttack(inst, data ~= nil and data.target or inst.components.combat.target)
+		if inst._stalking or inst.sg:HasStateTag("busy") or inst.components.health:IsDead() then
+			return
 		end
+		ChooseAttack(inst, data ~= nil and data.target or inst.components.combat.target)
 	end),
 
 	EventHandler("attacked", function(inst, data)
 		if inst.components.health:IsDead() then
+			return
+		end
+		-- 注视态开战：prefab 切 taunt，不播 hit
+		if inst._stalking or inst._just_engaged_from_stalk or inst.sg.currentstate.name == "taunt" then
+			inst._just_engaged_from_stalk = nil
 			return
 		end
 		if inst.sg:HasStateTag("screaming") then
@@ -193,6 +203,24 @@ local events =
 			if not CommonHandlers.HitRecoveryDelay(inst, TUNING.MOUNTAIN_SCREAMER.HIT_RECOVERY) then
 				inst.sg:GoToState("hit")
 			end
+		end
+	end),
+
+	EventHandler("ms_screamer_leave", function(inst)
+		if inst.components.health:IsDead() or inst.sg:HasStateTag("dead") then
+			return
+		end
+		if not inst.sg:HasStateTag("leaving") then
+			inst.sg:GoToState("leave")
+		end
+	end),
+
+	EventHandler("ms_screamer_stalkrelocate", function(inst)
+		if not inst._stalking or inst.components.health:IsDead() then
+			return
+		end
+		if not (inst.sg:HasStateTag("busy") or inst.sg:HasStateTag("dead")) then
+			inst.sg:GoToState("stalk_relocate_out")
 		end
 	end),
 
@@ -212,8 +240,11 @@ local events =
 	end),
 
 	EventHandler("ms_screamer_despawn", function(inst)
-		if not (inst.sg:HasStateTag("busy") or inst.components.health:IsDead()) then
-			inst.sg:GoToState("disappear")
+		if inst.components.health:IsDead() or inst.sg:HasStateTag("dead") then
+			return
+		end
+		if not inst.sg:HasStateTag("leaving") then
+			inst.sg:GoToState("leave")
 		end
 	end),
 
@@ -246,6 +277,16 @@ local states =
 			inst.components.health:SetInvincible(true)
 		end,
 
+		onupdate = function(inst)
+			if not inst._stalking then
+				return
+			end
+			local target = inst._stalk_target
+			if target ~= nil and target:IsValid() then
+				inst:ForceFacePoint(target.Transform:GetWorldPosition())
+			end
+		end,
+
 		timeline =
 		{
 			FrameEvent(1, function(inst)
@@ -267,14 +308,50 @@ local states =
 		end,
 	},
 
-	-- 脱战回巢：闪烁消失（disappear）后回到出生点
+	-- 离开：播 disappear 后移除（天亮、脱战、目标失效）
 	State{
-		name = "disappear",
-		tags = { "busy", "noattack", "nointerrupt" },
+		name = "leave",
+		tags = { "busy", "noattack", "nointerrupt", "leaving" },
 
 		onenter = function(inst)
 			inst.components.locomotor:Stop()
 			inst.components.combat:DropTarget()
+			inst._stalking = false
+			inst._stalk_target = nil
+			inst._wants_despawn = false
+			inst._engaged = false
+			inst.AnimState:PlayAnimation("disappear")
+			inst.components.health:SetInvincible(true)
+			inst.persists = false
+		end,
+
+		timeline =
+		{
+			FrameEvent(1, function(inst)
+				inst.SoundEmitter:PlaySound("dontstarve/creatures/together/stalker/disappear")
+			end),
+		},
+
+		events =
+		{
+			EventHandler("animover", function(inst)
+				if inst.AnimState:AnimDone() then
+					inst:Remove()
+				end
+			end),
+		},
+	},
+
+	-- 注视跟随：disappear → 落到玩家附近 → appear
+	State{
+		name = "stalk_relocate_out",
+		tags = { "busy", "noattack", "nointerrupt", "stalking" },
+
+		onenter = function(inst)
+			inst.components.locomotor:Stop()
+			local target = inst._stalk_target
+			local pos = inst.GetStalkRelocatePos ~= nil and inst:GetStalkRelocatePos(target) or nil
+			inst.sg.statemem.relocate_pos = pos
 			inst.AnimState:PlayAnimation("disappear")
 			inst.components.health:SetInvincible(true)
 		end,
@@ -289,14 +366,59 @@ local states =
 		events =
 		{
 			EventHandler("animover", function(inst)
-				if inst.AnimState:AnimDone() then
-					local home = GetHomePos(inst)
-					if home ~= nil then
-						inst.Physics:Teleport(home.x, 0, home.z)
+				if not inst.AnimState:AnimDone() then
+					return
+				end
+				local pos = inst.sg.statemem.relocate_pos
+				if pos ~= nil then
+					inst.Physics:Teleport(pos.x, 0, pos.z)
+					local target = inst._stalk_target
+					if target ~= nil and target:IsValid() then
+						inst:ForceFacePoint(target.Transform:GetWorldPosition())
 					end
-					inst._engaged = false
-					inst._wants_despawn = false
-					inst._wants_victory_laugh = false
+					inst.sg.statemem.keep_invincible = true
+					inst.sg:GoToState("stalk_relocate_in")
+				else
+					inst.sg:GoToState("leave")
+				end
+			end),
+		},
+
+		onexit = function(inst)
+			if not inst.sg.statemem.keep_invincible then
+				inst.components.health:SetInvincible(false)
+			end
+		end,
+	},
+
+	State{
+		name = "stalk_relocate_in",
+		tags = { "busy", "noattack", "nointerrupt", "stalking" },
+
+		onenter = function(inst)
+			inst.components.locomotor:Stop()
+			inst.AnimState:PlayAnimation("appear")
+			inst.components.health:SetInvincible(true)
+		end,
+
+		onupdate = function(inst)
+			local target = inst._stalk_target
+			if target ~= nil and target:IsValid() then
+				inst:ForceFacePoint(target.Transform:GetWorldPosition())
+			end
+		end,
+
+		timeline =
+		{
+			FrameEvent(1, function(inst)
+				inst.SoundEmitter:PlaySound("dontstarve/creatures/together/stalker/appear")
+			end),
+		},
+
+		events =
+		{
+			EventHandler("animover", function(inst)
+				if inst.AnimState:AnimDone() then
 					inst.sg:GoToState("idle", "idolidle")
 				end
 			end),
@@ -435,21 +557,22 @@ local states =
 		onenter = function(inst, playanim)
 			inst.components.locomotor:Stop()
 
-			-- 胜利笑优先于回巢/进食
+			-- 注视态只播 idolidle；朝向由 onupdate ForceFacePoint 持续跟随（同 kiki 泡澡盯人）
+			if inst._stalking then
+				inst.AnimState:PlayAnimation("idolidle", true)
+				inst.sg:SetTimeout(GetRandomMinMax(2.5, 5))
+				return
+			end
+
+			-- 胜利笑优先；笑完后闲逛，天亮再 leave
 			if inst._wants_victory_laugh then
 				inst._wants_victory_laugh = false
 				inst.sg:GoToState("laugh_pre", true)
 				return
 			end
 
-			-- 脱战回巢到位 → 消失
-			if inst._wants_despawn and IsNearHome(inst, 3) then
-				inst.sg:GoToState("disappear")
-				return
-			end
-
 			-- 附近有骷髅且缺血 → 进食
-			if not inst._wants_despawn and inst.FindSkeleton ~= nil then
+			if inst.FindSkeleton ~= nil then
 				local skel = inst:FindSkeleton()
 				if skel ~= nil and inst:IsNear(skel, TUNING.MOUNTAIN_SCREAMER.EAT_DIST) then
 					inst.sg:GoToState("eat_pre", skel)
@@ -460,6 +583,16 @@ local states =
 			local anim = playanim or ChooseIdleAnim(inst)
 			inst.AnimState:PlayAnimation(anim, true)
 			inst.sg:SetTimeout(GetRandomMinMax(2.5, 5))
+		end,
+
+		onupdate = function(inst)
+			if not inst._stalking then
+				return
+			end
+			local target = inst._stalk_target
+			if target ~= nil and target:IsValid() then
+				inst:ForceFacePoint(target.Transform:GetWorldPosition())
+			end
 		end,
 
 		ontimeout = function(inst)
@@ -487,7 +620,9 @@ local states =
 		timeline =
 		{
 			FrameEvent(20, function(inst)
-				inst.components.combat:DoAttack(inst.sg.statemem.target)
+				local target = inst.sg.statemem.target
+				inst.components.combat:DoAttack(target)
+				KnockbackTarget(inst, target)
 			end),
 			FrameEvent(30, function(inst)
 				inst.sg:AddStateTag("caninterrupt")
@@ -560,11 +695,13 @@ local states =
 	-- 嘲讽 / 大笑
 	--------------------------------------------------------------------------
 	-- 由 Combat:BattleCry（ChaseAndAttack 追击时）进入；CD 在 battlecryinterval
+	-- 夜间注视被攻击时也会直接切入，宣告开战
 	State{
 		name = "taunt",
 		tags = { "busy" },
 
 		onenter = function(inst)
+			inst._just_engaged_from_stalk = nil
 			inst.components.locomotor:Stop()
 			inst.AnimState:PlayAnimation("taunt")
 		end,
@@ -586,7 +723,7 @@ local states =
 		},
 	},
 
-	-- data/victory=true：战斗胜利笑（略长）；播完后走回巢 disappear
+	-- data/victory=true：战斗胜利笑（略长）；播完后闲逛等天亮
 	State{
 		name = "laugh_pre",
 		tags = { "busy" },
@@ -637,7 +774,7 @@ local states =
 		{
 			EventHandler("animover", function(inst)
 				if inst.AnimState:AnimDone() then
-					-- 胜利笑后交回 idle → brain 回巢 / 近家 disappear
+					-- 胜利笑后交回 idle → 闲逛，天亮 leave
 					inst.sg:GoToState("idle")
 				end
 			end),

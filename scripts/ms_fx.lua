@@ -51,6 +51,27 @@ local fx =
         bloom = true,
         fn = FinalOffsetNegative2,
     },
+    {
+        name = "ms_bone_pile_hit_fx",
+        bank = "ms_bone_pile",
+        build = "ms_bone_pile",
+        anim = "fx_hit",
+        fn = FinalOffset1,
+    },
+    {
+        name = "ms_bone_throne_hit_fx",
+        bank = "ms_bone_throne",
+        build = "ms_bone_throne",
+        anim = "fx_hit",
+        fn = FinalOffset1,
+    },
+    {
+        name = "ms_bone_chandelier_hit_fx",
+        bank = "ms_bone_chandelier",
+        build = "ms_bone_chandelier",
+        anim = "fx_hit",
+        fn = FinalOffset1,
+    },
 }
 
 FinalOffset1 = nil

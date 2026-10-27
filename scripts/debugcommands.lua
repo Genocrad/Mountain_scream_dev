@@ -35,6 +35,17 @@ function d_spawn_screamer_battle()
 	end
 end
 
+-- 夜间注视态：在当前玩家附近刷一只（走 spawner）
+function d_spawn_screamer_stalk()
+	local spawner = TheWorld.components.mountainscreamerspawner
+	if spawner == nil then
+		print("mountainscreamerspawner missing")
+		return
+	end
+	local player = ConsoleCommandPlayer and ConsoleCommandPlayer() or AllPlayers[1]
+	return spawner:DebugSpawnNear(player)
+end
+
 function d_spawn_plants()
 	local plants = {
 		"mountain_plants_bush_1",
@@ -123,6 +134,17 @@ function d_spawn_gravel()
 	local inst = SpawnPrefab("mountain_gravel_pile")
 	if inst ~= nil then
 		inst.Transform:SetPosition(pos:Get())
+	end
+end
+
+function d_spawn_bones()
+	local pos = ConsoleWorldPosition()
+	local names = { "ms_bone_pile", "ms_bone_throne", "ms_bone_chandelier" }
+	for i, name in ipairs(names) do
+		local inst = SpawnPrefab(name)
+		if inst ~= nil then
+			inst.Transform:SetPosition(pos.x + (i - 2) * 3, 0, pos.z)
+		end
 	end
 end
 
