@@ -1,9 +1,11 @@
 require("stategraphs/commonstates")
 
+local AOEUtil = require("aoeutil")
+
 --------------------------------------------------------------------------
 
 local SCREAM_DRAIN_MUST = { "_combat", "_health" }
-local SCREAM_DRAIN_CANT = { "INLIMBO", "flight", "invisible", "notarget", "playerghost", "mountain_screamer", "FX", "DECOR", "epic" }
+local SCREAM_DRAIN_CANT = { "INLIMBO", "flight", "invisible", "notarget", "playerghost", "mountain_screamer", "FX", "DECOR" }
 
 local function ChooseIdleAnim(inst)
 	if inst._stalking then
@@ -27,26 +29,94 @@ local function ChooseIdleAnim(inst)
 	return "idolidle"
 end
 
-local function KnockbackTarget(inst, target)
-	if target == nil or not target:IsValid() or not target:HasTag("player") then
+-- 官方击飞没有单独 API：打中后 PushEvent("knockback", ...)；范围技用 AOEUtil.Attack
+local BLINK_AOE_TAGS
+local function GetBlinkAOETags()
+	if BLINK_AOE_TAGS == nil then
+		BLINK_AOE_TAGS = AOEUtil.AttackTagSet()
+		BLINK_AOE_TAGS:AppendCantTags("playerghost", "mountain_screamer", "FX", "DECOR")
+	end
+	return BLINK_AOE_TAGS
+end
+
+local function ClearScreamBloodFx(target)
+	if target == nil then
 		return
 	end
-	if target.components.health ~= nil and target.components.health:IsDead() then
+	if target._ms_scream_blood_fx ~= nil then
+		if target._ms_scream_blood_fx:IsValid() then
+			target._ms_scream_blood_fx:Remove()
+		end
+		target._ms_scream_blood_fx = nil
+	end
+end
+
+local function ClearScreamAffected(inst)
+	local affected = inst.sg ~= nil and inst.sg.statemem.scream_affected or nil
+	if affected ~= nil then
+		for target in pairs(affected) do
+			ClearScreamBloodFx(target)
+		end
+		inst.sg.statemem.scream_affected = nil
+	end
+end
+
+local function EnsureScreamBloodFx(target)
+	if target._ms_scream_blood_fx ~= nil and target._ms_scream_blood_fx:IsValid() then
 		return
 	end
-	-- heavyarmor / heavybody：由玩家 SG 自行把 knockback 转为 knockbacklanded
-	target:PushEvent("knockback", {
-		knocker = inst,
-		radius = TUNING.MOUNTAIN_SCREAMER.ATTACK_KNOCKBACK_RADIUS,
-		strengthmult = TUNING.MOUNTAIN_SCREAMER.ATTACK_KNOCKBACK_STRENGTH,
-		forcelanded = false,
-	})
+	local fx = SpawnPrefab("ms_blood_fx")
+	if fx == nil then
+		return
+	end
+	fx.entity:SetParent(target.entity)
+	fx.Transform:SetPosition(0, 0, 0)
+	target._ms_scream_blood_fx = fx
+	fx:ListenForEvent("onremove", function()
+		if target._ms_scream_blood_fx == fx then
+			target._ms_scream_blood_fx = nil
+		end
+	end)
+end
+
+local function ApplyScreamFear(player)
+	if player == nil or not player:IsValid() or player:HasTag("playerghost") then
+		return
+	end
+	if player.components.health == nil or player.components.health:IsDead() then
+		return
+	end
+	-- 必须走联网 debuff：MindControlOver 只在「该玩家客户端」收 mindcontrollevel
+	-- 纯服务端 PushEvent 看不到黑影占屏
+	if player.AddDebuff ~= nil then
+		player:AddDebuff("ms_scream_fear", "ms_scream_fear")
+	elseif player.components.debuffable ~= nil then
+		player.components.debuffable:AddDebuff("ms_scream_fear", "ms_scream_fear")
+	end
+end
+
+local function DoScreamFearPulse(inst)
+	local x, y, z = inst.Transform:GetWorldPosition()
+	local range = TUNING.MOUNTAIN_SCREAMER.SCREAM_RANGE
+	for i, v in ipairs(TheSim:FindEntities(x, y, z, range, { "player" }, { "playerghost", "INLIMBO" })) do
+		if v:IsValid() and not (v.components.health ~= nil and v.components.health:IsDead()) then
+			ApplyScreamFear(v)
+		end
+	end
 end
 
 local function DoScreamDrain(inst)
 	local x, y, z = inst.Transform:GetWorldPosition()
 	local range = TUNING.MOUNTAIN_SCREAMER.SCREAM_RANGE
+	local player_dmg = TUNING.MOUNTAIN_SCREAMER.SCREAM_PLAYER_DAMAGE
+	local creature_dmg = TUNING.MOUNTAIN_SCREAMER.SCREAM_CREATURE_DAMAGE
+	local sanity_drain = TUNING.MOUNTAIN_SCREAMER.SCREAM_PLAYER_SANITY
+	local heal_ratio = TUNING.MOUNTAIN_SCREAMER.SCREAM_HEAL_RATIO
+	local panic_time = TUNING.MOUNTAIN_SCREAMER.SCREAM_PANIC_TIME
+	local prev_affected = inst.sg.statemem.scream_affected or {}
+	local now_affected = {}
 	local healed = 0
+
 	for i, v in ipairs(TheSim:FindEntities(x, y, z, range, SCREAM_DRAIN_MUST, SCREAM_DRAIN_CANT)) do
 		if v:IsValid()
 			and v.components.health ~= nil
@@ -54,17 +124,39 @@ local function DoScreamDrain(inst)
 			and not v.components.health:IsInvincible()
 			and inst.components.combat:CanTarget(v)
 		then
-			v.components.health:DoDelta(-TUNING.MOUNTAIN_SCREAMER.SCREAM_DRAIN_DAMAGE, false, "mountain_screamer_scream", false, inst, true)
-			healed = healed + TUNING.MOUNTAIN_SCREAMER.SCREAM_DRAIN_HEAL
+			local is_player = v:HasTag("player")
+			local dmg = is_player and player_dmg or creature_dmg
+			local hp_before = v.components.health.currenthealth
+			v.components.health:DoDelta(-dmg, false, "mountain_screamer_scream", false, inst, true)
+			local dealt = math.max(0, hp_before - v.components.health.currenthealth)
+			healed = healed + dealt * heal_ratio
+
+			if is_player then
+				if v.components.sanity ~= nil then
+					v.components.sanity:DoDelta(-sanity_drain)
+				end
+			else
+				if v.components.hauntable ~= nil then
+					v.components.hauntable:Panic(panic_time)
+				end
+			end
+
+			EnsureScreamBloodFx(v)
+			now_affected[v] = true
 		end
 	end
+
+	for target in pairs(prev_affected) do
+		if now_affected[target] == nil then
+			ClearScreamBloodFx(target)
+		end
+	end
+	inst.sg.statemem.scream_affected = now_affected
+
 	if healed > 0 and inst.components.health ~= nil and not inst.components.health:IsDead() then
 		inst.components.health:DoDelta(healed, false, "mountain_screamer_scream")
 	end
 end
-
-local BLINK_HIT_MUST = { "_combat" }
-local BLINK_HIT_CANT = { "INLIMBO", "flight", "invisible", "notarget", "playerghost", "mountain_screamer", "FX", "DECOR" }
 
 local function CanBlinkTo(inst, target)
 	if target == nil or not target:IsValid() then
@@ -107,45 +199,18 @@ local function SpawnBlinkWarning(inst, pos)
 end
 
 local function DoBlinkImpact(inst)
-	local pos = inst.sg.statemem.blink_pos
-	local x, y, z
-	if pos ~= nil then
-		x, y, z = pos.x, 0, pos.z
-	else
-		x, y, z = inst.Transform:GetWorldPosition()
-	end
-
 	ClearBlinkWarning(inst)
 
-	local radius = TUNING.MOUNTAIN_SCREAMER.BLINK_HIT_RADIUS
-	local kb_radius = TUNING.MOUNTAIN_SCREAMER.BLINK_KNOCKBACK_RADIUS
-	local kb_str = TUNING.MOUNTAIN_SCREAMER.BLINK_KNOCKBACK_STRENGTH
-	local damage = TUNING.MOUNTAIN_SCREAMER.BLINK_DAMAGE
-
-	inst.components.combat.ignorehitrange = true
-	for i, v in ipairs(TheSim:FindEntities(x, y, z, radius + 2, BLINK_HIT_MUST, BLINK_HIT_CANT)) do
-		if v:IsValid()
-			and not v:IsInLimbo()
-			and v.components.health ~= nil
-			and not v.components.health:IsDead()
-			and inst.components.combat:CanTarget(v)
-		then
-			local range = radius + v:GetPhysicsRadius(0)
-			if v:GetDistanceSqToPoint(x, y, z) < range * range then
-				local old = inst.components.combat.defaultdamage
-				inst.components.combat:SetDefaultDamage(damage)
-				inst.components.combat:DoAttack(v)
-				inst.components.combat:SetDefaultDamage(old)
-				v:PushEvent("knockback", {
-					knocker = inst,
-					radius = kb_radius,
-					strengthmult = kb_str,
-					forcelanded = false,
-				})
-			end
-		end
-	end
-	inst.components.combat.ignorehitrange = false
+	-- 已 Teleport 到落点；官方 AOEUtil：范围内 DoAttack，有 knockback_str 才击飞
+	local old = inst.components.combat.defaultdamage
+	inst.components.combat:SetDefaultDamage(TUNING.MOUNTAIN_SCREAMER.BLINK_DAMAGE)
+	AOEUtil.Attack(inst, {
+		radius = TUNING.MOUNTAIN_SCREAMER.BLINK_HIT_RADIUS,
+		knockback_str = TUNING.MOUNTAIN_SCREAMER.BLINK_KNOCKBACK_STRENGTH,
+		knockback_heavystr = 1,
+		knockback_forcelanded = false,
+	}, GetBlinkAOETags())
+	inst.components.combat:SetDefaultDamage(old)
 
 	ShakeAllCameras(CAMERASHAKE.FULL, 0.55, 0.03, 0.35, inst, 28)
 end
@@ -208,6 +273,15 @@ local events =
 
 	EventHandler("ms_screamer_leave", function(inst)
 		if inst.components.health:IsDead() or inst.sg:HasStateTag("dead") then
+			return
+		end
+		-- 胜利笑进行中 / 等待胜利笑：先笑完（由 laugh_pst 再 leave）
+		if inst.sg:HasStateTag("laughing") then
+			inst._leave_after_victory_laugh = true
+			return
+		end
+		if inst._wants_victory_laugh then
+			inst._leave_after_victory_laugh = true
 			return
 		end
 		if not inst.sg:HasStateTag("leaving") then
@@ -620,9 +694,17 @@ local states =
 		timeline =
 		{
 			FrameEvent(20, function(inst)
+				-- 官方单目标：打中才 PushEvent("knockback")
 				local target = inst.sg.statemem.target
+				local canhit = target ~= nil and target:IsValid() and inst.components.combat:CanHitTarget(target)
 				inst.components.combat:DoAttack(target)
-				KnockbackTarget(inst, target)
+				if canhit then
+					target:PushEvent("knockback", {
+						knocker = inst,
+						radius = TUNING.MOUNTAIN_SCREAMER.ATTACK_RANGE,
+						strengthmult = TUNING.MOUNTAIN_SCREAMER.ATTACK_KNOCKBACK_STRENGTH,
+					})
+				end
 			end),
 			FrameEvent(30, function(inst)
 				inst.sg:AddStateTag("caninterrupt")
@@ -694,8 +776,7 @@ local states =
 	--------------------------------------------------------------------------
 	-- 嘲讽 / 大笑
 	--------------------------------------------------------------------------
-	-- 由 Combat:BattleCry（ChaseAndAttack 追击时）进入；CD 在 battlecryinterval
-	-- 夜间注视被攻击时也会直接切入，宣告开战
+	-- 仅开战切入（EngageFromStalk）；战斗中不重复嘲讽
 	State{
 		name = "taunt",
 		tags = { "busy" },
@@ -726,7 +807,7 @@ local states =
 	-- data/victory=true：战斗胜利笑（略长）；播完后闲逛等天亮
 	State{
 		name = "laugh_pre",
-		tags = { "busy" },
+		tags = { "busy", "laughing" },
 
 		onenter = function(inst, victory)
 			inst.components.locomotor:Stop()
@@ -747,7 +828,7 @@ local states =
 
 	State{
 		name = "laugh_loop",
-		tags = { "busy" },
+		tags = { "busy", "laughing" },
 
 		onenter = function(inst, victory)
 			inst.sg.statemem.victory = victory == true
@@ -763,7 +844,7 @@ local states =
 
 	State{
 		name = "laugh_pst",
-		tags = { "busy" },
+		tags = { "busy", "laughing" },
 
 		onenter = function(inst, victory)
 			inst.sg.statemem.victory = victory == true
@@ -774,15 +855,20 @@ local states =
 		{
 			EventHandler("animover", function(inst)
 				if inst.AnimState:AnimDone() then
-					-- 胜利笑后交回 idle → 闲逛，天亮 leave
-					inst.sg:GoToState("idle")
+					-- 白天击杀：笑完再离开；夜晚：闲逛等天亮
+					if inst.sg.statemem.victory and inst._leave_after_victory_laugh then
+						inst._leave_after_victory_laugh = nil
+						inst.sg:GoToState("leave")
+					else
+						inst.sg:GoToState("idle")
+					end
 				end
 			end),
 		},
 	},
 
 	--------------------------------------------------------------------------
-	-- 尖啸（可被玩家打断）
+	-- 尖啸（仅铝器右键砸脸投掷可打断）
 	--------------------------------------------------------------------------
 	State{
 		name = "scream_pre",
@@ -821,9 +907,11 @@ local states =
 		onenter = function(inst)
 			inst.components.locomotor:Stop()
 			inst.AnimState:PlayAnimation("scream_loop", true)
-			local loop_len = inst.AnimState:GetCurrentAnimationLength()
-			inst.sg:SetTimeout(loop_len * TUNING.MOUNTAIN_SCREAMER.SCREAM_LOOP_COUNT)
+			inst.sg:SetTimeout(TUNING.MOUNTAIN_SCREAMER.SCREAM_DURATION)
+			inst.sg.statemem.scream_affected = {}
 			inst.sg.statemem.next_drain = GetTime()
+			-- 开场一次织影恐惧（仅对当前范围内玩家）
+			DoScreamFearPulse(inst)
 			DoScreamDrain(inst)
 		end,
 
@@ -837,6 +925,10 @@ local states =
 
 		ontimeout = function(inst)
 			inst.sg:GoToState("scream_pst")
+		end,
+
+		onexit = function(inst)
+			ClearScreamAffected(inst)
 		end,
 	},
 
@@ -869,7 +961,7 @@ local states =
 			inst.components.locomotor:Stop()
 			inst.AnimState:PlayAnimation("scream_breakoff")
 			inst.components.timer:StopTimer("scream_cd")
-			inst.components.timer:StartTimer("scream_cd", TUNING.MOUNTAIN_SCREAMER.SCREAM_CD * 0.5)
+			inst.components.timer:StartTimer("scream_cd", TUNING.MOUNTAIN_SCREAMER.SCREAM_CD_BREAK)
 			CommonHandlers.UpdateHitRecoveryDelay(inst)
 		end,
 

@@ -328,6 +328,7 @@ local function axe_fn()
 	inst.components.aoespell:SetSpellFn(SpellFn)
 
 	inst.ThrowAtBush = ThrowAtBush
+	inst.ThrowAtScreamerFace = require("ms_aluminum_scream_throw").ThrowAtScreamerFace
 
 	MakeHauntableLaunch(inst)
 

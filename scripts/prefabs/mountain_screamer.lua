@@ -8,6 +8,8 @@ local prefabs =
 	"boneshard",
 	"rocks",
 	"warningshadow",
+	"ms_blood_fx",
+	"ms_scream_fear",
 }
 
 local brain = require("brains/mountain_screamerbrain")
@@ -94,6 +96,7 @@ local function EngageFromStalk(inst, attacker)
 	inst._engaged = true
 	inst._wants_despawn = false
 	inst._wants_victory_laugh = false
+	inst._leave_after_victory_laugh = nil
 	inst.persists = true
 
 	if attacker ~= nil and attacker:IsValid() then
@@ -117,9 +120,11 @@ local function OnAttacked(inst, data)
 		return
 	end
 
-	-- 尖啸期间：仅玩家攻击可打断
+	-- 尖啸期间：仅「铝器砸脸投掷」可打断（水平点地投 / 近战不行）
 	if inst.sg ~= nil and inst.sg:HasStateTag("screaming") then
-		if data.attacker:HasTag("player") then
+		if data.stimuli == "ms_aluminum_face_throw"
+			and data.attacker:HasTag("player")
+		then
 			inst.components.combat:SetTarget(data.attacker)
 			inst:PushEvent("ms_screamer_screambreak", { attacker = data.attacker })
 		end
@@ -171,6 +176,7 @@ local function OnNewTarget(inst, data)
 		inst._engaged = true
 		inst._wants_despawn = false
 		inst._wants_victory_laugh = false
+		inst._leave_after_victory_laugh = nil
 	end
 end
 
@@ -186,14 +192,17 @@ local function OnDroppedTarget(inst, data)
 		return
 	end
 
-	-- 脱战：白天直接离开；夜晚原地闲逛等天亮（玩家可复活继续挑战）
+	-- 脱战：白天离开；夜晚原地闲逛等天亮（玩家可复活继续挑战）
+	-- 若击杀目标：先胜利笑，白天笑完再 leave（不能同帧 leave 冲掉 laugh）
 	inst._loiter_pos = inst:GetPosition()
 	if IsTargetDefeated(data ~= nil and data.target or nil) then
 		inst._wants_victory_laugh = true
+		if not TheWorld.state.iscavenight then
+			inst._leave_after_victory_laugh = true
+		end
 		inst:PushEvent("ms_screamer_victory")
 		TryVictoryLaugh(inst)
-	end
-	if not TheWorld.state.iscavenight then
+	elseif not TheWorld.state.iscavenight then
 		inst:PushEvent("ms_screamer_leave")
 	end
 end
@@ -335,9 +344,8 @@ local function fn()
 	inst.components.combat:SetAttackPeriod(TUNING.MOUNTAIN_SCREAMER.ATTACK_PERIOD)
 	inst.components.combat:SetRetargetFunction(3, RetargetFn)
 	inst.components.combat:SetKeepTargetFunction(KeepTargetFn)
-	-- 官方方案：ChaseAndAttack → BattleCry → SG "taunt"；CD = interval + 0~3s
-	inst.components.combat.battlecryenabled = true
-	inst.components.combat.battlecryinterval = TUNING.MOUNTAIN_SCREAMER.TAUNT_CD
+	-- 嘲讽仅开战前播一次（EngageFromStalk → taunt），战斗中不 BattleCry
+	inst.components.combat.battlecryenabled = false
 
 	inst:AddComponent("timer")
 

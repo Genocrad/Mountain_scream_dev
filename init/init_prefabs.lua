@@ -41,6 +41,8 @@ PrefabFiles = {
 	"mountain_golem_pillar",
 	"mountain_golem_platform",
 	"mountain_screamer",
+	"ms_blood_fx",
+	"ms_scream_fear",
 	"mountain_beam_fx",
 	"mountain_sandspike",
 	"mountain_sandblock",

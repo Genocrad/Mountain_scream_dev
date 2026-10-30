@@ -187,6 +187,8 @@ local function dagger_fn()
 	inst:AddComponent("aoespell")
 	inst.components.aoespell:SetSpellFn(SpellFn)
 
+	inst.ThrowAtScreamerFace = require("ms_aluminum_scream_throw").ThrowAtScreamerFace
+
 	MakeHauntableLaunch(inst)
 
 	return inst

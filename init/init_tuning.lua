@@ -1272,26 +1272,34 @@ TUNING.MOUNTAIN_SCREAMER = {
 	COMBAT_RANGE = 20,           -- 活动范围（距苏醒点）
 	DEAGGRO_DIST = 35,           -- 脱战距离
 
-	TAUNT_CD = 12,               -- BattleCry 间隔（秒）；实际 CD ≈ 该值 + 0~3 随机
+	-- 嘲讽仅开战前一次，不再使用 BattleCry 间隔
 
-	SCREAM_CD = 20,              -- 尖啸冷却（秒）
-	SCREAM_RANGE = 12,           -- 尖啸汲取范围
-	SCREAM_DRAIN_DAMAGE = 5,     -- 每次汲取对目标造成的伤害
-	SCREAM_DRAIN_HEAL = 15,      -- 每次从单个目标汲取的回血量
-	SCREAM_DRAIN_PERIOD = 0.5,   -- 尖啸 loop 期间汲取间隔（秒）
-	SCREAM_LOOP_COUNT = 4,       -- scream_loop 重复次数（可被打断）
+	SCREAM_CD = 25,              -- 尖啸成功冷却（秒）
+	SCREAM_CD_BREAK = 15,        -- 尖啸被打断冷却（秒）
+	SCREAM_DURATION = 20,        -- 尖啸持续施法时间（秒）
+	SCREAM_RANGE = 12,           -- 尖啸作用范围
+	SCREAM_DRAIN_PERIOD = 0.5,   -- 持续跳伤间隔（秒）；20s ≈ 40 跳
+	-- 跳伤（打满约：玩家 240 伤 / -80 理智；生物 480 伤）
+	SCREAM_PLAYER_DAMAGE = 6,
+	SCREAM_CREATURE_DAMAGE = 12,
+	SCREAM_PLAYER_SANITY = 2,    -- 每跳理智
+	SCREAM_HEAL_RATIO = 1,       -- 回血 = 本跳实际伤害 × 比例
+	SCREAM_FEAR_DURATION = 2,    -- 开场织影恐惧总时长（秒，含渐入）
+	SCREAM_FEAR_FADE_IN = 0.75,  -- 黑影占屏渐入时间（秒）；满屏后才锁操作
+	SCREAM_PANIC_TIME = 1.25,    -- 生物恐慌刷新时长（秒，在圈内每跳刷新）
+	SCREAM_BLOOD_FX_SPEED = 0.5, -- ms_blood_fx idle 播放速度
+	SCREAM_FACE_HIT_HEIGHT = 3,  -- 铝器砸脸投掷瞄准高度（相对地面）
+	SCREAM_FACE_THROW_DIST = 12, -- 右键砸脸最大距离
 
 	BLINK_CD = 14,               -- 瞬移闪烁冷却（秒）
 	BLINK_RANGE = 18,            -- 瞬移技能最大锁定距离
 	BLINK_MIN_DIST = 4,          -- 目标太近不使用瞬移
 	BLINK_DAMAGE = 50,           -- 闪烁出现命中伤害
-	BLINK_HIT_RADIUS = 3,        -- 落地冲击半径
-	BLINK_KNOCKBACK_RADIUS = 3,  -- 击飞判定半径
-	BLINK_KNOCKBACK_STRENGTH = 1.5, -- 击飞力度
+	BLINK_HIT_RADIUS = 3,        -- 落地冲击/击飞半径（官方：hit 半径兼作 knockback radius）
+	BLINK_KNOCKBACK_STRENGTH = 1.5, -- 击飞力度（重甲/heavybody 用 1）
 	BLINK_WARNING_SCALE = 1.8,   -- warningshadow 缩放
 
-	-- 近战击飞（不含尖啸汲取）
-	ATTACK_KNOCKBACK_RADIUS = 3,
+	-- 近战击飞：AOE 半径用 ATTACK_RANGE；strengthmult 同官方 PushEvent("knockback")
 	ATTACK_KNOCKBACK_STRENGTH = 1.25,
 
 	-- 夜间注视遭遇（仅山表层 IsInstInMSOverWorld；同晚最多一只）

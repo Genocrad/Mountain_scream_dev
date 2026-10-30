@@ -331,6 +331,7 @@ local function pickaxe_fn()
 	inst.components.aoespell:SetSpellFn(SpellFn)
 
 	inst.ThrowAtStalactite = ThrowAtStalactite
+	inst.ThrowAtScreamerFace = require("ms_aluminum_scream_throw").ThrowAtScreamerFace
 
 	MakeHauntableLaunch(inst)
 

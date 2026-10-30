@@ -151,7 +151,8 @@ function AimedProjectile:Hit(target)
 			and attacker.components.combat ~= nil
 			and target.components.combat ~= nil
 			and not (target:HasTag("player") or target:HasTag("companion")) then
-		target.components.combat:GetAttacked(attacker, self.damage, weapon)
+		-- ms_face_throw_stimuli：铝器砸脸投掷，用于尖啸打断判定
+		target.components.combat:GetAttacked(attacker, self.damage, weapon, self.inst.ms_face_throw_stimuli)
 	end
 
 	if self.onhit ~= nil then
@@ -160,6 +161,27 @@ function AimedProjectile:Hit(target)
 end
 
 local EXCLUDE_TAGS = { "player", "companion", "NOCLICK", "FX", "INLIMBO" }
+
+local function TryHitNearby(self, pos)
+	local targets = TheSim:FindEntities(pos.x, 0, pos.z, 3, nil, EXCLUDE_TAGS)
+	for _, v in ipairs(targets) do
+		local can_hit = (v.components.health ~= nil and not v.components.health:IsDead())
+			or (self.hit_work_action ~= nil
+				and v.components.workable ~= nil
+				and v.components.workable:CanBeWorked()
+				and v.components.workable:GetWorkAction() == self.hit_work_action)
+			or v:HasTag("structure")
+
+		if can_hit then
+			local range = v:GetPhysicsRadius(0) + self.hitdist
+			if distsq(pos, v:GetPosition()) < range * range then
+				self:Hit(v)
+				return true
+			end
+		end
+	end
+	return false
+end
 
 function AimedProjectile:OnUpdate(dt)
 	local pos = self.inst:GetPosition()
@@ -195,27 +217,13 @@ function AimedProjectile:OnUpdate(dt)
 		return
 	end
 
-	if self.dest ~= nil and distsq(pos, self.dest) < 0.25 then
-		self:Miss()
+	-- 先判命中，再判到达瞄准点；否则对准生物脚下投会先 Miss、打不中
+	if TryHitNearby(self, pos) then
 		return
 	end
 
-	local targets = TheSim:FindEntities(pos.x, 0, pos.z, 3, nil, EXCLUDE_TAGS)
-	for _, v in ipairs(targets) do
-		local can_hit = (v.components.health ~= nil and not v.components.health:IsDead())
-			or (self.hit_work_action ~= nil
-				and v.components.workable ~= nil
-				and v.components.workable:CanBeWorked()
-				and v.components.workable:GetWorkAction() == self.hit_work_action)
-			or v:HasTag("structure")
-
-		if can_hit then
-			local range = v:GetPhysicsRadius(0) + self.hitdist
-			if distsq(pos, v:GetPosition()) < range * range then
-				self:Hit(v)
-				return
-			end
-		end
+	if self.dest ~= nil and distsq(pos, self.dest) < 0.25 then
+		self:Miss()
 	end
 end
 

@@ -141,6 +141,27 @@ end
 
 AddAction(MS_THROW)
 
+-- 铝器右键对尖啸者：飞向面部（打断尖啸专用，非水平点地投）
+local MS_THROW_AT_SCREAMER = Action({
+	priority = 12,
+	distance = (TUNING.MOUNTAIN_SCREAMER ~= nil and TUNING.MOUNTAIN_SCREAMER.SCREAM_FACE_THROW_DIST) or 12,
+	mount_valid = true,
+})
+MS_THROW_AT_SCREAMER.id = "MS_THROW_AT_SCREAMER"
+MS_THROW_AT_SCREAMER.str = "Throw"
+MS_THROW_AT_SCREAMER.fn = function(act)
+	if act.invobject ~= nil
+		and act.target ~= nil
+		and act.doer ~= nil
+		and act.invobject.ThrowAtScreamerFace ~= nil
+	then
+		return act.invobject:ThrowAtScreamerFace(act.doer, act.target) == true
+	end
+	return false
+end
+
+AddAction(MS_THROW_AT_SCREAMER)
+
 ------------------------------------------------------------------------------------------------------------------------
 -- mountain_kiki：拍打成熟苹果树掉果（不砍倒）
 
@@ -159,10 +180,25 @@ AddAction(MS_KNOCK_APPLE)
 local is_chinese = locale == "zh" or locale == "zht" or locale == "zhr"
 STRINGS.ACTIONS.MS_MINE_STALACTITE = is_chinese and "开采" or "Mine"
 STRINGS.ACTIONS.MS_THROW = is_chinese and "投掷" or "Throw"
+STRINGS.ACTIONS.MS_THROW_AT_SCREAMER = is_chinese and "砸脸" or "Face Throw"
 STRINGS.ACTIONS.MS_KNOCK_APPLE = is_chinese and "拍打" or "Knock"
 
 AddComponentAction("EQUIPPED", "aoetargeting", function(inst, doer, target, actions, right)
-	if right or target == nil then
+	if target == nil then
+		return
+	end
+
+	-- 右键尖啸者：铝器砸脸投掷（飞向面部）
+	if right
+		and inst:HasTag("ms_aluminum_tool")
+		and target:HasTag("mountain_screamer")
+		and not (target.replica.health ~= nil and target.replica.health:IsDead())
+	then
+		table.insert(actions, ACTIONS.MS_THROW_AT_SCREAMER)
+		return
+	end
+
+	if right then
 		return
 	end
 
@@ -190,6 +226,8 @@ AddStategraphActionHandler("wilson", ActionHandler(ACTIONS.MS_MINE_STALACTITE, "
 AddStategraphActionHandler("wilson_client", ActionHandler(ACTIONS.MS_MINE_STALACTITE, "throw_line"))
 AddStategraphActionHandler("wilson", ActionHandler(ACTIONS.MS_THROW, "throw_line"))
 AddStategraphActionHandler("wilson_client", ActionHandler(ACTIONS.MS_THROW, "throw_line"))
+AddStategraphActionHandler("wilson", ActionHandler(ACTIONS.MS_THROW_AT_SCREAMER, "throw_line"))
+AddStategraphActionHandler("wilson_client", ActionHandler(ACTIONS.MS_THROW_AT_SCREAMER, "throw_line"))
 
 ------------------------------------------------------------------------------------------------------------------------
 -- 铁砧上的锤子：锻造锭，不是拆除铁砧。熔炉等建筑仍显示原版 Destroy。
