@@ -1,6 +1,7 @@
 --------------------------------------------------------------------------
 --[[ MountainScreamerSpawner ]]
---[[ Night stalk encounter: 20% on cave-night for one MS-overworld player; max one boss per night. ]]
+--[[ Night stalk encounter: chance on cave-night for one MS-overworld player (IsInstInMSOverWorld); max one boss per night.
+     Spawn gate stays OverWorld-only; chase/fall pursuit is handled on the screamer prefab with soft level checks. ]]
 --------------------------------------------------------------------------
 
 return Class(function(self, inst)
@@ -125,9 +126,16 @@ local function TrySpawnStalk()
 	end
 end
 
+local function GetStalkSpawnDelay()
+	return GetRandomMinMax(
+		TUNING.MOUNTAIN_SCREAMER.STALK_SPAWN_DELAY_MIN,
+		TUNING.MOUNTAIN_SCREAMER.STALK_SPAWN_DELAY_MAX
+	)
+end
+
 local function OnIsCaveNight(src, iscavenight)
 	if iscavenight then
-		inst:DoTaskInTime(GetRandomMinMax(1, 3), TrySpawnStalk)
+		inst:DoTaskInTime(GetStalkSpawnDelay(), TrySpawnStalk)
 	else
 		_rolled_this_night = false
 		-- 实体自身 WatchWorldState 也会 leave；此处兜底：未在交战则赶走
@@ -179,7 +187,7 @@ inst:ListenForEvent("ms_playerjoined", OnPlayerJoined, TheWorld)
 inst:ListenForEvent("ms_playerleft", OnPlayerLeft, TheWorld)
 
 if _worldstate.iscavenight then
-	inst:DoTaskInTime(GetRandomMinMax(1, 3), TrySpawnStalk)
+	inst:DoTaskInTime(GetStalkSpawnDelay(), TrySpawnStalk)
 end
 
 --------------------------------------------------------------------------

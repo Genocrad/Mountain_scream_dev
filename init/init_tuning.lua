@@ -1263,8 +1263,8 @@ TUNING.MOUNTAIN_GOLEM = {
 -- Mountain Screamer（尖啸者）
 --------------------------------------------------------------------------
 TUNING.MOUNTAIN_SCREAMER = {
-	HEALTH = 6000,               -- 最大生命
-	DAMAGE = 50,                -- 右手近战伤害
+	HEALTH = 16000,               -- 最大生命
+	DAMAGE = 50,                  -- 右手近战伤害
 	ATTACK_PERIOD = 3,           -- 攻击间隔（秒）
 	ATTACK_RANGE = 4,            -- 近战攻击距离
 	HIT_RECOVERY = 1.5,          -- 受击硬直间隔（秒）
@@ -1284,7 +1284,8 @@ TUNING.MOUNTAIN_SCREAMER = {
 	SCREAM_CREATURE_DAMAGE = 12,
 	SCREAM_PLAYER_SANITY = 2,    -- 每跳理智
 	SCREAM_HEAL_RATIO = 1,       -- 回血 = 本跳实际伤害 × 比例
-	SCREAM_FEAR_DURATION = 2,    -- 开场织影恐惧总时长（秒，含渐入）
+	SCREAM_FEAR_DELAY = 5,      -- 尖啸开始后延迟触发织影恐惧（秒），留给投掷打断窗口
+	SCREAM_FEAR_DURATION = 2,    -- 织影恐惧总时长（秒，含渐入）
 	SCREAM_FEAR_FADE_IN = 0.75,  -- 黑影占屏渐入时间（秒）；满屏后才锁操作
 	SCREAM_PANIC_TIME = 1.25,    -- 生物恐慌刷新时长（秒，在圈内每跳刷新）
 	SCREAM_BLOOD_FX_SPEED = 0.5, -- ms_blood_fx idle 播放速度
@@ -1293,7 +1294,7 @@ TUNING.MOUNTAIN_SCREAMER = {
 
 	BLINK_CD = 14,               -- 瞬移闪烁冷却（秒）
 	BLINK_RANGE = 18,            -- 瞬移技能最大锁定距离
-	BLINK_MIN_DIST = 4,          -- 目标太近不使用瞬移
+	BLINK_MIN_DIST = 8,          -- 目标太近不使用瞬移
 	BLINK_DAMAGE = 50,           -- 闪烁出现命中伤害
 	BLINK_HIT_RADIUS = 3,        -- 落地冲击/击飞半径（官方：hit 半径兼作 knockback radius）
 	BLINK_KNOCKBACK_STRENGTH = 1.5, -- 击飞力度（重甲/heavybody 用 1）
@@ -1301,12 +1302,20 @@ TUNING.MOUNTAIN_SCREAMER = {
 
 	-- 近战击飞：AOE 半径用 ATTACK_RANGE；strengthmult 同官方 PushEvent("knockback")
 	ATTACK_KNOCKBACK_STRENGTH = 1.25,
+	-- 攻击/闪烁落地摧毁建筑（熊獾式 Destroy）；半径相对自身朝前偏移
+	DESTROY_WORK_DIST = 1.5,
+	DESTROY_WORK_RADIUS = 3,
 
-	-- 夜间注视遭遇（仅山表层 IsInstInMSOverWorld；同晚最多一只）
+	-- 夜间注视遭遇（刷出候选仍用 IsInstInMSOverWorld；追击改软校验，掉落换层可跟上）
 	STALK_SPAWN_CHANCE = 0.9,    -- 入夜基础出现概率，默认20%，测试阶段调的比较大
+	STALK_SPAWN_DELAY_MIN = 5,   -- 入夜后刷出延迟下限（秒）
+	STALK_SPAWN_DELAY_MAX = 10,  -- 入夜后刷出延迟上限（秒）
 	STALK_SPAWN_DIST_MIN = 6,    -- 刷出/跟随落点距玩家最小
 	STALK_SPAWN_DIST_MAX = 10,   -- 刷出/跟随落点距玩家最大
-	STALK_FOLLOW_DIST = 15,      -- 走出该距离后 disappear→appear 跟上
+	STALK_FOLLOW_DIST = 15,      -- 同层走出该距离后 disappear→appear 跟上
+	-- 跨层/坠落追击（参考 falcon：level nil 中途粘住，落地后再瞬移）
+	CROSS_FLOOR_DIST = 45,       -- 与目标水平距离超过此值视为换层/坠落，触发瞬移追击
+	LOST_TARGET_TIME = 12,       -- 目标彻底离开山域多久后放弃（秒）
 
 	EAT_HEAL = 500,              -- 吃骷髅回血量
 	EAT_RANGE = 15,              -- 搜寻骷髅范围

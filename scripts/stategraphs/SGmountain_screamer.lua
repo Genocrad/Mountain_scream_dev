@@ -7,6 +7,43 @@ local AOEUtil = require("aoeutil")
 local SCREAM_DRAIN_MUST = { "_combat", "_health" }
 local SCREAM_DRAIN_CANT = { "INLIMBO", "flight", "invisible", "notarget", "playerghost", "mountain_screamer", "FX", "DECOR" }
 
+-- 熊獾式攻击摧毁建筑
+local WORK_RADIUS_PADDING = 0.5
+local COLLAPSIBLE_WORK_ACTIONS =
+{
+	CHOP = true,
+	DIG = true,
+	HAMMER = true,
+	MINE = true,
+}
+local COLLAPSIBLE_TAGS = { "NPC_workable" }
+for k, v in pairs(COLLAPSIBLE_WORK_ACTIONS) do
+	table.insert(COLLAPSIBLE_TAGS, k.."_workable")
+end
+local NON_COLLAPSIBLE_TAGS = { "FX", "DECOR", "INLIMBO" }
+
+local function DestroyStuff(inst, dist, radius)
+	local x, y, z = inst.Transform:GetWorldPosition()
+	if dist ~= nil and dist ~= 0 then
+		local theta = inst.Transform:GetRotation() * DEGREES
+		x = x + dist * math.cos(theta)
+		z = z - dist * math.sin(theta)
+	end
+	radius = radius or TUNING.MOUNTAIN_SCREAMER.DESTROY_WORK_RADIUS
+	for i, v in ipairs(TheSim:FindEntities(x, y, z, radius + WORK_RADIUS_PADDING, nil, NON_COLLAPSIBLE_TAGS, COLLAPSIBLE_TAGS)) do
+		if v:IsValid() and not v:IsInLimbo() and v.components.workable ~= nil then
+			local work_action = v.components.workable:GetWorkAction()
+			local isworkable =
+				(work_action == nil and v:HasTag("NPC_workable")) or
+				(v.components.workable:CanBeWorked() and work_action ~= nil and COLLAPSIBLE_WORK_ACTIONS[work_action.id])
+			if isworkable then
+				SpawnPrefab("collapse_small").Transform:SetPosition(v.Transform:GetWorldPosition())
+				v.components.workable:Destroy(inst)
+			end
+		end
+	end
+end
+
 local function ChooseIdleAnim(inst)
 	if inst._stalking then
 		return "idolidle"
@@ -96,6 +133,13 @@ local function ApplyScreamFear(player)
 end
 
 local function DoScreamFearPulse(inst)
+	if inst == nil or not inst:IsValid() or inst.components.health == nil or inst.components.health:IsDead() then
+		return
+	end
+	-- 仅尖啸仍在持续时触发；被铝器打断则不恐惧
+	if inst.sg == nil or not inst.sg:HasStateTag("screaming") then
+		return
+	end
 	local x, y, z = inst.Transform:GetWorldPosition()
 	local range = TUNING.MOUNTAIN_SCREAMER.SCREAM_RANGE
 	for i, v in ipairs(TheSim:FindEntities(x, y, z, range, { "player" }, { "playerghost", "INLIMBO" })) do
@@ -103,6 +147,24 @@ local function DoScreamFearPulse(inst)
 			ApplyScreamFear(v)
 		end
 	end
+end
+
+local function CancelPendingScreamFear(inst)
+	if inst.sg ~= nil and inst.sg.statemem.fear_task ~= nil then
+		inst.sg.statemem.fear_task:Cancel()
+		inst.sg.statemem.fear_task = nil
+	end
+end
+
+local function ScheduleScreamFear(inst)
+	CancelPendingScreamFear(inst)
+	local delay = TUNING.MOUNTAIN_SCREAMER.SCREAM_FEAR_DELAY or 5
+	inst.sg.statemem.fear_task = inst:DoTaskInTime(delay, function(inst)
+		if inst.sg ~= nil then
+			inst.sg.statemem.fear_task = nil
+		end
+		DoScreamFearPulse(inst)
+	end)
 end
 
 local function DoScreamDrain(inst)
@@ -211,6 +273,7 @@ local function DoBlinkImpact(inst)
 		knockback_forcelanded = false,
 	}, GetBlinkAOETags())
 	inst.components.combat:SetDefaultDamage(old)
+	DestroyStuff(inst, 0, TUNING.MOUNTAIN_SCREAMER.BLINK_HIT_RADIUS)
 
 	ShakeAllCameras(CAMERASHAKE.FULL, 0.55, 0.03, 0.35, inst, 28)
 end
@@ -289,12 +352,25 @@ local events =
 		end
 	end),
 
+	-- 注视跟随 / 交战跨层（坠落换层）：disappear → 目标附近 → appear
+	-- 尖啸中忽略；其它 busy 由 prefab 置 _wants_relocate，idle 再消化
 	EventHandler("ms_screamer_stalkrelocate", function(inst)
-		if not inst._stalking or inst.components.health:IsDead() then
+		if inst.components.health:IsDead() or inst.sg:HasStateTag("dead") then
 			return
 		end
-		if not (inst.sg:HasStateTag("busy") or inst.sg:HasStateTag("dead")) then
+		if inst.sg:HasStateTag("screaming") then
+			return
+		end
+		local target = inst.GetPursueTarget ~= nil and inst:GetPursueTarget() or inst._stalk_target
+		if target == nil or not target:IsValid() then
+			inst._wants_relocate = nil
+			return
+		end
+		if not inst.sg:HasStateTag("busy") then
+			inst._wants_relocate = nil
 			inst.sg:GoToState("stalk_relocate_out")
+		else
+			inst._wants_relocate = true
 		end
 	end),
 
@@ -393,7 +469,11 @@ local states =
 			inst._stalking = false
 			inst._stalk_target = nil
 			inst._wants_despawn = false
+			inst._wants_relocate = nil
 			inst._engaged = false
+			-- 远距 leave 时保持清醒，避免 disappear 卡在 EntitySleep
+			inst.entity:SetCanSleep(false)
+			inst._pursue_can_sleep = false
 			inst.AnimState:PlayAnimation("disappear")
 			inst.components.health:SetInvincible(true)
 			inst.persists = false
@@ -416,16 +496,13 @@ local states =
 		},
 	},
 
-	-- 注视跟随：disappear → 落到玩家附近 → appear
+	-- 注视/交战追击瞬移：disappear → 落到目标附近 → appear
 	State{
 		name = "stalk_relocate_out",
 		tags = { "busy", "noattack", "nointerrupt", "stalking" },
 
 		onenter = function(inst)
 			inst.components.locomotor:Stop()
-			local target = inst._stalk_target
-			local pos = inst.GetStalkRelocatePos ~= nil and inst:GetStalkRelocatePos(target) or nil
-			inst.sg.statemem.relocate_pos = pos
 			inst.AnimState:PlayAnimation("disappear")
 			inst.components.health:SetInvincible(true)
 		end,
@@ -443,17 +520,20 @@ local states =
 				if not inst.AnimState:AnimDone() then
 					return
 				end
-				local pos = inst.sg.statemem.relocate_pos
+				-- 瞬移时再取落点：坠落落地后目标坐标才准确
+				local target = inst.GetPursueTarget ~= nil and inst:GetPursueTarget() or inst._stalk_target
+				local pos = inst.GetStalkRelocatePos ~= nil and inst:GetStalkRelocatePos(target) or nil
 				if pos ~= nil then
 					inst.Physics:Teleport(pos.x, 0, pos.z)
-					local target = inst._stalk_target
 					if target ~= nil and target:IsValid() then
 						inst:ForceFacePoint(target.Transform:GetWorldPosition())
 					end
 					inst.sg.statemem.keep_invincible = true
 					inst.sg:GoToState("stalk_relocate_in")
-				else
+				elseif inst._stalking then
 					inst.sg:GoToState("leave")
+				else
+					inst.sg:GoToState("idle")
 				end
 			end),
 		},
@@ -476,7 +556,7 @@ local states =
 		end,
 
 		onupdate = function(inst)
-			local target = inst._stalk_target
+			local target = inst.GetPursueTarget ~= nil and inst:GetPursueTarget() or inst._stalk_target
 			if target ~= nil and target:IsValid() then
 				inst:ForceFacePoint(target.Transform:GetWorldPosition())
 			end
@@ -493,6 +573,13 @@ local states =
 		{
 			EventHandler("animover", function(inst)
 				if inst.AnimState:AnimDone() then
+					-- 交战跨层落地后重挂仇恨，避免瞬移间隙丢目标
+					if not inst._stalking and inst.components.combat ~= nil then
+						local target = inst.GetPursueTarget ~= nil and inst:GetPursueTarget() or nil
+						if target ~= nil and target:IsValid() and inst.components.combat.target ~= target then
+							inst.components.combat:SetTarget(target)
+						end
+					end
 					inst.sg:GoToState("idle", "idolidle")
 				end
 			end),
@@ -631,6 +718,17 @@ local states =
 		onenter = function(inst, playanim)
 			inst.components.locomotor:Stop()
 
+			-- 跨层排队优先于注视 idle / 胜利笑：攻击或 appear 结束后追上掉崖目标
+			if inst._wants_relocate then
+				local target = inst.GetPursueTarget ~= nil and inst:GetPursueTarget() or inst._stalk_target
+				if target ~= nil and target:IsValid() then
+					inst._wants_relocate = nil
+					inst.sg:GoToState("stalk_relocate_out")
+					return
+				end
+				inst._wants_relocate = nil
+			end
+
 			-- 注视态只播 idolidle；朝向由 onupdate ForceFacePoint 持续跟随（同 kiki 泡澡盯人）
 			if inst._stalking then
 				inst.AnimState:PlayAnimation("idolidle", true)
@@ -705,6 +803,11 @@ local states =
 						strengthmult = TUNING.MOUNTAIN_SCREAMER.ATTACK_KNOCKBACK_STRENGTH,
 					})
 				end
+				DestroyStuff(
+					inst,
+					TUNING.MOUNTAIN_SCREAMER.DESTROY_WORK_DIST,
+					TUNING.MOUNTAIN_SCREAMER.DESTROY_WORK_RADIUS
+				)
 			end),
 			FrameEvent(30, function(inst)
 				inst.sg:AddStateTag("caninterrupt")
@@ -910,8 +1013,8 @@ local states =
 			inst.sg:SetTimeout(TUNING.MOUNTAIN_SCREAMER.SCREAM_DURATION)
 			inst.sg.statemem.scream_affected = {}
 			inst.sg.statemem.next_drain = GetTime()
-			-- 开场一次织影恐惧（仅对当前范围内玩家）
-			DoScreamFearPulse(inst)
+			-- 延迟织影恐惧，留给玩家投掷铝器打断
+			ScheduleScreamFear(inst)
 			DoScreamDrain(inst)
 		end,
 
@@ -928,6 +1031,7 @@ local states =
 		end,
 
 		onexit = function(inst)
+			CancelPendingScreamFear(inst)
 			ClearScreamAffected(inst)
 		end,
 	},
@@ -976,7 +1080,7 @@ local states =
 	},
 
 	--------------------------------------------------------------------------
-	-- 进食骷髅
+	-- 进食骷髅：只播一段进食动画（eat_pre/eat_loop 各自都像咬一口，不能串联）
 	--------------------------------------------------------------------------
 	State{
 		name = "eat_pre",
@@ -988,28 +1092,8 @@ local states =
 			if target ~= nil and target:IsValid() then
 				inst:ForceFacePoint(target.Transform:GetWorldPosition())
 			end
-			inst.AnimState:PlayAnimation("eat_pre")
-		end,
-
-		events =
-		{
-			EventHandler("animover", function(inst)
-				if inst.AnimState:AnimDone() then
-					inst.sg:GoToState("eat_loop", inst.sg.statemem.target)
-				end
-			end),
-		},
-	},
-
-	State{
-		name = "eat_loop",
-		tags = { "busy", "eating" },
-
-		onenter = function(inst, target)
-			inst.sg.statemem.target = target
-			inst.AnimState:PlayAnimation("eat_loop", true)
-			inst.sg.statemem.loops = 2
-			inst.sg:SetTimeout(inst.AnimState:GetCurrentAnimationLength() * inst.sg.statemem.loops)
+			-- 只用 eat_loop 播一次；再播 eat_pre 会看起来吃了两口
+			inst.AnimState:PlayAnimation("eat_loop")
 		end,
 
 		timeline =
@@ -1025,9 +1109,14 @@ local states =
 			end),
 		},
 
-		ontimeout = function(inst)
-			inst.sg:GoToState("eat_pst", inst.sg.statemem.ate)
-		end,
+		events =
+		{
+			EventHandler("animover", function(inst)
+				if inst.AnimState:AnimDone() then
+					inst.sg:GoToState("eat_pst", inst.sg.statemem.ate)
+				end
+			end),
+		},
 	},
 
 	State{
