@@ -43,35 +43,39 @@ end
 
 local fx =
 {
-    {
-        name = "furnace_firesplash_fx",
-        bank = "furnace_firesplash_fx",
-        build = "furnace_firesplash_fx",
-        anim = "idle",
-        bloom = true,
-        fn = FinalOffsetNegative2,
-    },
-    {
-        name = "ms_bone_pile_hit_fx",
-        bank = "ms_bone_pile",
-        build = "ms_bone_pile",
-        anim = "fx_hit",
-        fn = FinalOffset1,
-    },
-    {
-        name = "ms_bone_throne_hit_fx",
-        bank = "ms_bone_throne",
-        build = "ms_bone_throne",
-        anim = "fx_hit",
-        fn = FinalOffset1,
-    },
-    {
-        name = "ms_bone_chandelier_hit_fx",
-        bank = "ms_bone_chandelier",
-        build = "ms_bone_chandelier",
-        anim = "fx_hit",
-        fn = FinalOffset1,
-    },
+  {
+    name = "furnace_firesplash_fx",
+    bank = "furnace_firesplash_fx",
+    build = "furnace_firesplash_fx",
+    anim = "idle",
+    bloom = true,
+    fn = FinalOffsetNegative2,
+  },
+  {
+		name = "ms_snowpile_fx",
+		bank = "ms_snowball",
+		build = "ms_snowball",
+		anim = "snow_destruction_1",
+		sound = "qol1/daywalker_scrappy/pile_destroy",
+		fn = function(inst)
+			local rnd = math.random(6)
+			if rnd > 3 then
+				rnd = rnd - 3
+				inst.AnimState:SetScale(-1, 1)
+			end
+			if rnd ~= 1 then
+				inst.AnimState:PlayAnimation("snow_destruction_"..tostring(rnd))
+			end
+			inst.AnimState:SetFinalOffset(1)
+		end,
+	}, 
+  {
+		name = "ms_snowpile_fall_fx",
+		bank = "ms_snowball",
+		build = "ms_snowball",
+		anim = "snow_fall",
+		sound = "qol1/daywalker_scrappy/pile_destroy",
+	},
 }
 
 FinalOffset1 = nil

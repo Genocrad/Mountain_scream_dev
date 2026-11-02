@@ -21,6 +21,23 @@ TUNING.MS_LEVEL_TO_TEMP = {
   [14] = {delta = 0, max = 70, min = -50},
 }
 
+TUNING.MS_LEVEL_AVALANCHE = {
+  [1] = { player_causes = 0.0, size = 10}, 
+  [2] = { player_causes = 0.0, size = 10}, 
+  [3] = { player_causes = 0.1, size = 20}, 
+  [4] = { player_causes = 0.3, size = 60}, 
+  [5] = { player_causes = 0.5, size = 100}, 
+  [6] = { player_causes = 1, size = 200}, 
+  [7] = { player_causes = 1, size = 200}, 
+  [8] = { player_causes = 0.5, size = 100}, 
+  [9] = { player_causes = 0.3, size = 30}, 
+  [10] = { player_causes = 0.0, size = 0}, 
+  [11] = { player_causes = 0.0, size = 0}, 
+  [12] = { player_causes = 0.0, size = 0},
+  [13] = { player_causes = 0.0, size = 0},
+  [14] = { player_causes = 0.0, size = 0},
+  [15] = { player_causes = 0.0, size = 0},
+}
 -- terraformer offsets: index 0 unused conceptually; values for levels 1..
 TUNING.MS_TERRAFORMER_OFFSET_X = {0, 140, 140, 140, 140, 0,     0,    0,  0,   0,    -140,   -140,  -140}
 TUNING.MS_TERRAFORMER_OFFSET_Y = {0, 0,   0,   0,   0,   140  , 140 , 70, 70,  140,  0,       0,    0}

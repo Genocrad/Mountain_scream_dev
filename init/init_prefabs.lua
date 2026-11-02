@@ -91,6 +91,7 @@ PrefabFiles = {
 	"mountain_cold_rocks",
 	"mountain_snowpeak_stones",
 	"mountain_snowpile",
+  "avalanche_snowpile",
 	"mountain_gravel_pile",
 	"mountain_goapaca_horn",
 	"mountain_transformation_cube",
