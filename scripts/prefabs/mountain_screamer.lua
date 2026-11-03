@@ -10,6 +10,7 @@ local prefabs =
 	"warningshadow",
 	"collapse_small",
 	"ms_blood_fx",
+	"ms_blooding_fx",
 	"ms_scream_fear",
 }
 

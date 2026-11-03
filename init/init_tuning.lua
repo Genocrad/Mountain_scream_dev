@@ -1288,15 +1288,12 @@ TUNING.MOUNTAIN_SCREAMER = {
 	SPEED = 2,                 	 -- 基础移动速度
 	COMBAT_RANGE = 20,           -- 活动范围（距苏醒点）
 	DEAGGRO_DIST = 35,           -- 脱战距离
-
-	-- 嘲讽仅开战前一次，不再使用 BattleCry 间隔
-
 	SCREAM_CD = 25,              -- 尖啸成功冷却（秒）
 	SCREAM_CD_BREAK = 15,        -- 尖啸被打断冷却（秒）
 	SCREAM_DURATION = 20,        -- 尖啸持续施法时间（秒）
 	SCREAM_RANGE = 12,           -- 尖啸作用范围
 	SCREAM_DRAIN_PERIOD = 0.5,   -- 持续跳伤间隔（秒）；20s ≈ 40 跳
-	-- 跳伤（打满约：玩家 240 伤 / -80 理智；生物 480 伤）
+	
 	SCREAM_PLAYER_DAMAGE = 6,
 	SCREAM_CREATURE_DAMAGE = 12,
 	SCREAM_PLAYER_SANITY = 2,    -- 每跳理智
@@ -1306,6 +1303,12 @@ TUNING.MOUNTAIN_SCREAMER = {
 	SCREAM_FEAR_FADE_IN = 0.75,  -- 黑影占屏渐入时间（秒）；满屏后才锁操作
 	SCREAM_PANIC_TIME = 1.25,    -- 生物恐慌刷新时长（秒，在圈内每跳刷新）
 	SCREAM_BLOOD_FX_SPEED = 0.5, -- ms_blood_fx idle 播放速度
+	-- 吸血飞行粒子 ms_blooding_fx：受害者 → Screamer，land 时回血
+	SCREAM_BLOODING_FX_SPEED_MIN = 8,
+	SCREAM_BLOODING_FX_SPEED_MAX = 10,
+	SCREAM_BLOODING_FX_SPAWN_Y = 1.2,
+	SCREAM_BLOODING_FX_LAND_Y = 2.5,
+	SCREAM_BLOODING_FX_HIT_DIST = 0.75,
 	SCREAM_FACE_HIT_HEIGHT = 3,  -- 铝器砸脸投掷瞄准高度（相对地面）
 	SCREAM_FACE_THROW_DIST = 12, -- 右键砸脸最大距离
 
@@ -1317,20 +1320,20 @@ TUNING.MOUNTAIN_SCREAMER = {
 	BLINK_KNOCKBACK_STRENGTH = 1.5, -- 击飞力度（重甲/heavybody 用 1）
 	BLINK_WARNING_SCALE = 1.8,   -- warningshadow 缩放
 
-	-- 近战击飞：AOE 半径用 ATTACK_RANGE；strengthmult 同官方 PushEvent("knockback")
+	-- 近战击飞：AOE 半径用 ATTACK_RANGE
 	ATTACK_KNOCKBACK_STRENGTH = 1.25,
-	-- 攻击/闪烁落地摧毁建筑（熊獾式 Destroy）；半径相对自身朝前偏移
+	-- 攻击/闪烁落地摧毁建筑
 	DESTROY_WORK_DIST = 1.5,
 	DESTROY_WORK_RADIUS = 3,
 
-	-- 夜间注视遭遇（刷出候选仍用 IsInstInMSOverWorld；追击改软校验，掉落换层可跟上）
+	-- 夜间注视遭遇
 	STALK_SPAWN_CHANCE = 0.9,    -- 入夜基础出现概率，默认20%，测试阶段调的比较大
 	STALK_SPAWN_DELAY_MIN = 5,   -- 入夜后刷出延迟下限（秒）
 	STALK_SPAWN_DELAY_MAX = 10,  -- 入夜后刷出延迟上限（秒）
 	STALK_SPAWN_DIST_MIN = 6,    -- 刷出/跟随落点距玩家最小
 	STALK_SPAWN_DIST_MAX = 10,   -- 刷出/跟随落点距玩家最大
 	STALK_FOLLOW_DIST = 15,      -- 同层走出该距离后 disappear→appear 跟上
-	-- 跨层/坠落追击（参考 falcon：level nil 中途粘住，落地后再瞬移）
+	-- 跨层/坠落追击
 	CROSS_FLOOR_DIST = 45,       -- 与目标水平距离超过此值视为换层/坠落，触发瞬移追击
 	LOST_TARGET_TIME = 12,       -- 目标彻底离开山域多久后放弃（秒）
 

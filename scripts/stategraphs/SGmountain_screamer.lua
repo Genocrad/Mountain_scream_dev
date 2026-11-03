@@ -116,6 +116,21 @@ local function EnsureScreamBloodFx(target)
 	end)
 end
 
+-- 飞行吸血粒子：与挂身 ms_blood_fx 并存；尖啸结束不打断，飞到 Screamer 后 land 再回血
+local function SpawnScreamBloodingFx(screamer, victim, heal)
+	if screamer == nil or not screamer:IsValid() or victim == nil or not victim:IsValid() then
+		return
+	end
+	local fx = SpawnPrefab("ms_blooding_fx")
+	if fx == nil then
+		return
+	end
+	local x, y, z = victim.Transform:GetWorldPosition()
+	local spawn_y = TUNING.MOUNTAIN_SCREAMER.SCREAM_BLOODING_FX_SPAWN_Y or 1.2
+	fx.Transform:SetPosition(x, spawn_y, z)
+	fx:Launch(screamer, heal)
+end
+
 local function ApplyScreamFear(player)
 	if player == nil or not player:IsValid() or player:HasTag("playerghost") then
 		return
@@ -177,7 +192,6 @@ local function DoScreamDrain(inst)
 	local panic_time = TUNING.MOUNTAIN_SCREAMER.SCREAM_PANIC_TIME
 	local prev_affected = inst.sg.statemem.scream_affected or {}
 	local now_affected = {}
-	local healed = 0
 
 	for i, v in ipairs(TheSim:FindEntities(x, y, z, range, SCREAM_DRAIN_MUST, SCREAM_DRAIN_CANT)) do
 		if v:IsValid()
@@ -191,7 +205,7 @@ local function DoScreamDrain(inst)
 			local hp_before = v.components.health.currenthealth
 			v.components.health:DoDelta(-dmg, false, "mountain_screamer_scream", false, inst, true)
 			local dealt = math.max(0, hp_before - v.components.health.currenthealth)
-			healed = healed + dealt * heal_ratio
+			local heal = dealt * heal_ratio
 
 			if is_player then
 				if v.components.sanity ~= nil then
@@ -204,6 +218,9 @@ local function DoScreamDrain(inst)
 			end
 
 			EnsureScreamBloodFx(v)
+			if dealt > 0 then
+				SpawnScreamBloodingFx(inst, v, heal)
+			end
 			now_affected[v] = true
 		end
 	end
@@ -214,10 +231,6 @@ local function DoScreamDrain(inst)
 		end
 	end
 	inst.sg.statemem.scream_affected = now_affected
-
-	if healed > 0 and inst.components.health ~= nil and not inst.components.health:IsDead() then
-		inst.components.health:DoDelta(healed, false, "mountain_screamer_scream")
-	end
 end
 
 local function CanBlinkTo(inst, target)
