@@ -1,3 +1,5 @@
+local RegisterShaderMouse = require("ms_shader_mouse").Register
+
 local assets = {
     Asset("ANIM", "anim/ms_cave_entrance.zip"),
 }
@@ -144,6 +146,7 @@ MakeTeleporter("ms_cave_entrance_vertical", function(inst)
       inst.AnimState:SetDefaultEffectHandle(resolvefilepath("shaders/clickable_vertical_shader.ksh"))	
       inst.AnimState:SetDepthTestEnabled(true)
       inst.AnimState:SetDepthWriteEnabled(true)
+      RegisterShaderMouse(inst, "clickable")
     end, 
     function(inst) 
       inst:AddComponent("savedrotation") 

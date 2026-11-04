@@ -1,3 +1,5 @@
+local RegisterShaderMouse = require("ms_shader_mouse").Register
+
 local assets = {
     Asset("ANIM", "anim/ms_climbing.zip"),
 }
@@ -87,7 +89,7 @@ local function fn()
     inst.AnimState:SetDepthWriteEnabled(true)
     inst.Transform:SetScale(1.002,2,1.002)
     inst.AnimState:SetManualBB(0,0,600,1000)
-    inst.AnimState:SetSymbolAddColour("climbing", 0, 0, 1, 1)
+    RegisterShaderMouse(inst, "clickable")
     
     inst:AddTag("climbable")
     

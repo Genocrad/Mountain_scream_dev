@@ -1,3 +1,5 @@
+local RegisterShaderMouse = require("ms_shader_mouse").Register
+
 local assets =
 
 {
@@ -84,6 +86,7 @@ local function fn()
     inst.MiniMapEntity:SetIcon("ms_wall_bush.tex")
 
     inst.Transform:SetEightFaced()
+    RegisterShaderMouse(inst, "rotation")
 
     inst.entity:SetPristine()
 

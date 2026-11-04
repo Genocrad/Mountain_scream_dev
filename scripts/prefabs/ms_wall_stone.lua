@@ -1,3 +1,5 @@
+local RegisterShaderMouse = require("ms_shader_mouse").Register
+
 local assets =
 {
     Asset("ANIM", "anim/ms_wall_stone.zip"),
@@ -35,6 +37,7 @@ local function fn()
     inst.AnimState:SetDepthWriteEnabled(true)
     inst.AnimState:SetDefaultEffectHandle(resolvefilepath("shaders/rotation_vertical_shader.ksh"))	
     inst.Transform:SetEightFaced()
+    RegisterShaderMouse(inst, "rotation")
     inst:AddTag("mountain_stalactite")
     inst.entity:SetPristine()
     
