@@ -6,7 +6,7 @@ local assets = {
   local function fn()
       local inst = CreateEntity()
       
-      inst.persist = false
+      inst.persists = false
       
       inst.entity:AddTransform()
       inst.entity:AddAnimState()
