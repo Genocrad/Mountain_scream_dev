@@ -20,6 +20,7 @@ local DungeonPlayerEnvironment = Class(function(self, inst)
     self._onphase = function() self:ApplyMaster() end
     self._ondoor = function() self:UpdateCameraTarget() end
     self._ondeactivated = function() self:DeactivateClient() end
+    self._oncameraupdate = function() self:UpdateCameraClouds() end
 
     inst:ListenForEvent("mslevelchanged", self._onlevelchanged)
     if TheWorld.ismastersim then
@@ -80,7 +81,7 @@ function DungeonPlayerEnvironment:UpdateCameraTarget()
     end
     if self.tracker:IsInMsCave() then
         TheCamera.target = FindNearestFloor(self.inst) or TheFocalPoint
-        TheCamera.targetoffset.z = -12
+        TheCamera.targetoffset.z = -14
         TheCamera.targetoffset.y = 2
         TheCamera.controllable = false
         TheCamera:SetHeadingTarget(270)
@@ -93,21 +94,82 @@ function DungeonPlayerEnvironment:UpdateCameraTarget()
 end
 
 function DungeonPlayerEnvironment:ApplyCamera(region)
-    -- Keep the current camera tuning; only reset zoom on a change of region type.
+    -- Reset zoom on region changes or when the native camera restores defaults.
     if region == "mountain" then
         TheCamera.mindist = 10
-        TheCamera.maxdist = 25
-        TheCamera.mindistpitch = 35
-        TheCamera.maxdistpitch = 45
-        TheCamera.distancetarget = 25
-        TheCamera.fov = 50
+        TheCamera.maxdist = 50
+        TheCamera.mindistpitch = 30
+        TheCamera.maxdistpitch = 60
+        TheCamera.distancetarget = 30
+        TheCamera.fov = 35
+    elseif region == "ms_cave" then
+        TheCamera.mindist = 15
+        TheCamera.maxdist = 35
+        TheCamera.mindistpitch = 25
+        TheCamera.maxdistpitch = 40
+        TheCamera.distancetarget = 30
+        TheCamera.fov = 35
     else
         TheCamera.mindist = 15
         TheCamera.maxdist = 35
         TheCamera.mindistpitch = 25
         TheCamera.maxdistpitch = 40
-        TheCamera.distancetarget = region == "ms_cave" and 30 or 25
+        TheCamera.distancetarget = 25
         TheCamera.fov = 35
+    end
+end
+
+function DungeonPlayerEnvironment:OnCameraReset()
+    if TheNet:IsDedicated() or self.inst ~= ThePlayer or self._clientinactive or not self.tracker:IsReady() then
+        return
+    end
+    local region = self.tracker:GetRegion()
+    if region == "mountain" or region == "ms_cave" then
+        -- Native defaults use the shard's cave tag, which does not describe our regions.
+        self:ApplyCamera(region)
+        self:UpdateCameraTarget()
+    end
+end
+
+function DungeonPlayerEnvironment:ClearCameraClouds()
+    local hud = self._cloudhud
+    if hud ~= nil and hud.clouds_on then
+        hud.clouds_on = false
+        hud.clouds:Hide()
+        TheFocalPoint.SoundEmitter:KillSound("windsound")
+        TheMixer:PopMix("high")
+    end
+    if self._cloudcamera ~= nil then
+        self._cloudcamera.should_push_down = false
+    end
+    self._cloudhud = nil
+end
+
+function DungeonPlayerEnvironment:UpdateCameraClouds()
+    if self.inst ~= ThePlayer or self._clientinactive or not self.tracker:IsInMsOverWorld() then
+        self:SetCameraCloudsEnabled(false)
+        return
+    end
+    local hud = self.inst.HUD
+    if hud ~= self._cloudhud then
+        self:ClearCameraClouds()
+        self._cloudhud = hud
+    end
+    if hud ~= nil then
+        hud:UpdateClouds(self._cloudcamera)
+    end
+end
+
+function DungeonPlayerEnvironment:SetCameraCloudsEnabled(enabled)
+    if self._cloudcamera ~= nil and (not enabled or self._cloudcamera ~= TheCamera) then
+        self._cloudcamera:RemoveListener(self)
+        self:ClearCameraClouds()
+        self._cloudcamera = nil
+    end
+    if enabled and self._cloudcamera == nil then
+        self._cloudcamera = TheCamera
+        -- Use a listener so HUD activation cannot replace this with its cave callback.
+        self._cloudcamera:AddListener(self, self._oncameraupdate)
     end
 end
 
@@ -144,6 +206,7 @@ function DungeonPlayerEnvironment:ApplyClient()
     local region = self.tracker:GetRegion()
     local level = self.tracker:GetLevel()
     local changed = self._clientregion ~= region or self._clientlevel ~= level
+    self:SetCameraCloudsEnabled(region == "mountain")
     if self._clientregion ~= region then
         self:ApplyCamera(region)
         self:SetMountainAnnouncements(region == "mountain")
@@ -177,6 +240,7 @@ end
 
 function DungeonPlayerEnvironment:DeactivateClient()
     self._clientinactive = true
+    self:SetCameraCloudsEnabled(false)
     self:SetMountainAnnouncements(false)
     RemoveFX(self._rain)
     RemoveFX(self._snow)
