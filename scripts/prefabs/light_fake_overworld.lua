@@ -50,29 +50,19 @@ local light_params =
     },
 }
 
--- Generate light phase ID's
--- Add tint to params
-local light_phases = {}
-for k, v in pairs(light_params) do
-    table.insert(light_phases, k)
-    v.id = #light_phases
-    v.tint = { v.colour[1] * .5, v.colour[2] * .5, v.colour[3] * .5, 1 }
+-- Network phase IDs must have the same order on server and clients.
+local light_phases = { "day", "dusk", "night", "fullmoon" }
+for i, phase in ipairs(light_phases) do
+    light_params[phase].id = i
 end
 
 local function pushparams(inst, params)
+    local enabled = inst._lightswitch:value() and params.intensity > 0
     inst.Light:SetRadius(params.radius * inst.widthscale)
-    inst.Light:SetIntensity(params.intensity)
+    inst.Light:SetIntensity(enabled and params.intensity or 0)
     inst.Light:SetFalloff(params.falloff)
     inst.Light:SetColour(unpack(params.colour))
-    if TheWorld.ismastersim then
-        if params.intensity > 0 then
-            inst.Light:Enable(true)
-            inst:Show()
-        else
-            inst.Light:Enable(false)
-            inst:Hide()
-        end
-    end
+    inst.Light:Enable(enabled)
 end
 
 -- Not using deepcopy because we want to copy in place
@@ -126,92 +116,67 @@ local function OnLightPhaseDirty(inst)
 end
 
 
-local function OnCavePhase(inst, cavephase)
-    local params = light_params[cavephase == "night" and TheWorld.state.isfullmoon and "fullmoon" or cavephase]
+local function CurrentPhase()
+    local state = TheWorld.state
+    return state.cavephase == "night" and state.iscavefullmoon and "fullmoon" or state.cavephase
+end
+
+local function OnPhaseChanged(inst)
+    inst._lightphase:set(light_params[CurrentPhase()].id)
+    OnLightPhaseDirty(inst)
+end
+
+local function ApplyCurrentPhase(inst)
+    local params = light_params[light_phases[inst._lightphase:value()]]
     if params ~= nil then
-        inst._lightphase:set(params.id)
-        OnLightPhaseDirty(inst)
-      
-        
+        if inst._lighttask ~= nil then
+            inst._lighttask:Cancel()
+            inst._lighttask = nil
+        end
+        copyparams(inst._currentlight, params)
+        inst._endlight = params
+    end
+    pushparams(inst, inst._currentlight)
+end
+
+local function OnLightSwitchDirty(inst)
+    if inst._lightswitch:value() then
+        ApplyCurrentPhase(inst)
+    else
+        pushparams(inst, inst._currentlight)
     end
 end
 
-local function OnCharlieCutscene(inst, isstart)
-    if isstart then
-        OnCavePhase(inst, "day")
-    else
-        OnCavePhase(inst, TheWorld.state.cavephase)
+local function UpdateLevel(inst, level)
+    local enabled = level ~= nil and level <= TUNING.MS_CAVES_START
+    if inst._lightswitch:value() ~= enabled then
+        inst._lightswitch:set(enabled)
+        OnLightSwitchDirty(inst)
     end
 end
 
 local function OnInit(inst)
     if TheWorld.ismastersim then
-        inst:WatchWorldState("cavephase", OnCavePhase)
-        local params = light_params[TheWorld.state.iscavenight and TheWorld.state.isfullmoon and "fullmoon" or TheWorld.state.cavephase]
-        if params ~= nil then
-            inst._lightphase:set(params.id)
-        end
-    else
-        inst:ListenForEvent("lightphasedirty", OnLightPhaseDirty)
+        inst:WatchWorldState("cavephase", OnPhaseChanged)
+        inst:WatchWorldState("iscavefullmoon", OnPhaseChanged)
+        inst._lightphase:set(light_params[CurrentPhase()].id)
+        local tracker = inst._target ~= nil and inst._target.components.dungeonplayertracker or nil
+        UpdateLevel(inst, tracker ~= nil and tracker:GetLevel() or nil)
     end
-    
-    local phase = light_phases[inst._lightphase:value()]
-    if phase ~= nil then
-        local params = light_params[phase]
-        if params ~= nil and params ~= inst._endlight then
-            copyparams(inst._currentlight, params)
-            inst._endlight = params
-            if inst._lighttask ~= nil then
-                inst._lighttask:Cancel()
-                inst._lighttask = nil
-            end
-            pushparams(inst, inst._currentlight)
-        end
-    end
-end
-
-local function onspawned(inst, child)
-    child:PushEvent("fly_back")
+    ApplyCurrentPhase(inst)
 end
 
 local function UpdatePosition(inst)
-  if inst._target == nil then
-    inst:Remove()    
-  else
-	local x, y, z = inst._target.Transform:GetWorldPosition()
-  if x ~= nil then
+    if inst._target == nil or not inst._target:IsValid() then
+        inst:Remove()
+        return
+    end
+    local x, _, z = inst._target.Transform:GetWorldPosition()
     if inst._x ~= x or inst._z ~= z then
         inst._x = x
         inst._z = z
         inst.Transform:SetPosition(x, 0, z)
     end
-    
-  else
-    inst:Remove()
-  end
-  end
-end
-local function UpdateLevel(inst, level)
-  print(inst, level)
-  if level and level <= TUNING.MS_CAVES_START then
-    inst._lightswitch:set(true)
-    inst.Light:SetIntensity(light_params[TheWorld.state.cavephase].intensity)
-    inst.Light:Enable(true)
-  else
-    inst._lightswitch:set(false)
-    inst.Light:Enable(false)
-    inst.Light:SetIntensity(0)
-  end
-end
-    
-local function lightswitchdirty(inst)
-  if inst._lightswitch:value() then
-    inst.Light:SetIntensity(light_params[TheWorld.state.cavephase].intensity)
-    inst.Light:Enable(true)
-  else
-    inst.Light:Enable(false)
-    inst.Light:SetIntensity(0)
-  end
 end
 
 local function common_fn()
@@ -239,15 +204,15 @@ local function common_fn()
     inst._currentlight = {}
     copyparams(inst._startlight, inst._endlight)
     copyparams(inst._currentlight, inst._endlight)
-    pushparams(inst, inst._currentlight)
-
     inst._lightphase = net_tinybyte(inst.GUID, "cavelight._lightphase", "lightphasedirty")
     inst._lightswitch = net_bool(inst.GUID, "cavelight._lightswitch", "lightswitchdirty")
     inst._lightphase:set(inst._currentlight.id)
     inst._lighttask = nil
+    inst:ListenForEvent("lightphasedirty", OnLightPhaseDirty)
+    inst:ListenForEvent("lightswitchdirty", OnLightSwitchDirty)
+    pushparams(inst, inst._currentlight)
 
     inst:DoTaskInTime(0, OnInit)
-    inst:DoTaskInTime(0, lightswitchdirty)
     inst.entity:SetPristine()
 
     if not TheWorld.ismastersim then

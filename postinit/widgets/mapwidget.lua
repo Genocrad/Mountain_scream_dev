@@ -13,7 +13,8 @@ local MAP_TILE_SIZE = 4
 local MAP_BOUNDS_PADDING_TILES = 12
 
 local function GetMapZoomMaximum()
-  return GLOBAL.ThePlayer ~= nil and GLOBAL.ThePlayer.map_level_current ~= nil and LEVEL_MAX_ZOOM or 20
+  local tracker = GLOBAL.ThePlayer ~= nil and GLOBAL.ThePlayer.components.dungeonplayertracker or nil
+  return tracker ~= nil and tracker:IsInMsLevel() and LEVEL_MAX_ZOOM or 20
 end
 
 local function EnforceMapZoomMaximum(mapwidget)
@@ -265,7 +266,7 @@ function MapWidget:OnUpdate(dt)
     -- captured rectangle; do not substitute floor 1 when the player is outside
     -- all generated level rectangles.
     if self._ms_map_bounds_mask_active then
-      local level = GLOBAL.ThePlayer.map_level_current
+      local level = GLOBAL.ThePlayer.components.dungeonplayertracker:GetLevel()
       if level ~= nil then
         UpdateMapBoundsMask(self, level)
       else

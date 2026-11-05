@@ -272,7 +272,28 @@ function DungeonMapOverwatch:GetTileDiffForLevel(level)
     end
 end 
 
+function DungeonMapOverwatch:IsLevelDataReady()
+  local xs = self._map_points_level_x:value()
+  local arrays = {
+    self._map_points_level_y:value(),
+    self._level_limits_xp:value(), self._level_limits_xn:value(),
+    self._level_limits_yp:value(), self._level_limits_yn:value(),
+  }
+  if xs == nil or #xs == 0 then
+    return false
+  end
+  for i = 1, 5 do
+    if arrays[i] == nil or #arrays[i] < #xs then
+      return false
+    end
+  end
+  return true
+end
+
 function DungeonMapOverwatch:GetNearestLevel(x,y,z)
+  if not self:IsLevelDataReady() then
+    return nil
+  end
   local xs = self._map_points_level_x:value()
   if xs == nil or #xs < 1 then
     return nil

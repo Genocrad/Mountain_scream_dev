@@ -4,22 +4,23 @@ local PauseScreen = require "screens/redux/pausescreen"
 
 
 local MAPSCALE = .5
-local function HasCurrentLevel()
-  return ThePlayer ~= nil and ThePlayer.map_level_current ~= nil
+local function GetCurrentLevel()
+  local tracker = ThePlayer ~= nil and ThePlayer.components.dungeonplayertracker or nil
+  return tracker ~= nil and tracker:GetLevel() or nil
 end
 
 local function OnLevelPressedUp()
-  if not HasCurrentLevel() then
+  if GetCurrentLevel() == nil then
     return
   end
-  ThePlayer.map_level_shown = math.min((ThePlayer.map_level_shown or ThePlayer.map_level_current) + 1, 12)
+  ThePlayer.map_level_shown = math.min((ThePlayer.map_level_shown or GetCurrentLevel()) + 1, 12)
 end
 
 local function OnLevelPressedDown()
-  if not HasCurrentLevel() then
+  if GetCurrentLevel() == nil then
     return
   end
-  ThePlayer.map_level_shown = math.max((ThePlayer.map_level_shown or ThePlayer.map_level_current) - 1, 2)
+  ThePlayer.map_level_shown = math.max((ThePlayer.map_level_shown or GetCurrentLevel()) - 1, 2)
 end
 
 
@@ -28,7 +29,7 @@ local MapControlsDungeon = Class(Widget, function(self)
     Widget._ctor(self, "Map Controls Dungeon")
     
     if ThePlayer then
-        ThePlayer.map_level_shown = ThePlayer.map_level_current
+        ThePlayer.map_level_shown = GetCurrentLevel()
     end
     
     self.OnLevelPressedUp = OnLevelPressedUp
@@ -43,7 +44,7 @@ local MapControlsDungeon = Class(Widget, function(self)
     self.level2:SetScale(-.7, .7, .7)
     self.level2:SetOnClick(self.OnLevelPressedDown)
     
-    if not TheWorld:HasTag("mountain_scream_dungeons") or not HasCurrentLevel() then
+    if not TheWorld:HasTag("mountain_scream_dungeons") or GetCurrentLevel() == nil then
       self:Hide()
     end
     --self:RefreshTooltips(mountain_scream_dungeons)

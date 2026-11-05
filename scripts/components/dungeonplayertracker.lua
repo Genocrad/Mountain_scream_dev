@@ -1,56 +1,63 @@
 local DungeonPlayerTracker = Class(function(self, inst)
     self.inst = inst
-    self.lastlevel = nil
     self.level = nil
-    inst:AddTag("dungeonplayertracker")    
-    self.inst:StartUpdatingComponent(self)
+    self.ready = false
+    inst:AddTag("dungeonplayertracker")
+    inst:StartUpdatingComponent(self)
 end)
 
+function DungeonPlayerTracker:Refresh()
+    local level
+    if TheWorld:HasTag("mountain_scream_dungeons") then
+        local overwatch = TheWorld.net ~= nil and TheWorld.net.components.dungeonmapoverwatch or nil
+        if overwatch == nil or not overwatch:IsLevelDataReady() then
+            self.ready = false
+            return false
+        end
+        level = overwatch:GetNearestLevel(self.inst.Transform:GetWorldPosition())
+    end
+
+    local changed = not self.ready or self.level ~= level
+    self.level = level
+    self.ready = true
+    if changed then
+        -- Commit the state before notifying listeners, including the initial nil level.
+        self.inst:PushEvent("mslevelchanged", level)
+    end
+    return true
+end
+
 function DungeonPlayerTracker:OnUpdate()
-  if not TheWorld.net.components.dungeonmapoverwatch then
-    return
-  end
-  
-  local x,y,z = self.inst.Transform:GetWorldPosition()
-  
-  self.level = TheWorld.net.components.dungeonmapoverwatch:GetNearestLevel(x,y,z)
-  
-  if self.level ~= self.lastlevel then
-    self.inst:PushEvent("mslevelchanged", self.level)
-  end
-  
-  self.lastlevel = self.level
+    self:Refresh()
+end
+
+function DungeonPlayerTracker:IsReady()
+    return self.ready
+end
+
+function DungeonPlayerTracker:GetRegion()
+    if not self.ready then
+        return nil
+    elseif self.level ~= nil then
+        return self.level <= TUNING.MS_CAVES_START and "mountain" or "ms_cave"
+    end
+    return TheWorld:HasTag("cave") and "cave" or "surface"
 end
 
 function DungeonPlayerTracker:IsInMsCave()
-  if not self.level then
-    return false
-  end
-  if self.level > TUNING.MS_CAVES_START then
-    return true
-  end
-  return false
+    return self.ready and self.level ~= nil and self.level > TUNING.MS_CAVES_START
 end
 
 function DungeonPlayerTracker:IsInMsOverWorld()
-  if not self.level then
-    return false
-  end
-  if self.level <= TUNING.MS_CAVES_START then
-    return true
-  end
-  return false
+    return self.ready and self.level ~= nil and self.level <= TUNING.MS_CAVES_START
 end
 
 function DungeonPlayerTracker:IsInMsLevel()
-  if self.level then
-    return true
-  end
-  return false
+    return self.ready and self.level ~= nil
 end
 
 function DungeonPlayerTracker:GetLevel()
-  return self.level
+    return self.ready and self.level or nil
 end
 
 return DungeonPlayerTracker

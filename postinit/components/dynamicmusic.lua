@@ -28,7 +28,7 @@ local function musicsetup(inst)
             local _isenabled = UpvalueHacker.GetUpvalue(TheWorld.event_listeners["enabledynamicmusic"][TheWorld][1], "_isenabled")
             local _dangertask = UpvalueHacker.GetUpvalue(player.event_listeners["buildsuccess"][TheWorld][1], "_dangertask")
             local _extendtime = UpvalueHacker.GetUpvalue(player.event_listeners["goinsane"][TheWorld][1], "_extendtime")
-            if  player.map_level_current and player.map_level_current <= TUNING.MS_CAVES_START and _isenabled then
+            if  IsInstInMSOverWorld(player) and _isenabled then
               if _dangertask == nil then
                 local x, y, z = player.Transform:GetWorldPosition()
                 local epics = TheSim:FindEntities(x, y, z, 30, EPIC_TAGS, NO_EPIC_TAGS)
@@ -74,7 +74,7 @@ local function musicsetup(inst)
           BUSYTHEMES.MOUNTAINS = GetTableSize(BUSYTHEMES)
           local function StartBusy(player, ...)
             local _isenabled = UpvalueHacker.GetUpvalue(player.event_listeners["buildsuccess"][TheWorld][1], "_isenabled")
-            if player.map_level_current and player.map_level_current < TUNING.MS_CAVES_START and _isenabled then
+            if IsInstInMSOverWorld(player) and _isenabled then
               local _busytask = UpvalueHacker.GetUpvalue(player.event_listeners["buildsuccess"][TheWorld][1], "_busytask")
               local _busytheme = UpvalueHacker.GetUpvalue(player.event_listeners["buildsuccess"][TheWorld][1], "_busytheme")
               local _extendtime = UpvalueHacker.GetUpvalue(player.event_listeners["buildsuccess"][TheWorld][1], "_extendtime")
@@ -108,7 +108,7 @@ local function musicsetup(inst)
 
 
           local function OnPhase(inst, phase)
-            if ThePlayer.map_level_current and ThePlayer.map_level_current < TUNING.MS_CAVES_START then
+            if IsInstInMSOverWorld(ThePlayer) then
               local _isenabled = UpvalueHacker.GetUpvalue(ThePlayer.event_listeners["buildsuccess"][TheWorld][1], "_isenabled")
               local _extendtime = UpvalueHacker.GetUpvalue(ThePlayer.event_listeners["buildsuccess"][TheWorld][1], "_extendtime")
               local _dangertask = UpvalueHacker.GetUpvalue(ThePlayer.event_listeners["buildsuccess"][TheWorld][1], "_dangertask")

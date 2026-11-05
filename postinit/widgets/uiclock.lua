@@ -9,15 +9,13 @@ local CAVE_LIGHT_MUST_TAGS = { "sinkhole", "lightsource" }
 local old_update = UIClock.UpdateCaveClock
 local UIAnim = require "widgets/uianim"
 
-AddGlobalClassPostConstruct("widgets/uiclock", "UIClock", function(self, owner)    
+AddGlobalClassPostConstruct("widgets/uiclock", "UIClock", function(self)
 
   if self._cave then
     self._rim2 = self:AddChild(Image("images/hud.xml", "clock_rim.tex"))
     self._rim2:SetScale(0.5)
     self._rim2:SetClickable(false)
-    self._rim:MoveToBack()
-    self._hands:MoveToFront()
-    self._text:MoveToFront()
+    self._rim2:Hide()
     
     self.inst:ListenForEvent("phasechanged", function(inst, data) self:OnCavePhaseChanged(data) end, TheWorld)
     self.inst:ListenForEvent("moonphasechanged2", function(inst, data) self:OnMoonPhaseChanged2(data) end, TheWorld)
@@ -70,17 +68,54 @@ function UIClock:OnCavePhaseChanged(phase)
 end
 
 function UIClock:UpdateCaveClock(owner, ...)
-  if ThePlayer.map_level_current and ThePlayer.map_level_current < TUNING.MS_CAVES_START then   
-    self.is_in_level = true
-    self._caveopen = nil 
-    self._rim:GetAnimState():SetBuild("clock_transitions")
-    self._rim:MoveToBack()
+  if owner == nil then
+    return
+  end
+  -- UIClock() has no owner argument; Controls supplies it on the first update.
+  if self._ms_clockowner ~= owner then
+    if self._ms_clockowner ~= nil then
+      self.inst:RemoveEventCallback("msenvironmentchanged", self._ms_onenvironmentchanged, self._ms_clockowner)
+    end
+    self._ms_clockowner = owner
+    self._ms_onenvironmentchanged = function() self:UpdateCaveClock(owner) end
+    self.inst:ListenForEvent("msenvironmentchanged", self._ms_onenvironmentchanged, owner)
+  end
+  local tracker = owner.components.dungeonplayertracker
+  if tracker ~= nil and not tracker:IsReady() then
+    return
+  end
+  if tracker ~= nil and tracker:IsInMsOverWorld() then
+    if not self.is_in_level then
+      self.is_in_level = true
+      self._caveopen = nil
+      self._phase = nil
+      -- Cancel a pending cave-clock close and restore its hidden/shrunk hand.
+      self:StopUpdating()
+      self._hands._animtime = nil
+      self._hands._img:SetScale(1, 1, 1)
+      self._hands._img:Show()
+      self._rim2:Show()
+      self._rim:GetAnimState():SetBuild("clock_transitions")
+      self._rim:MoveToBack()
+      self:OnMoonPhaseChanged2({moonphase = TheWorld.state.cavemoonphase, waxing = TheWorld.state.iscavewaxingmoon})
+    end
     self:OnCavePhaseChanged(TheWorld.state.cavephase)
   else
-    self.is_in_level = false
-    self._phase = nil -- So cavephase sees that animation play is needed
-    self._rim:GetAnimState():SetBuild("cave_clock")
-    self._rim:MoveToFront()
-    old_update(self, owner, ...)
+    if self.is_in_level then
+      self.is_in_level = false
+      self._phase = nil
+      self._caveopen = nil
+      self._lastsinkhole = nil
+      self:StopUpdating()
+      self._hands._animtime = nil
+      self._rim2:Hide()
+      self._moonanim:GetAnimState():PlayAnimation("hidden")
+      self._rim:GetAnimState():SetBuild("cave_clock")
+      self._rim:MoveToFront()
+      self._hands:MoveToFront()
+      self._text:MoveToFront()
+    end
+    -- MSCaves and the base cave share the native skylight detection and animations.
+    return old_update(self, owner, ...)
   end
 end

@@ -183,7 +183,8 @@ local function fn()
 
     local function updateFunc(fastforward)
     if ThePlayer then
-      if ThePlayer.map_level_current and ThePlayer.map_level_current <= TUNING.MS_RAIN_MAX_LEVEL then
+      local level = ThePlayer.components.dungeonplayertracker:GetLevel()
+      if level ~= nil and level <= TUNING.MS_RAIN_MAX_LEVEL then
         -- Only refresh per-tick rates here. Do NOT assign num_* = rate (that was
         -- multiplying precipitation twice and setting ~100 splashes per frame).
         local rate = TheWorld.state.precipitationrate or 0

@@ -128,9 +128,9 @@ local function fn()
     local function update_fn()
       
       if ThePlayer then
-        if ThePlayer.map_level_current
-            and ThePlayer.map_level_current > TUNING.MS_RAIN_MAX_LEVEL
-            and ThePlayer.map_level_current <= TUNING.MS_CAVES_START then
+        local tracker = ThePlayer.components.dungeonplayertracker
+        local level = tracker:GetLevel()
+        if tracker:IsInMsOverWorld() and level > TUNING.MS_RAIN_MAX_LEVEL then
           -- Only update per-tick rate; num_particles_to_emit is accumulated below.
           local rate = TheWorld.state.precipitationrate or 0
           inst.particles_per_tick = desired_particles_per_second * tick_time * rate
