@@ -39,14 +39,14 @@ local function OnWork(inst, worker, workleft)
     inst.components.workable:SetWorkable(false)
   end
   
-    inst.AnimState:PlayAnimation("idle")
+    inst.AnimState:ClearOverrideSymbol("tree")
     inst.components.timer:StartTimer("regenerate", TUNING.MS_MOUNTAIN_BUSH_REGEN_DURATION + math.random(-TUNING.MS_MOUNTAIN_BUSH_REGEN_VARIATION, TUNING.MS_MOUNTAIN_BUSH_REGEN_VARIATION))
 end
 
 
 
 local function OnTimerDone(inst)
-  inst.AnimState:PlayAnimation("idle_full")
+  inst.AnimState:OverrideSymbol("tree", "ms_wall_tree", "tree_full")
   inst.components.workable:SetWorkLeft(1)
   inst.components.workable:SetWorkable(false)
   inst:AddTag("mountain_throw_target")
@@ -66,8 +66,17 @@ end
 
 
 
+local function UpdateBillboardParams(inst)
+    local x, y, z = inst.Transform:GetWorldPosition()
+    inst.AnimState:SetFloatParams(x, y, z)
+    inst.AnimState:SetSortWorldOffset(0, -y + 2, 0)
+end
+
 local function fn()
     local inst = CreateEntity()
+
+    -- Must be the first tag, before adding AnimState (see wagdrone_flying).
+    inst:AddTag("can_offset_sort_pos")
     
     inst.entity:AddTransform()
     inst.entity:AddAnimState()
@@ -79,14 +88,16 @@ local function fn()
     inst.AnimState:SetBuild("ms_wall_tree")
 
     inst.AnimState:PlayAnimation("idle")
-    inst.AnimState:SetDepthTestEnabled(true)
-    inst.AnimState:SetDepthWriteEnabled(true)
     inst.AnimState:SetDefaultEffectHandle(resolvefilepath("shaders/rotation_vertical_shader.ksh"))	
 
     inst.MiniMapEntity:SetIcon("ms_wall_bush.tex")
 
     inst.Transform:SetEightFaced()
     RegisterShaderMouse(inst, "rotation")
+
+    if not TheNet:IsDedicated() then
+        inst:DoStaticTaskInTime(0, UpdateBillboardParams)
+    end
 
     inst.entity:SetPristine()
 

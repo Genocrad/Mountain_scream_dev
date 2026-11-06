@@ -63,7 +63,6 @@ uniform vec4 TIMEPARAMS;
 
 uniform mat4 COLOUR_XFORM;
 uniform vec3 PARAMS;
-uniform vec3 FLOAT_PARAMS;
 uniform vec4 HAUNTPARAMS;
 uniform vec4 HAUNTPARAMS2;
 uniform vec4 OCEAN_BLEND_PARAMS;
@@ -139,14 +138,6 @@ void main()
 		gl_FragColor.rgba = vec4(0, 0, 0, colour.a);
 		return;
 	}
-
-    if(FLOAT_PARAMS.y > 0.0)
-    {
-    	if(PS_POS.y < FLOAT_PARAMS.x)
-    	{
-    		discard;
-    	}
-    }
 
 #if defined ( FADE_OUT )
 	if (colour.a >= ALPHA_TEST)

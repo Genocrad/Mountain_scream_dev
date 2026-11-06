@@ -29,6 +29,17 @@ local WALL_COLLISION_POINTS = {
 }
 local WALL_COLLISION_HEIGHT = 4
 
+local CORNER_SORT_ALONG_WALL = 2
+local CORNER_SORT_INTO_MOUNTAIN = 1.9
+
+local WALL_RENDER_POINTS = {
+    wall = { { -2, 0 }, { 2, 0 } },
+    right = { { 0, 0 }, { 2, 0 } },
+    left = { { -2, 0 }, { 0, 0 } },
+    -- Two sides meet at the tip and connect to the closing wall one tile behind it.
+    slope = { { 0, 0 }, { 0, 0 }, { 0, 0 } },
+}
+
 local function UpdateWallPhysics(inst)
     -- Bake wall rotation into the static mesh vertices on both server and clients.
     local rotation = inst._mountain_wall_rotation:value()
@@ -59,7 +70,7 @@ local function UpdateSortWorldOffset(inst)
     local dx, dz = inst._mountain_sort_x:value(), inst._mountain_sort_z:value()
     if inst._collision_shape == "slope" then
         -- Rotate the base midpoint into world space, using the same rotation as physics.
-        local points = WALL_COLLISION_POINTS.slope
+        local points = WALL_RENDER_POINTS.slope
         local x = (points[1][1] + points[#points][1]) * 0.5
         local z = (points[1][2] + points[#points][2]) * 0.5
         local angle = inst._mountain_wall_rotation:value() * DEGREES
@@ -81,12 +92,13 @@ local function SetMountainSortDirection(inst, dx, dz)
     if length == 0 then
         return
     end
-    dx, dz = dx * HALF_TILE_SCALE / length, dz * HALF_TILE_SCALE / length
+    local retreat = inst._sort_half ~= nil and CORNER_SORT_INTO_MOUNTAIN or HALF_TILE_SCALE
+    dx, dz = dx * retreat / length, dz * retreat / length
     if inst._sort_half ~= nil then
-        -- Each corner entity contains only one half of a tile-wide wall.
+        -- Move into this half-wall along its length, then toward the mountain.
         local angle = inst.Transform:GetRotation() * DEGREES
-        local midpoint = inst._sort_half * HALF_TILE_SCALE * 0.5
-        dx, dz = dx + midpoint * math.cos(angle), dz - midpoint * math.sin(angle)
+        local along_wall = inst._sort_half * CORNER_SORT_ALONG_WALL
+        dx, dz = dx + along_wall * math.cos(angle), dz - along_wall * math.sin(angle)
     end
     inst._mountain_sort_x:set(dx)
     inst._mountain_sort_z:set(dz)
@@ -146,9 +158,6 @@ local function MakeWall(name, animation, overrides, customfn)
         inst.AnimState:SetSymbolAddColour("filler", 1, 1, 1, 1)
         inst.AnimState:SetOrientation(ANIM_ORIENTATION.OnGround)
         inst.AnimState:SetDefaultEffectHandle(resolvefilepath("shaders/mountain_vertical_shader.ksh"))
-
-        inst.AnimState:SetDepthTestEnabled(true)
-        inst.AnimState:SetDepthWriteEnabled(true)
 
         if customfn then
             customfn(inst)

@@ -1,5 +1,5 @@
 -- Simplified picking for clickable_vertical_shader and rotation_vertical_shader.
--- Keep these two column replacements in sync with their .vs files.
+-- Keep these transforms in sync with their .vs files.
 local registered = setmetatable({}, { __mode = "k" })
 local active = {}
 local installed = false
@@ -39,7 +39,28 @@ local function TriangleDepth(x, y, a, b, c)
     end
 end
 
-local function HitDepth(inst, entry, mouse_x, mouse_y, camera, sim)
+local function BillboardTransform(camera)
+    local dir, up = camera.camera_dir, camera.camera_up
+    -- The camera already supplies orthonormal direction/up vectors.
+    local rx, ry, rz = dir.y * up.z - dir.z * up.y, dir.z * up.x - dir.x * up.z, dir.x * up.y - dir.y * up.x
+    local hx, hz = -dir.z, dir.x
+    local length = Length(hx, 0, hz)
+    if length < EPSILON then
+        hx, hz = rx, rz
+        length = Length(hx, 0, hz)
+    end
+    length = math.max(length, EPSILON)
+    hx, hz = hx / length, hz / length
+    return function(x, y, z)
+        -- Project onto camera axes, then rebuild with world up, as in the shader.
+        local vx = x * rx + y * ry + z * rz
+        local vy = x * up.x + y * up.y + z * up.z
+        local vz = x * dir.x + y * dir.y + z * dir.z
+        return hx * vx + hz * vz, vy, hz * vx - hx * vz
+    end
+end
+
+local function HitDepth(inst, entry, mouse_x, mouse_y, camera, sim, billboard)
     local anim = inst.AnimState
     local x1, y1, x2, y2 = anim:GetVisualBB()
     if x1 == nil or y1 == nil or x2 == nil or y2 == nil
@@ -48,7 +69,7 @@ local function HitDepth(inst, entry, mouse_x, mouse_y, camera, sim)
     end
 
     -- Empty-symbol offsets expose the native animation's model matrix, including
-    -- its orientation, facing and scales, before our vertex shader replaces columns.
+    -- its orientation, facing and scales, before the custom vertex transform.
     -- Large probes avoid subtracting nearly identical floats far from world origin.
     local ox, oy, oz = anim:GetSymbolPosition("", 0, 0, 0)
     local xx, xy, xz = anim:GetSymbolPosition("", PROBE, 0, 0)
@@ -83,7 +104,12 @@ local function HitDepth(inst, entry, mouse_x, mouse_y, camera, sim)
         yy = (zy - oy) / PROBE * -0.0033
         yz = (zz - oz) / PROBE
     else
-        yx, yy, yz = yx >= 0.2 and 1 or 0, -0.005, yz >= 0.2 and 1 or 0
+        -- Rotate the complete native quad about the actual entity origin,
+        -- including any root offset, exactly as rotation_vertical_shader does.
+        ox, oy, oz = billboard(ox - tx, oy - ty, oz - tz)
+        ox, oy, oz = tx + ox, ty + oy, tz + oz
+        xx, xy, xz = billboard(xx, xy, xz)
+        yx, yy, yz = billboard(yx, yy, yz)
     end
 
     local a, b, c, d = entry[1], entry[2], entry[3], entry[4]
@@ -122,7 +148,7 @@ local function Install()
         -- Exactly one native picking query; never query again for individual entities.
         local entities = original(sim, mouse_x, mouse_y, ...)
         local camera = TheCamera
-        if next(active) == nil or camera == nil or camera.camera_pos == nil or camera.camera_dir == nil
+        if next(active) == nil or camera == nil or camera.camera_pos == nil or camera.camera_dir == nil or camera.camera_up == nil
             or (entities[1] ~= nil and entities[1].UITransform ~= nil) then
             return entities
         end
@@ -134,13 +160,14 @@ local function Install()
         end
 
         local hits = {}
+        local billboard = BillboardTransform(camera)
         for inst, entry in pairs(active) do
             if not inst:IsValid() then
                 OnRemove(inst)
             elseif inst.entity:IsVisible() and not inst:HasAnyTag("NOCLICK", "INLIMBO") then
                 local _, _, _, alpha = inst.AnimState:GetMultColour()
                 if alpha > 0 then
-                    local depth = HitDepth(inst, entry, mouse_x, mouse_y, camera, sim)
+                    local depth = HitDepth(inst, entry, mouse_x, mouse_y, camera, sim, billboard)
                     if depth ~= nil then
                         hits[#hits + 1] = { inst = inst, depth = depth }
                     end
