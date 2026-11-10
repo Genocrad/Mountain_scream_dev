@@ -1,3 +1,5 @@
+local RegisterWallOcclusion = require("ms_wall_occlusion").Register
+
 local assets = {
     Asset("ANIM", "anim/ms_mountain_wall.zip"),
 
@@ -158,6 +160,7 @@ local function MakeWall(name, animation, overrides, customfn)
         inst.AnimState:SetSymbolAddColour("filler", 1, 1, 1, 1)
         inst.AnimState:SetOrientation(ANIM_ORIENTATION.OnGround)
         inst.AnimState:SetDefaultEffectHandle(resolvefilepath("shaders/mountain_vertical_shader.ksh"))
+        RegisterWallOcclusion(inst)
 
         if customfn then
             customfn(inst)

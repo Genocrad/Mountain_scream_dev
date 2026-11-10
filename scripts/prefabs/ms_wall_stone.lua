@@ -1,4 +1,5 @@
 local RegisterShaderMouse = require("ms_shader_mouse").Register
+local RegisterOcclusionProp = require("ms_wall_occlusion").RegisterProp
 
 local assets =
 {
@@ -29,7 +30,7 @@ end
 local function UpdateBillboardParams(inst)
     local x, y, z = inst.Transform:GetWorldPosition()
     inst.AnimState:SetFloatParams(x, y, z)
-    inst.AnimState:SetSortWorldOffset(0, -y + 2, 0)
+    inst.AnimState:SetSortWorldOffset(0, -y + 0.75, 0)
 end
 
 local function fn()
@@ -54,6 +55,7 @@ local function fn()
     inst.Transform:SetEightFaced()
 
     RegisterShaderMouse(inst, "rotation")
+    RegisterOcclusionProp(inst)
     inst:AddTag("mountain_stalactite")
 
     if not TheNet:IsDedicated() then

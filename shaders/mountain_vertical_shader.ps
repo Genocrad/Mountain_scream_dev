@@ -27,7 +27,10 @@ uniform mat4 MatrixW;
 #if !defined( UI_CC )
 // Lighting
 varying vec3 PS_POS;
-varying vec3 PS_FINAL_POS;
+varying vec4 PS_CLIP_POS;
+varying vec3 PS_REVEAL_CENTRE;
+varying vec2 PS_NDC_TO_VIEW;
+varying vec4 PS_CAMERA;
 #endif
 
 // xy = min, zw = max
@@ -67,6 +70,8 @@ uniform vec4 TIMEPARAMS;
 
 uniform mat4 COLOUR_XFORM;
 uniform vec3 PARAMS;
+// Player ground XZ, then 0 = effect off or 1 + player-hidden strength,
+// supplied through SetFloatParams only.
 uniform vec3 FLOAT_PARAMS;
 uniform vec4 HAUNTPARAMS;
 uniform vec4 HAUNTPARAMS2;
@@ -83,7 +88,6 @@ uniform vec3 CAMERARIGHT;
 
 
 #if defined( FADE_OUT )
-	uniform vec4 EROSION_PARAMS; 
 
 	#if defined( HOLO )
 		#define HOLO_SAMPLER			SAMPLER[2]
@@ -110,31 +114,97 @@ uniform vec4 OCEAN_WORLD_EXTENTS;
 	}
 #endif
 
+// See-through tuning, in world units. Keep the two level shapes in sync with
+// ms_wall_occlusion.lua, which fades wall props the same way.
+// Level 1, always on: walls nearer the camera than this share of the focus
+// distance fade out completely; the limit reaches furthest at the
+// centre of the screen.
+const float NEAR_CENTRE = 0.45;
+const float NEAR_EDGE = 0.25;
+const float NEAR_SOFT = 0.3;               // blend over +-30% of the limit
+// Fade at fixed world heights; mountain walls stand on the Y=0 ground plane.
+const float TOP_FADE_END = 1536.0 * 0.0033 * 4.0; // full wall height: 20.2752
+const float TOP_FADE_START = TOP_FADE_END - 2.0;  // half a tile below the top
+const float TOP_KEEP = 0.0;               // fully transparent at and above the top
+// Level 2, while the player is hidden: a camera-facing ellipse around the player.
+const vec2 REVEAL_RADII = vec2(18.0, 12.0); // horizontal/vertical radii at the centre's depth
+const float REVEAL_CORE = 0.5;             // share of the radii fully open
+const float REVEAL_DEPTH = 4.0;            // back boundary at ellipse centre (50% depth weight)
+const float REVEAL_DEPTH_SOFT = 1.0;       // blend on either side of the depth limit
+const float FILL_KEEP = 0.1;               // paint left
+const float INK_KEEP = 0.45;               // ink lines left
+const float INK_BLUR_BIAS = 3.0;           // mip bias of the local paint average
+const vec3 LUMA = vec3(0.299, 0.587, 0.114);
+
+// Level 1. In view space the faded zone is a dome on the camera that bulges
+// furthest toward the centre of the screen.
+float NearFade(vec2 screen_pos)
+{
+    // Screen heights from the centre, so the dome is round on any display.
+    float from_centre = length(screen_pos * vec2(PS_NDC_TO_VIEW.x / PS_NDC_TO_VIEW.y, 1.0));
+    float limit = PS_CAMERA.w * mix(NEAR_CENTRE, NEAR_EDGE, smoothstep(0.0, 1.0, from_centre));
+    return 1.0 - smoothstep(limit * (1.0 - NEAR_SOFT), limit * (1.0 + NEAR_SOFT), PS_CLIP_POS.w);
+}
+
+// Level 2. Measure screen distance on a plane facing the camera at the player.
+// A rounded back boundary allows more depth near the centre than at the edge.
+float EllipseReveal(vec2 screen_pos, float strength)
+{
+    if (strength <= 0.0 || PS_REVEAL_CENTRE.z <= 0.001)
+    {
+        return 0.0;
+    }
+
+    vec2 offset = (screen_pos - PS_REVEAL_CENTRE.xy) * PS_NDC_TO_VIEW * PS_REVEAL_CENTRE.z;
+    float spread = length(offset / REVEAL_RADII);
+    float reveal = 1.0 - smoothstep(REVEAL_CORE, 1.0, spread);
+    float radial = min(spread, 1.0);
+    float depth_limit = PS_REVEAL_CENTRE.z + REVEAL_DEPTH * sqrt(max(0.0, 1.0 - radial * radial));
+    float depth_fade = 1.0 - smoothstep(depth_limit - REVEAL_DEPTH_SOFT, depth_limit + REVEAL_DEPTH_SOFT, PS_CLIP_POS.w);
+    return strength * reveal * depth_fade;
+}
+
+// Ink lines are darker than the paint around them. Comparing with a blurred
+// mip finds the strokes of the light, dark and snowy variants alike.
+float InkAmount(vec4 colour, vec4 blurred)
+{
+    float around = dot(blurred.rgb, LUMA) / max(blurred.a, 0.01);
+    return smoothstep(0.04, 0.12, around - dot(colour.rgb, LUMA));
+}
+
 void main()
 {
     vec4 colour;
+    vec4 blurred;
 
+    // The blurred sample stays outside per-pixel branches so its mip
+    // derivatives are well defined.
 #if defined( TRIPLE_ATLAS )
     if( PS_TEXCOORD.z < 0.5 )
     {
         colour.rgba = texture2D( SAMPLER[0], PS_TEXCOORD.xy );
+        blurred = texture2D( SAMPLER[0], PS_TEXCOORD.xy, INK_BLUR_BIAS );
     }
     else if( PS_TEXCOORD.z < 1.5 )
     {
         colour.rgba = texture2D( SAMPLER[1], PS_TEXCOORD.xy );
+        blurred = texture2D( SAMPLER[1], PS_TEXCOORD.xy, INK_BLUR_BIAS );
     }
     else
     {
         colour.rgba = texture2D( SAMPLER[5], PS_TEXCOORD.xy );
+        blurred = texture2D( SAMPLER[5], PS_TEXCOORD.xy, INK_BLUR_BIAS );
     }
 #else
     if( PS_TEXCOORD.z < 0.5 )
     {
         colour.rgba = texture2D( SAMPLER[0], PS_TEXCOORD.xy );
+        blurred = texture2D( SAMPLER[0], PS_TEXCOORD.xy, INK_BLUR_BIAS );
     }
     else
     {
         colour.rgba = texture2D( SAMPLER[1], PS_TEXCOORD.xy );
+        blurred = texture2D( SAMPLER[1], PS_TEXCOORD.xy, INK_BLUR_BIAS );
     }
 #endif
 
@@ -143,19 +213,33 @@ void main()
 		discard;
 	}
 
+    // Player reveal retains ink; near-camera fade can remove the wall entirely.
+    // Wall tops remain softly translucent even when neither view effect applies.
+    float opacity = 1.0;
+    if (FLOAT_PARAMS.z >= 1.0 && PS_CLIP_POS.w > 0.001)
+    {
+        vec2 screen_pos = PS_CLIP_POS.xy / PS_CLIP_POS.w;
+        float ink = InkAmount(colour, blurred);
+        float reveal = EllipseReveal(screen_pos, FLOAT_PARAMS.z - 1.0);
+        float reveal_keep = mix(FILL_KEEP, INK_KEEP, ink);
+        // Match the vertex shader's wall branch so filler symbols stay opaque.
+        float top_fade = COLOUR_XFORM[0][3] != 1.0
+            ? smoothstep(TOP_FADE_START, TOP_FADE_END, PS_POS.y) : 0.0;
+        float top_keep = mix(1.0, TOP_KEEP, top_fade);
+        opacity = min(top_keep, min(1.0 - NearFade(screen_pos), mix(1.0, reveal_keep, reveal)));
+    }
+
+    // Fully invisible fragments must not leave depth behind.
+    if (opacity <= 0.0)
+    {
+        discard;
+    }
+
 	if (BLOOM_TOGGLE == 1.0)
 	{
-		gl_FragColor.rgba = vec4(0, 0, 0, colour.a);
+		gl_FragColor.rgba = vec4(0, 0, 0, colour.a * opacity);
 		return;
 	}
-
-    if(FLOAT_PARAMS.y > 0.0)
-    {
-    	if(PS_POS.y < FLOAT_PARAMS.x)
-    	{
-    		discard;
-    	}
-    }
 
 #if defined ( FADE_OUT )
 	if (colour.a >= ALPHA_TEST)
@@ -164,7 +248,7 @@ void main()
 	{
 		if (colour.a >= ALPHA_TEST)
 		{
-			gl_FragColor = colour.rgba;	
+			gl_FragColor = colour.rgba * opacity;
 		}
 		else
 		{
@@ -185,12 +269,8 @@ void main()
 		gl_FragColor.rgb = mix(gl_FragColor.rgb, gl_FragColor.rgb * world_tint.rgb, OCEAN_BLEND_PARAMS.x);
 
         vec3 light = CalculateLightingContribution();
-		float opac = 1.0;
-        if (sqrt(pow(PS_FINAL_POS.x, 2.0) + pow(PS_FINAL_POS.y, 2.0)) < 10.0) {
-            opac = clamp(1.0 - clamp(((PS_POS.y-PS_FINAL_POS.y+5.0)/10.0), 0.0, 0.6) + sqrt(pow(PS_FINAL_POS.x, 2.0) + pow(PS_FINAL_POS.y, 2.0))/20.0, 0.1, 1.0);
-        }
         gl_FragColor.rgb *= light.rgb;
-		gl_FragColor.rgba *= vec4(opac, opac, opac, opac);
+		gl_FragColor.rgba *= vec4(opacity);
 	}
 	else
 		{

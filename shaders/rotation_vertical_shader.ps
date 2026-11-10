@@ -133,6 +133,12 @@ void main()
     }
 #endif
 
+    // Wall props can fade out completely; skip every output/depth path then.
+    if ((colour.rgba * COLOUR_XFORM).a <= 0.0)
+    {
+        discard;
+    }
+
 	if (BLOOM_TOGGLE == 1.0)
 	{
 		gl_FragColor.rgba = vec4(0, 0, 0, colour.a);
