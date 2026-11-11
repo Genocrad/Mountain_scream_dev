@@ -2,7 +2,8 @@
 -- (mountain_vertical_shader.ps). Level 1 is always on: walls too near the
 -- camera fade out completely. Level 2 runs while a wall hides the
 -- local player: walls open in a camera-facing ellipse centred on the player.
--- Its depth extends behind the player most at the centre and tapers at the edge.
+-- Project that screen ellipse onto a camera-facing vertical plane at the player.
+-- Its depth extends behind that plane most at the centre and tapers at the edge.
 -- Props mounted on walls fade the same way. Lua decides whether the
 -- player is hidden and where they stand.
 local WALL_HEIGHT = 1536 * 0.0033 * 4 -- frame height (px) * vertical factor in the .vs * Transform Y scale
@@ -11,11 +12,12 @@ local BODY_HALF_WIDTH = 0.45
 -- Keep the ellipse height in sync with the .vs, and its shape with the .ps.
 local REVEAL_HEIGHT, REVEAL_CORE = 1.5, 0.5
 local REVEAL_RADIUS_X, REVEAL_RADIUS_Y = 18, 12
--- Rounded back boundary, with a soft transition on either side (world units).
+-- Rounded extension behind the projected vertical plane, measured in view depth.
+-- Keep a soft transition on either side of this boundary (world units).
 local REVEAL_DEPTH, REVEAL_DEPTH_SOFT = 4, 1
-local NEAR_CENTRE, NEAR_EDGE, NEAR_SOFT = 0.45, 0.25, 0.3
+local NEAR_CENTRE_START, NEAR_EDGE_START, NEAR_SOFT = 4, 4, 0.3
 -- Opacity left on a fully faded prop, for level 1 and level 2.
-local NEAR_PROP_KEEP, PROP_KEEP = 0, 0.3
+local NEAR_PROP_KEEP, PROP_KEEP = 0, 0.5
 local FADE_IN, FADE_OUT = 0.15, 0.4
 -- Keep the view open briefly, so walking past a corner does not flicker.
 local HOLD = 0.3
@@ -90,8 +92,8 @@ end
 local function ApplyView(inst)
     -- FLOAT_PARAMS = player ground XZ, 1 + player-hidden strength. 1 keeps
     -- level 1 on; other users of the shader leave 0 and stay untouched.
-    -- Mountain levels all use ground Y=0; the shader obtains the camera from
-    -- MatrixV itself.
+    -- Mountain levels all use ground Y=0; view/projection matrices supply the
+    -- screen position and view depth in the shader.
     -- SetErosionParams is NOT a data channel: it enables native erosion and
     -- overrides the custom effect, potentially hiding the entire wall.
     inst.AnimState:SetFloatParams(x or 0, z or 0, 1 + strength)
@@ -112,14 +114,17 @@ end
 
 -- The shader's two levels, evaluated once per prop at its origin.
 local function UpdateProps(camera)
-    local eye, dir = camera.camera_pos, camera.camera_dir
     local screen_width, screen_height = TheSim:GetScreenSize()
     local half_height = screen_height * 0.5
-    local focus = eye.y / math.max(-dir.y, 0.2)
+    local eye, dir = camera.camera_pos, camera.camera_dir
     local centre_x, centre_y, centre_depth, world_per_pixel
+    local plane_distance
     if strength > 0 then
         centre_x, centre_y, centre_depth = Project(camera, x, REVEAL_HEIGHT, z)
-        if centre_x ~= nil and centre_depth > 0.001 then
+        -- The plane is vertical in world space, with the camera's horizontal
+        -- forward direction as its normal. Its XZ position follows the player.
+        plane_distance = (x - eye.x) * dir.x + (z - eye.z) * dir.z
+        if centre_x ~= nil and centre_depth > 0.001 and plane_distance > 0.001 then
             world_per_pixel = 2 * math.tan(camera.fov * 0.5 * DEGREES) * centre_depth / screen_height
         end
     end
@@ -129,19 +134,27 @@ local function UpdateProps(camera)
         local alpha = 1
         if sx ~= nil then
             local from_centre = math.sqrt((sx - screen_width * 0.5) ^ 2 + (sy - half_height) ^ 2) / half_height
-            local limit = focus * Lerp(NEAR_CENTRE, NEAR_EDGE, SmoothStep(0, 1, from_centre))
-            local near = 1 - SmoothStep(limit * (1 - NEAR_SOFT), limit * (1 + NEAR_SOFT), depth)
+            local fade_start = Lerp(NEAR_CENTRE_START, NEAR_EDGE_START, SmoothStep(0, 1, from_centre))
+            -- The configured distance is where fading starts, not its midpoint.
+            local limit = fade_start / (1 + NEAR_SOFT)
+            local near = 1 - SmoothStep(limit * (1 - NEAR_SOFT), fade_start, depth)
             alpha = 1 - near * (1 - NEAR_PROP_KEEP)
             if world_per_pixel ~= nil and depth > 0 then
-                local offset_x = (sx - centre_x) * world_per_pixel / REVEAL_RADIUS_X
-                local offset_y = (sy - centre_y) * world_per_pixel / REVEAL_RADIUS_Y
-                local spread = math.sqrt(offset_x * offset_x + offset_y * offset_y)
-                local reveal = 1 - SmoothStep(REVEAL_CORE, 1, spread)
-                local radial = math.min(spread, 1)
-                local depth_limit = centre_depth + REVEAL_DEPTH * math.sqrt(math.max(0, 1 - radial * radial))
-                local depth_fade = 1 - SmoothStep(depth_limit - REVEAL_DEPTH_SOFT, depth_limit + REVEAL_DEPTH_SOFT, depth)
-                local see = strength * reveal * depth_fade
-                alpha = math.min(alpha, 1 - see * (1 - PROP_KEEP))
+                -- Intersect this prop's camera ray with the player's vertical
+                -- plane. Normalize by view depth to match the shader's ray.
+                local plane_ray = ((px - eye.x) * dir.x + (pz - eye.z) * dir.z) / depth
+                if plane_ray > 0.001 then
+                    local plane_depth = plane_distance / plane_ray
+                    local offset_x = (sx - centre_x) * world_per_pixel / REVEAL_RADIUS_X
+                    local offset_y = (sy - centre_y) * world_per_pixel / REVEAL_RADIUS_Y
+                    local spread = math.sqrt(offset_x * offset_x + offset_y * offset_y)
+                    local reveal = 1 - SmoothStep(REVEAL_CORE, 1, spread)
+                    local radial = math.min(spread, 1)
+                    local depth_limit = plane_depth + REVEAL_DEPTH * math.sqrt(math.max(0, 1 - radial * radial))
+                    local depth_fade = 1 - SmoothStep(depth_limit - REVEAL_DEPTH_SOFT, depth_limit + REVEAL_DEPTH_SOFT, depth)
+                    local see = strength * reveal * depth_fade
+                    alpha = math.min(alpha, 1 - see * (1 - PROP_KEEP))
+                end
             end
         end
         SetPropAlpha(inst, alpha)

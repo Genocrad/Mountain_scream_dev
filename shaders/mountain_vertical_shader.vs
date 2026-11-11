@@ -13,7 +13,7 @@ varying vec3 PS_POS;
 varying vec4 PS_CLIP_POS;
 varying vec3 PS_REVEAL_CENTRE;
 varying vec2 PS_NDC_TO_VIEW;
-varying vec4 PS_CAMERA;
+varying vec2 PS_REVEAL_PLANE;
 
 // Keep in sync with ms_wall_occlusion.lua.
 const float REVEAL_HEIGHT = 1.5;
@@ -44,23 +44,27 @@ void main()
 
     vec4 world_pos = world_matrix * object_pos;
     PS_POS = world_pos.xyz;
-    gl_Position = MatrixP * MatrixV * world_pos;
+    vec4 view_pos = MatrixV * world_pos;
+    gl_Position = MatrixP * view_pos;
     // Interpolate homogeneous positions, then divide by W in the fragment
     // stage. Dividing at the vertices would distort the mask on slanted walls.
     PS_CLIP_POS = gl_Position;
 
-    vec4 centre_clip = MatrixP * MatrixV * vec4(FLOAT_PARAMS.x, REVEAL_HEIGHT, FLOAT_PARAMS.y, 1.0);
+    vec4 centre_view = MatrixV * vec4(FLOAT_PARAMS.x, REVEAL_HEIGHT, FLOAT_PARAMS.y, 1.0);
+    vec4 centre_clip = MatrixP * centre_view;
     PS_REVEAL_CENTRE = vec3(centre_clip.xy / max(centre_clip.w, 0.001), centre_clip.w);
 
     // Convert NDC offsets to view units at depth 1, correcting display aspect ratio.
     PS_NDC_TO_VIEW = 1.0 / max(abs(vec2(MatrixP[0][0], MatrixP[1][1])), vec2(0.001));
 
-    // Camera position, and the depth of the ground at the screen centre where
-    // the camera is focused. The camera always looks down, which settles the
-    // sign of its view axis for either handedness.
-    vec3 view_translation = MatrixV[3].xyz;
-    vec3 camera_pos = -vec3(dot(MatrixV[0].xyz, view_translation),
-                            dot(MatrixV[1].xyz, view_translation),
-                            dot(MatrixV[2].xyz, view_translation));
-    PS_CAMERA = vec4(camera_pos, camera_pos.y / max(abs(MatrixV[1][2]), 0.2));
+    // Project the screen ellipse along its view rays onto an upright plane
+    // through the player. Its normal follows camera heading, not camera pitch.
+    // Clip W is positive view depth for either projection handedness.
+    float forward_sign = sign(MatrixP[2][3]);
+    vec3 plane_normal = vec3(MatrixV[0][2], 0.0, MatrixV[2][2]) * forward_sign;
+    vec3 view_normal = (MatrixV * vec4(plane_normal, 0.0)).xyz;
+    // The second value varies across the wall. Perspective interpolation
+    // keeps it equal to the fragment's horizontal distance along the normal.
+    PS_REVEAL_PLANE = vec2(dot(view_normal, centre_view.xyz),
+                           dot(view_normal, view_pos.xyz));
 }
