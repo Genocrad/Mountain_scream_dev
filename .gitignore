@@ -6024,3 +6024,6 @@ tmp_ref/
 
 # Local mountain wall sources, intermediate files, backups, and tools
 /anim/ms_mountain_wall_work/
+
+# Editable audio projects, source recordings, backups, and build caches
+/sound/projects/
