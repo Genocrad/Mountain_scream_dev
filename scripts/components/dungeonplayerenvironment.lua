@@ -99,7 +99,7 @@ function DungeonPlayerEnvironment:ApplyCamera(region)
         TheCamera.mindist = 10
         TheCamera.maxdist = 50
         TheCamera.mindistpitch = 30
-        TheCamera.maxdistpitch = 60
+        TheCamera.maxdistpitch = 50
         TheCamera.distancetarget = 30
         TheCamera.fov = 35
     elseif region == "ms_cave" then

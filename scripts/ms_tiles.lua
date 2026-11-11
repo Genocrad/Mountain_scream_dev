@@ -13,7 +13,6 @@ local TileRanges =
 
 mod_protect_TileManager = false
 
-
 TileManager.RegisterTileRange(TileRanges.MS_CLOUDS, 40000, 40257)
 --!!!!!!!!!!!!!!!!!!!
 --Luigi: It is really unlikely, but possible that this tile range is taken already by another mod. Move the value up until the problem is solved. 40000 is just a random number i picked, it has no significance to code
@@ -136,8 +135,8 @@ TileManager.AddTile(
     {
         name = "blocky",
         noise_texture = "ms_turf_brick",
-        runsound="dontstarve/movement/run_marsh",
-        walksound="dontstarve/movement/walk_marsh",
+        runsound="dontstarve/movement/run_dirt",
+        walksound="dontstarve/movement/walk_dirt",
         snowsound="dontstarve/movement/run_ice",
         mudsound = "dontstarve/movement/run_mud",
     },
@@ -149,20 +148,20 @@ TileManager.AddTile(
         name = "ms_brick",
         bank_build = "turf_moon",
         pickupsound = "rock",
-         ms_tile = true,
+        ms_tile = true,
     }
 )
 
-TileManager.AddTile(
+TileManager.AddTile( -- Does this tile be used?
     "MS_HIGHLAND",
     TileRanges.LAND,
     {ground_name = "MS Highland"},
     {
         name = "deciduous",
         noise_texture = "highland_start_turf",
-        runsound="dontstarve/movement/run_marsh",
-        walksound="dontstarve/movement/walk_marsh",
-        snowsound="dontstarve/movement/run_ice",
+        runsound="dontstarve/movement/run_grass",
+        walksound="dontstarve/movement/walk_grass",
+        snowsound="dontstarve/movement/run_snow",
         mudsound = "dontstarve/movement/run_mud",
     },
     {
@@ -184,8 +183,8 @@ TileManager.AddTile(
     {
         name = "blocky",
         noise_texture = "ms_turf_void_technical",
-        runsound="dontstarve/movement/run_marsh",
-        walksound="dontstarve/movement/walk_marsh",
+        runsound="dontstarve/movement/run_dirt",
+        walksound="dontstarve/movement/walk_dirt",
         snowsound="dontstarve/movement/run_ice",
         mudsound = "dontstarve/movement/run_mud",
         cannotbedug = true,
@@ -200,8 +199,8 @@ TileManager.AddTile(
     {
         name = "blocky",
         noise_texture = "ms_turf_cave",
-        runsound="dontstarve/movement/run_marsh",
-        walksound="dontstarve/movement/walk_marsh",
+        runsound="dontstarve/movement/run_dirt",
+        walksound="dontstarve/movement/walk_dirt",
         snowsound="dontstarve/movement/run_ice",
         mudsound = "dontstarve/movement/run_mud",
     },
@@ -224,9 +223,9 @@ TileManager.AddTile(
     {
         name = "deciduous",
         noise_texture = "ms_turf_mountain",
-        runsound="dontstarve/movement/run_marsh",
-        walksound="dontstarve/movement/walk_marsh",
-        snowsound="dontstarve/movement/run_ice",
+        runsound="dontstarve/movement/run_grass",
+        walksound="dontstarve/movement/walk_grass",
+        snowsound="dontstarve/movement/run_snow",
         mudsound = "dontstarve/movement/run_mud",
     },
     {
@@ -236,7 +235,7 @@ TileManager.AddTile(
     {
         name = "ms_mountain_low",
         bank_build = "turf_moon",
-        pickupsound = "rock",
+        pickupsound = "vegetation_grassy",
         ms_tile = true,
     }
 )
@@ -248,9 +247,9 @@ TileManager.AddTile(
     {
         name = "deciduous",
         noise_texture = "ms_turf_mountain2",
-        runsound="dontstarve/movement/run_marsh",
-        walksound="dontstarve/movement/walk_marsh",
-        snowsound="dontstarve/movement/run_ice",
+        runsound="dontstarve/movement/run_grass",
+        walksound="dontstarve/movement/walk_grass",
+        snowsound="dontstarve/movement/run_snow",
         mudsound = "dontstarve/movement/run_mud",
     },
     {
@@ -260,7 +259,7 @@ TileManager.AddTile(
     {
         name = "ms_mountain_low_2",
         bank_build = "turf_moon",
-        pickupsound = "rock",
+        pickupsound = "vegetation_grassy",
         ms_tile = true,
     }
 )
@@ -272,8 +271,8 @@ TileManager.AddTile(
     {
         name = "ms_edge",
         noise_texture = "ms_turf_mountain_high",
-        runsound="dontstarve/movement/run_marsh",
-        walksound="dontstarve/movement/walk_marsh",
+        runsound="dontstarve/movement/run_dirt",
+        walksound="dontstarve/movement/walk_dirt",
         snowsound="dontstarve/movement/run_ice",
         mudsound = "dontstarve/movement/run_mud",
     },
@@ -298,10 +297,10 @@ TileManager.AddTile(
     {
         name = "rocky",
         noise_texture = "turf_permafrost",
-        runsound="dontstarve/movement/run_marsh",
-        walksound="dontstarve/movement/walk_marsh",
-        snowsound="dontstarve/movement/run_ice",
-        mudsound = "dontstarve/movement/run_mud",
+        runsound="dontstarve/movement/run_ice",
+        walksound="dontstarve/movement/run_ice",
+        walksound="dontstarve/movement/run_ice",
+        mudsound = "dontstarve/movement/run_ice",
     },
     {
         name="map_edge",
@@ -322,10 +321,10 @@ TileManager.AddTile(
     {
         name = "snowfall",
         noise_texture = "ms_snow_turf",
-        runsound="dontstarve/movement/run_marsh",
-        walksound="dontstarve/movement/walk_marsh",
-        snowsound="dontstarve/movement/run_ice",
-        mudsound = "dontstarve/movement/run_mud",
+        runsound="dontstarve/movement/run_snow",
+        walksound="dontstarve/movement/run_snow",
+        snowsound="dontstarve/movement/run_snow",
+        mudsound = "dontstarve/movement/run_snow",
         istemptile = true,
     },
     {

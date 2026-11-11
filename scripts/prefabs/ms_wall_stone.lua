@@ -30,7 +30,7 @@ end
 local function UpdateBillboardParams(inst)
     local x, y, z = inst.Transform:GetWorldPosition()
     inst.AnimState:SetFloatParams(x, y, z)
-    inst.AnimState:SetSortWorldOffset(0, -y + 1.5, 0)
+    inst.AnimState:SetSortWorldOffset(0, -y + 1.25, 0)
 end
 
 local function fn()
