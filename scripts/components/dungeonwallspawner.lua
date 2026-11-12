@@ -6,7 +6,80 @@ local DungeonWallSpawner = Class(function(self, inst)
     self.cave_doors = {}
     self.exits = {}
     self.entrances = {}
+    self._terraformers = {}
   end)
+
+function DungeonWallSpawner:QueueTerraformer(inst, prepare, terraform)
+  if self._terraformers ~= nil then
+    -- SpawnSaveRecord/the spawning parent sets the position after the prefab
+    -- constructor returns. Only collect work here; never run it inline.
+    self._terraformers[#self._terraformers + 1] = {
+      inst = inst, prepare = prepare, terraform = terraform,
+    }
+  elseif self.generated then
+    inst:DoTaskInTime(0, inst.Remove)
+  else
+    -- Preserve support for markers spawned after world initialization.
+    inst:DoTaskInTime(0.05, prepare)
+    inst:DoTaskInTime(0.1, terraform)
+  end
+end
+
+function DungeonWallSpawner:OnTerraformingFinished()
+  if self.generated then
+    return
+  end
+  if self._terraformers ~= nil then
+    -- Several marker chains can reach the last floor in the same batch.
+    -- Finish all of them before placing walls and connecting entrances.
+    self._terraforming_finished = true
+  else
+    self.inst:PushEvent("terraforming_finished")
+  end
+end
+
+function DungeonWallSpawner:OnPostInit()
+  if self._terraformers == nil or self._processing_terraformers then
+    return
+  end
+  self._processing_terraformers = true
+  -- World PostInit runs after entity positions/load data are restored and
+  -- before players enter. Drain every generation without advancing sim time.
+  while #self._terraformers > 0 do
+    local batch = self._terraformers
+    self._terraformers = {}
+    -- Register every anchor first so the floor centroid is already complete
+    -- when the first marker starts modifying tiles/removing nearby markers.
+    for _, work in ipairs(batch) do
+      if work.inst:IsValid() then
+        if self.generated then
+          work.inst:Remove()
+        else
+          work.prepare(work.inst)
+        end
+      end
+    end
+    for _, work in ipairs(batch) do
+      if work.inst:IsValid() then
+        work.terraform(work.inst)
+      end
+    end
+  end
+  self._terraformers = nil
+  self._processing_terraformers = nil
+  if self._terraforming_finished then
+    self._terraforming_finished = nil
+    self:OnTerraformingFinished()
+  end
+end
+
+function DungeonWallSpawner:OnSave()
+  return { generated = self.generated }
+end
+
+function DungeonWallSpawner:OnLoad(data)
+  self.generated = data ~= nil and data.generated == true
+end
 
 local function IsMsTile(tile)
   return tile == WORLD_TILES.MS_HIGHLAND or

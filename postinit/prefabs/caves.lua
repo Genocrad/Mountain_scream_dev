@@ -4,6 +4,11 @@ local ENV = env
 GLOBAL.setfenv(1, GLOBAL)
 
 local function onterraformingfinished(inst)
+  local spawner = inst.components.dungeonwallspawner
+  if spawner.generated or spawner.generating then
+    return
+  end
+  spawner.generating = true
   inst.components.dungeonwallspawner:SpawnMainEntrance()
   local x, y = TheWorld.net.components.dungeonmapoverwatch:GetPointForLevel(11)
   inst.components.dungeonwallspawner:SpawnCaveLayout(x,y-120, 10, 4)
@@ -30,6 +35,8 @@ local function onterraformingfinished(inst)
     inst.components.dungeoncontentspawner:SpawnConfiguredLevels()
   end
 
+  spawner.generated = true
+  spawner.generating = nil
   inst:RemoveEventCallback("terraforming_finished", inst.onterraformingfinished)
 end
 

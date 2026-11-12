@@ -78,8 +78,8 @@ local function MakeTerraformer(name, tiles, tile_rarity, snow_randomseed, snow_r
       return inst        
     end
 
-    -- Position not being initialised? 
-    inst:DoTaskInTime(0.05, function()
+    -- The world spawner waits until all saved/spawned positions are available.
+    local function PrepareTerraforming()
         local posx, posy, posz = inst.Transform:GetWorldPosition()
          if inst.prefab == "terraformer_mountain_dungeon_level_1" then
    
@@ -95,8 +95,8 @@ local function MakeTerraformer(name, tiles, tile_rarity, snow_randomseed, snow_r
           inst:Remove()
         end
       
-      end)
-    inst:DoTaskInTime(0.1, function()
+      end
+    local function Terraform()
 
         -- Actual tile replacement
 
@@ -111,9 +111,13 @@ local function MakeTerraformer(name, tiles, tile_rarity, snow_randomseed, snow_r
 
         local posx, posy, posz = inst.Transform:GetWorldPosition()
         
-        -- Now check if we are near other terraformers. If do, it kills itself.
+        -- Keep one marker per nearby group; remove this marker after its work.
         local nearest_terraformers = TheSim:FindEntities(posx, posy, posz, 40, {"ms_terraformer"})
-        if nearest_terraformers then for k,v in pairs(nearest_terraformers) do v:Remove() end end
+        if nearest_terraformers then
+          for _, v in pairs(nearest_terraformers) do
+            if v ~= inst then v:Remove() end
+          end
+        end
         
         local center_x, center_y = TheWorld.Map:GetTileXYAtPoint(posx, posy, posz)
         
@@ -245,11 +249,11 @@ local function MakeTerraformer(name, tiles, tile_rarity, snow_randomseed, snow_r
       
       
 
-      TheWorld:PushEvent("terraforming_finished")
-      inst:Remove()
+      TheWorld.components.dungeonwallspawner:OnTerraformingFinished()
     end
     inst:Remove()
-  end)
+  end
+  TheWorld.components.dungeonwallspawner:QueueTerraformer(inst, PrepareTerraforming, Terraform)
   
     
 return inst
