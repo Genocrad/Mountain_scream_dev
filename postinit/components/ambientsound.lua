@@ -17,6 +17,13 @@ local CLOUD_LEVEL_BONUS = {
 }
 local CLOUD_LEVEL_RATE = 0.8
 
+-- Match the native normal and birdless ambience parameters.
+local PHASE_PARAMS = {
+    day = { 1, .5 },
+    dusk = { 1.5, 1.6 },
+    night = { 2, 2.5 },
+}
+
 local function GetCloudProximity(map, x, y, z, level)
     local tile_x, tile_y = map:GetTileCoordsAtPoint(x, y, z)
     local count = 0
@@ -94,6 +101,55 @@ AddComponentPostInit("ambientsound", function(self)
         debug.setupvalue(onupdate, sounds_index, regional_sounds)
     end
 
+    -- Cave worlds keep state.phase at night, while mountain daylight follows
+    -- cavephase. Adapt both the recordings and their light attenuation together.
+    local light_index = FindUpvalue(onupdate, "_lightattenuation")
+    local _, getdaytime = FindUpvalue(onupdate, "GetDayTimeParam")
+    local daytime_index, birdless_index
+    if type(getdaytime) == "function" then
+        daytime_index = FindUpvalue(getdaytime, "_daytimeparam")
+        birdless_index = FindUpvalue(getdaytime, "_nobirddaytimeparam")
+    end
+    local phase_available = light_index ~= nil and daytime_index ~= nil and birdless_index ~= nil
+    if not phase_available then
+        print("[Mountain Scream] Ambient phase hook unavailable: native daytime upvalues not found.")
+    end
+    local mountain_phase
+    local saved_light, saved_daytime, saved_birdless
+    local function UpdateMountainPhase(phase)
+        if not phase_available then
+            return
+        end
+        local params = PHASE_PARAMS[phase]
+        if params == nil then
+            phase = nil
+        end
+        if phase == mountain_phase then
+            return
+        end
+
+        local light, daytime, birdless
+        if params ~= nil then
+            if mountain_phase == nil then
+                -- Restore the actual native state on exit, including overrides.
+                local name
+                name, saved_light = debug.getupvalue(onupdate, light_index)
+                name, saved_daytime = debug.getupvalue(getdaytime, daytime_index)
+                name, saved_birdless = debug.getupvalue(getdaytime, birdless_index)
+            end
+            light = phase ~= "day"
+            daytime, birdless = params[1], params[2]
+        else
+            light, daytime, birdless = saved_light, saved_daytime, saved_birdless
+        end
+        mountain_phase = phase
+        debug.setupvalue(onupdate, light_index, light)
+        debug.setupvalue(getdaytime, daytime_index, daytime)
+        debug.setupvalue(getdaytime, birdless_index, birdless)
+        -- Refresh playing loops without restarting them or rescanning terrain.
+        self.inst:PushEvent("updateambientsoundparams")
+    end
+
     local cloud_volume = 0
     local cloud_proximity = 0
     local cloud_target_proximity = 0
@@ -138,6 +194,7 @@ AddComponentPostInit("ambientsound", function(self)
     local onremove = self.OnRemoveFromEntity
     self.OnRemoveFromEntity = function(component, ...)
         SetCloudSound(0, cloud_proximity)
+        UpdateMountainPhase(nil)
         if onremove ~= nil then
             return onremove(component, ...)
         end
@@ -145,6 +202,7 @@ AddComponentPostInit("ambientsound", function(self)
     local onremoveentity = self.OnRemoveEntity
     self.OnRemoveEntity = function(component, ...)
         SetCloudSound(0, cloud_proximity)
+        UpdateMountainPhase(nil)
         if onremoveentity ~= nil then
             return onremoveentity(component, ...)
         end
@@ -178,6 +236,7 @@ AddComponentPostInit("ambientsound", function(self)
         -- Match the wave scan cadence, caching scalar positions to avoid extra
         -- vectors or per-frame scans. Re-entry, player and floor changes force a scan.
         local clouds_enabled = in_mountain and (environment == nil or not environment._clientinactive)
+        UpdateMountainPhase(clouds_enabled and component.inst.state.cavephase or nil)
         if clouds_enabled then
             if cloud_player ~= player or cloud_level ~= level
                 or player:GetDistanceSqToPoint(cloud_x, cloud_y, cloud_z) >= 16 then
