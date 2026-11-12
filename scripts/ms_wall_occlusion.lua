@@ -6,7 +6,9 @@
 -- Its depth extends behind that plane most at the centre and tapers at the edge.
 -- Props mounted on walls fade the same way. Lua decides whether the
 -- player is hidden and where they stand.
-local WALL_HEIGHT = 1536 * 0.0033 * 4 -- frame height (px) * vertical factor in the .vs * Transform Y scale
+local WALL_GEOMETRY = require("ms_mountain_wall_geometry")
+local SetSlopeView = require("ms_slope_shader").SetView
+local WALL_HEIGHT = WALL_GEOMETRY.HEIGHT
 local BODY_HEIGHT = 1.5 -- hiding is tested from mid-body
 local BODY_HALF_WIDTH = 0.45
 -- Keep the ellipse height in sync with the .vs, and its shape with the .ps.
@@ -22,13 +24,16 @@ local FADE_IN, FADE_OUT = 0.15, 0.4
 -- Keep the view open briefly, so walking past a corner does not flicker.
 local HOLD = 0.3
 
--- Along-wall extent of each rendered shape before rotation, as in ms_mountain_wall.lua.
-local WALL_SPANS = {
-    wall = { -2, 2 },
-    right = { 0, 2 },
-    left = { -2, 0 },
-    slope = { -2, 2 },
-}
+-- Precompute triangle edges once. Slope sight tests allocate no per-frame data.
+local slope_triangles = {}
+for i, triangle in ipairs(WALL_GEOMETRY.SLOPE_TRIANGLES) do
+    local a, b, c = triangle[1], triangle[2], triangle[3]
+    slope_triangles[i] = {
+        a[1], a[2], a[3],
+        b[1] - a[1], b[2] - a[2], b[3] - a[3],
+        c[1] - a[1], c[2] - a[2], c[3] - a[3],
+    }
+end
 
 local walls = {}
 local props = {}
@@ -56,33 +61,84 @@ local function SegmentsCross(ax, az, bx, bz, cx, cz, dx, dz)
     return t >= 0 and t <= 1 and u >= 0 and u <= 1
 end
 
--- Walls are far taller than anything that walks, so hiding reduces to the
--- ground plane: does a wall base cross the body's way toward the camera
--- before the sight line clears the wall tops?
+local function SegmentHitsTriangle(ax, ay, az, bx, by, bz, triangle)
+    local dx, dy, dz = bx - ax, by - ay, bz - az
+    local e1x, e1y, e1z = triangle[4], triangle[5], triangle[6]
+    local e2x, e2y, e2z = triangle[7], triangle[8], triangle[9]
+    local px, py, pz = dy * e2z - dz * e2y, dz * e2x - dx * e2z, dx * e2y - dy * e2x
+    local determinant = e1x * px + e1y * py + e1z * pz
+    if math.abs(determinant) < 1e-6 then
+        return false
+    end
+    local tx, ty, tz = ax - triangle[1], ay - triangle[2], az - triangle[3]
+    local u = (tx * px + ty * py + tz * pz) / determinant
+    if u < 0 or u > 1 then
+        return false
+    end
+    local qx, qy, qz = ty * e1z - tz * e1y, tz * e1x - tx * e1z, tx * e1y - ty * e1x
+    local v = (dx * qx + dy * qy + dz * qz) / determinant
+    if v < 0 or u + v > 1 then
+        return false
+    end
+    local t = (e2x * qx + e2y * qy + e2z * qz) / determinant
+    return t >= 0 and t <= 1
+end
+
+local function SlopeHidesPlayer(inst, eye, px, py, pz, dx, dz, wx, wy, wz)
+    local inverse_angle = -inst.Transform:GetRotation() * DEGREES
+    local ex, ez = WALL_GEOMETRY.RotatePoint(eye.x - wx, eye.z - wz, inverse_angle)
+    local ey = eye.y - wy
+    for side = -1, 1 do
+        local ox, oz = WALL_GEOMETRY.RotatePoint(
+            px - dz * side * BODY_HALF_WIDTH - wx,
+            pz + dx * side * BODY_HALF_WIDTH - wz, inverse_angle)
+        for _, triangle in ipairs(slope_triangles) do
+            if SegmentHitsTriangle(ox, py + BODY_HEIGHT - wy, oz, ex, ey, ez, triangle) then
+                return true
+            end
+        end
+    end
+    return false
+end
+
+-- Straight walls use their vertical footprint. Slopes use their actual tilted
+-- triangles: a sight line can pass above the narrowing sides without hiding.
 local function IsHidden(eye, px, py, pz)
     local dx, dz = eye.x - px, eye.z - pz
     local distance = math.sqrt(dx * dx + dz * dz)
     local clearance = WALL_HEIGHT - py - BODY_HEIGHT
-    if distance < 0.01 or clearance <= 0 then
-        return false
+    if distance >= 0.01 then
+        dx, dz = dx / distance, dz / distance
+    else
+        dx, dz = 0, 1
     end
-    dx, dz = dx / distance, dz / distance
     local rise = eye.y - py - BODY_HEIGHT
     local reach = rise > clearance and distance * clearance / rise or distance
-    local range_sq = (reach + 2 + BODY_HALF_WIDTH) ^ 2
     for inst in pairs(walls) do
-        local span = WALL_SPANS[inst._collision_shape]
-        local wx, _, wz = inst.Transform:GetWorldPosition()
-        if span ~= nil and (wx - px) ^ 2 + (wz - pz) ^ 2 <= range_sq then
+        local shape = inst._collision_shape
+        local points = WALL_GEOMETRY.POINTS[shape]
+        local wx, wy, wz = inst.Transform:GetWorldPosition()
+        local radius = WALL_GEOMETRY.RADII[shape]
+        if shape == "slope" then
+            if (wx - px) ^ 2 + (wz - pz) ^ 2 <= (distance + radius + BODY_HALF_WIDTH) ^ 2
+                and SlopeHidesPlayer(inst, eye, px, py, pz, dx, dz, wx, wy, wz) then
+                return true
+            end
+        elseif points ~= nil and distance >= 0.01 and clearance > 0
+            and (wx - px) ^ 2 + (wz - pz) ^ 2 <= (reach + radius + BODY_HALF_WIDTH) ^ 2 then
             local angle = inst.Transform:GetRotation() * DEGREES
-            local cos, sin = math.cos(angle), math.sin(angle)
-            local ax, az = wx + span[1] * cos, wz - span[1] * sin
-            local bx, bz = wx + span[2] * cos, wz - span[2] * sin
-            for side = -1, 1 do
-                local ox, oz = px - dz * side * BODY_HALF_WIDTH, pz + dx * side * BODY_HALF_WIDTH
-                if SegmentsCross(ax, az, bx, bz, ox, oz, ox + dx * reach, oz + dz * reach) then
-                    return true
+            local ax, az = WALL_GEOMETRY.RotatePoint(points[1][1], points[1][2], angle)
+            ax, az = wx + ax, wz + az
+            for i = 2, #points do
+                local bx, bz = WALL_GEOMETRY.RotatePoint(points[i][1], points[i][2], angle)
+                bx, bz = wx + bx, wz + bz
+                for side = -1, 1 do
+                    local ox, oz = px - dz * side * BODY_HALF_WIDTH, pz + dx * side * BODY_HALF_WIDTH
+                    if SegmentsCross(ax, az, bx, bz, ox, oz, ox + dx * reach, oz + dz * reach) then
+                        return true
+                    end
                 end
+                ax, az = bx, bz
             end
         end
     end
@@ -97,8 +153,11 @@ local function ApplyView(inst)
     -- SetErosionParams is NOT a data channel: it enables native erosion and
     -- overrides the custom effect, potentially hiding the entire wall.
     inst.AnimState:SetFloatParams(x or 0, z or 0, 1 + strength)
-    if inst._slope_right_visual ~= nil then
-        inst._slope_right_visual.AnimState:SetFloatParams(x or 0, z or 0, 1 + strength)
+    if inst._slope_faces ~= nil then
+        local wx, _, wz = inst.Transform:GetWorldPosition()
+        for _, face in ipairs(inst._slope_faces) do
+            SetSlopeView(face, (x or 0) - wx, (z or 0) - wz, strength)
+        end
     end
 end
 
@@ -271,4 +330,4 @@ local function RegisterProp(inst)
     end
 end
 
-return { Register = Register, RegisterProp = RegisterProp }
+return { Register = Register, RegisterProp = RegisterProp, Refresh = ApplyView }

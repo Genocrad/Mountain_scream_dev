@@ -31,6 +31,7 @@ varying vec4 PS_CLIP_POS;
 varying vec3 PS_REVEAL_CENTRE;
 varying vec2 PS_NDC_TO_VIEW;
 varying vec2 PS_REVEAL_PLANE;
+varying vec3 PS_WALL_FADE;
 #endif
 
 // xy = min, zw = max
@@ -70,9 +71,6 @@ uniform vec4 TIMEPARAMS;
 
 uniform mat4 COLOUR_XFORM;
 uniform vec3 PARAMS;
-// Player ground XZ, then 0 = effect off or 1 + player-hidden strength,
-// supplied through SetFloatParams only.
-uniform vec3 FLOAT_PARAMS;
 uniform vec4 HAUNTPARAMS;
 uniform vec4 HAUNTPARAMS2;
 uniform vec4 OCEAN_BLEND_PARAMS;
@@ -222,14 +220,16 @@ void main()
     // Player reveal retains ink; near-camera fade can remove the wall entirely.
     // Wall tops remain softly translucent even when neither view effect applies.
     float opacity = 1.0;
-    if (FLOAT_PARAMS.z >= 1.0 && PS_CLIP_POS.w > 0.001)
+    // 0 disables the effect; 1 + strength enables it. Leave room for varying
+    // interpolation roundoff when the player reveal strength is exactly zero.
+    if (PS_WALL_FADE.x > 0.5 && PS_CLIP_POS.w > 0.001)
     {
         vec2 screen_pos = PS_CLIP_POS.xy / PS_CLIP_POS.w;
         float ink = InkAmount(colour, blurred);
-        float reveal = EllipseReveal(screen_pos, FLOAT_PARAMS.z - 1.0);
+        float reveal = EllipseReveal(screen_pos, PS_WALL_FADE.x - 1.0);
         float reveal_keep = mix(FILL_KEEP, INK_KEEP, ink);
         // Match the vertex shader's wall branch so filler symbols stay opaque.
-        float top_fade = COLOUR_XFORM[0][3] != 1.0
+        float top_fade = PS_WALL_FADE.y > 0.5
             ? smoothstep(TOP_FADE_START, TOP_FADE_END, PS_POS.y) : 0.0;
         float top_keep = mix(1.0, TOP_KEEP, top_fade);
         opacity = min(top_keep, min(1.0 - NearFade(screen_pos), mix(1.0, reveal_keep, reveal)));
@@ -272,7 +272,7 @@ void main()
 		
 		vec2 world_uv = ( PS_POS.xz - OCEAN_WORLD_EXTENTS.xy ) * OCEAN_WORLD_EXTENTS.zw;
 		vec3 world_tint = texture2D( OCEAN_SAMPLER, world_uv ).rgb;
-		gl_FragColor.rgb = mix(gl_FragColor.rgb, gl_FragColor.rgb * world_tint.rgb, OCEAN_BLEND_PARAMS.x);
+		gl_FragColor.rgb = mix(gl_FragColor.rgb, gl_FragColor.rgb * world_tint.rgb, PS_WALL_FADE.z);
 
         vec3 light = CalculateLightingContribution();
         gl_FragColor.rgb *= light.rgb;

@@ -5,6 +5,7 @@ uniform mat4 MatrixW;
 uniform vec3 FLOAT_PARAMS;
 uniform mat4 COLOUR_XFORM;
 uniform vec3 PARAMS;
+uniform vec4 OCEAN_BLEND_PARAMS;
 
 attribute vec4 POS2D_UV;
 
@@ -14,6 +15,8 @@ varying vec4 PS_CLIP_POS;
 varying vec3 PS_REVEAL_CENTRE;
 varying vec2 PS_NDC_TO_VIEW;
 varying vec2 PS_REVEAL_PLANE;
+// View amount, whether this symbol fades at the top, ocean tint amount.
+varying vec3 PS_WALL_FADE;
 
 // Keep in sync with ms_wall_occlusion.lua.
 const float REVEAL_HEIGHT = 1.5;
@@ -30,7 +33,7 @@ void main()
     mat4 world_matrix = MatrixW;
     if (COLOUR_XFORM[0][3] != 1.0)
     {
-        // Preserve the existing wall/slope geometry and symbol parameters.
+        // Preserve the ordinary wall and legacy symbol transforms.
         world_matrix = mat4(
             MatrixW[0],
             vec4(MatrixW[2][0], MatrixW[2][1] * -0.0033, MatrixW[2][2], MatrixW[1][3]),
@@ -43,6 +46,8 @@ void main()
     }
 
     vec4 world_pos = world_matrix * object_pos;
+    PS_WALL_FADE = vec3(FLOAT_PARAMS.z,
+        COLOUR_XFORM[0][3] != 1.0 ? 1.0 : 0.0, OCEAN_BLEND_PARAMS.x);
     PS_POS = world_pos.xyz;
     vec4 view_pos = MatrixV * world_pos;
     gl_Position = MatrixP * view_pos;

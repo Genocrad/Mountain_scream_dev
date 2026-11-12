@@ -1,46 +1,28 @@
-local RegisterWallOcclusion = require("ms_wall_occlusion").Register
+local WallOcclusion = require("ms_wall_occlusion")
+local RegisterWallOcclusion = WallOcclusion.Register
+local WallGeometry = require("ms_mountain_wall_geometry")
 
 local assets = {
     Asset("ANIM", "anim/ms_mountain_wall.zip"),
+    Asset("SHADER", "shaders/mountain_slope_shader.ksh"),
 
     Asset("ANIM", "anim/ms_mountain_wall_variants/ms_mountain_wall_idle_build.zip"),
     Asset("ANIM", "anim/ms_mountain_wall_variants/ms_mountain_wall_idle_high_mountain_build.zip"),
     Asset("ANIM", "anim/ms_mountain_wall_variants/ms_mountain_wall_idle_snow_mountain_build.zip"),
 
     Asset("ANIM", "anim/ms_mountain_wall_variants/ms_mountain_wall_idle_left_corner_build.zip"),
-    Asset("ANIM", "anim/ms_mountain_wall_variants/ms_mountain_wall_idle_left_slope_high_mountain_left_build.zip"),
     Asset("ANIM", "anim/ms_mountain_wall_variants/ms_mountain_wall_idle_left_corner_high_mountain_build.zip"),
-    Asset("ANIM", "anim/ms_mountain_wall_variants/ms_mountain_wall_idle_left_slope_snow_mountain_left_build.zip"),
     Asset("ANIM", "anim/ms_mountain_wall_variants/ms_mountain_wall_idle_left_corner_snow_mountain_build.zip"),
-    Asset("ANIM", "anim/ms_mountain_wall_variants/ms_mountain_wall_idle_left_slope_left_build.zip"),
 
     Asset("ANIM", "anim/ms_mountain_wall_variants/ms_mountain_wall_idle_right_corner_snow_mountain_build.zip"),
-    Asset("ANIM", "anim/ms_mountain_wall_variants/ms_mountain_wall_idle_left_slope_snow_mountain_right_build.zip"),
     Asset("ANIM", "anim/ms_mountain_wall_variants/ms_mountain_wall_idle_right_corner_high_mountain_build.zip"),
-    Asset("ANIM", "anim/ms_mountain_wall_variants/ms_mountain_wall_idle_left_slope_high_mountain_right_build.zip"),
     Asset("ANIM", "anim/ms_mountain_wall_variants/ms_mountain_wall_idle_right_corner_build.zip"),
-    Asset("ANIM", "anim/ms_mountain_wall_variants/ms_mountain_wall_idle_left_slope_right_build.zip"),
 }
 
-local WALL_COLLISION_POINTS = {
-    wall = { { -2, 0 }, { 2, 0 } },
-    right = { { 0, 0 }, { 2, 0 } },
-    left = { { -2, 0 }, { 0, 0 } },
-    -- Two sides meet at the tip and connect to the closing wall one tile behind it.
-    slope = { { -2, 4 }, { 0, 0 }, { 2, 4 } },
-}
 local WALL_COLLISION_HEIGHT = 4
 
 local CORNER_SORT_ALONG_WALL = 2
 local CORNER_SORT_INTO_MOUNTAIN = 1.9
-
-local WALL_RENDER_POINTS = {
-    wall = { { -2, 0 }, { 2, 0 } },
-    right = { { 0, 0 }, { 2, 0 } },
-    left = { { -2, 0 }, { 0, 0 } },
-    -- Sort the two slope faces separately at opposite points on the rear base.
-    slope = { { -1.8, 4 }, { 0, 0 }, { 1.8, 4 } },
-}
 
 local function UpdateWallPhysics(inst)
     -- Bake wall rotation into the static mesh vertices on both server and clients.
@@ -49,13 +31,12 @@ local function UpdateWallPhysics(inst)
         return
     end
     local angle = rotation * DEGREES
-    local cos, sin = math.cos(angle), math.sin(angle)
-    local points = WALL_COLLISION_POINTS[inst._collision_shape]
+    local points = WallGeometry.POINTS[inst._collision_shape]
     local mesh = {}
     for i = 1, #points - 1 do
         local p0, p1 = points[i], points[i + 1]
-        local x0, z0 = p0[1] * cos + p0[2] * sin, p0[2] * cos - p0[1] * sin
-        local x1, z1 = p1[1] * cos + p1[2] * sin, p1[2] * cos - p1[1] * sin
+        local x0, z0 = WallGeometry.RotatePoint(p0[1], p0[2], angle)
+        local x1, z1 = WallGeometry.RotatePoint(p1[1], p1[2], angle)
         local offset = #mesh
         mesh[offset + 1], mesh[offset + 2], mesh[offset + 3] = x0, 0, z0
         mesh[offset + 4], mesh[offset + 5], mesh[offset + 6] = x0, WALL_COLLISION_HEIGHT, z0
@@ -71,17 +52,23 @@ end
 local function UpdateSortWorldOffset(inst)
     local dx, dz = inst._mountain_sort_x:value(), inst._mountain_sort_z:value()
     if inst._collision_shape == "slope" then
-        -- The parent renders the left face; its local child renders the right.
-        -- Sort offsets are world-space, so rotate each base point explicitly.
-        local points = WALL_RENDER_POINTS.slope
+        -- Both faces use the same parent origin. Only their engine sort points
+        -- differ; the shared edge must go through identical vertex transforms.
         local angle = inst._mountain_wall_rotation:value() * DEGREES
-        local cos, sin = math.cos(angle), math.sin(angle)
-        local left, right = points[1], points[#points]
-        dx, dz = left[1] * cos + left[2] * sin, left[2] * cos - left[1] * sin
-        if inst._slope_right_visual ~= nil then
-            inst._slope_right_visual.AnimState:SetSortWorldOffset(
-                right[1] * cos + right[2] * sin, 0, right[2] * cos - right[1] * sin)
+        if inst._slope_faces ~= nil then
+            local wx, _, wz = inst.Transform:GetWorldPosition()
+            local render_angle = inst.Transform:GetRotation() * DEGREES
+            for i, face in ipairs(inst._slope_faces) do
+                local target = WallGeometry.SLOPE_SORT_POINTS[i]
+                local x, z = WallGeometry.RotatePoint(target[1], target[2], angle)
+                face.AnimState:SetSortWorldOffset(x, 0, z)
+                -- Like Porkland's waterfall: pass the actual entity origin and
+                -- yaw explicitly; never infer them from a native draw matrix.
+                face.AnimState:SetFloatParams(wx, wz, render_angle)
+            end
+            WallOcclusion.Refresh(inst)
         end
+        dx, dz = 0, 0
     end
     inst.AnimState:SetSortWorldOffset(dx, 0, dz)
     UpdateWallPhysics(inst)
@@ -138,42 +125,36 @@ local function ConfigureWallAnimation(inst, animation, overrides)
     inst.AnimState:SetDefaultEffectHandle(resolvefilepath("shaders/mountain_vertical_shader.ksh"))
 end
 
-local function ConfigureSlopeAnimation(inst)
-    -- These symbol values also control the slope geometry in the vertex shader.
-    inst.AnimState:SetSymbolAddColour("wall_half_right", 0.01, 0.07, 0, 1)
-    inst.AnimState:SetSymbolAddColour("wall_half_left", 0.01, 0.07, 0, 1)
-    inst.AnimState:SetSymbolLightOverride("wall_half_right", 1)
-end
-
-local function CreateSlopeRightVisual(inst, animation, overrides)
+local function CreateSlopeFaces(inst, animation, overrides)
     if TheNet:IsDedicated() then
         return
     end
 
-    local right = CreateEntity()
-    -- Each AnimState needs its own sort position, including the local-only face.
-    right:AddTag("can_offset_sort_pos")
-    right.entity:AddTransform()
-    right.entity:AddAnimState()
-    right.entity:SetCanSleep(TheWorld.ismastersim)
-    right:AddTag("FX")
-    right:AddTag("DECOR")
-    right:AddTag("NOCLICK")
-    right.persists = false
+    inst._slope_faces = {}
+    for i, side in ipairs({ "left", "right" }) do
+        local face = CreateEntity()
+        -- Each local-only wall face needs an independent engine sort position.
+        face:AddTag("can_offset_sort_pos")
+        face.entity:AddTransform()
+        face.entity:AddAnimState()
+        face.entity:SetCanSleep(TheWorld.ismastersim)
+        face:AddTag("FX")
+        face:AddTag("DECOR")
+        face:AddTag("NOCLICK")
+        face.persists = false
 
-    ConfigureWallAnimation(right, animation, overrides)
-    ConfigureSlopeAnimation(right)
-    right.AnimState:HideSymbol("wall_half_left")
-    right.AnimState:HideSymbol("filler")
-    inst.AnimState:HideSymbol("wall_half_right")
+        local symbol = "slope_face_" .. side
+        ConfigureWallAnimation(face, animation:gsub("^idle", symbol), overrides)
+        face.AnimState:SetDefaultEffectHandle(resolvefilepath("shaders/mountain_slope_shader.ksh"))
 
-    -- Inherit the full transform once (including Y scale 4). AddChild also
-    -- removes this non-networked, non-persistent visual when the wall is removed.
-    inst:AddChild(right)
-    inst._slope_right_visual = right
+        -- B/D vertices and frame bounds match exactly in both builds. Keep
+        -- the children at the same origin, with no per-face rotation or scale.
+        inst:AddChild(face)
+        inst._slope_faces[i] = face
+    end
 end
 
-local function MakeWall(name, animation, overrides, customfn)
+local function MakeWall(name, animation, overrides, shape)
     local function fn()
         local inst = CreateEntity()
 
@@ -201,15 +182,21 @@ local function MakeWall(name, animation, overrides, customfn)
         inst:AddTag("ms_wall")
 
         inst.Transform:SetScale(1.00, 4, 1.00)
-        ConfigureWallAnimation(inst, animation, overrides)
-
-        if customfn then
-            customfn(inst)
+        inst._collision_shape = shape
+        if shape == "slope" then
+            -- The networked parent owns physics/save data; only its two local
+            -- children render the sloping triangles with separate sort points.
+            CreateSlopeFaces(inst, animation, overrides)
+        else
+            ConfigureWallAnimation(inst, animation, overrides)
+            inst.AnimState:SetSymbolAddColour(overrides[1].symbol, 0, 0, 1, 1)
+            if shape == "right" then
+                inst._sort_half = 1
+            elseif shape == "left" then
+                inst._sort_half = -1
+            end
         end
-        if inst._collision_shape == "slope" then
-            CreateSlopeRightVisual(inst, animation, overrides)
-        end
-        -- Register only the logical wall; its view parameters also reach the child.
+        -- Register only the logical wall; its view parameters reach both faces.
         RegisterWallOcclusion(inst)
 
         UpdateWallPhysics(inst)
@@ -236,64 +223,39 @@ local function MakeWall(name, animation, overrides, customfn)
     return Prefab(name, fn, assets)
 end
 
-local function Wall(inst)
-    inst._collision_shape = "wall"
-    inst.AnimState:SetSymbolAddColour("wall", 0, 0, 1, 1)
-end
-
-local function Right(inst)
-    inst._collision_shape = "right"
-    inst._sort_half = 1
-    inst.AnimState:SetSymbolAddColour("wall_half_right", 0, 0, 1, 1)
-end
-
-local function Left(inst)
-    inst._collision_shape = "left"
-    inst._sort_half = -1
-    inst.AnimState:SetSymbolAddColour("wall_half_left", 0, 0, 1, 1)
-end
-
-local function Slope(inst)
-    inst._collision_shape = "slope"
-    ConfigureSlopeAnimation(inst)
-end
-
 return MakeWall("ms_mountain_wall", "idle", {
         { symbol = "wall", build = "ms_mountain_wall_idle_build" },
-    }, Wall),
+    }, "wall"),
     MakeWall("ms_mountain_corner_wall_right", "idle_right_corner", {
         { symbol = "wall_half_right", build = "ms_mountain_wall_idle_right_corner_build" },
-    }, Right),
+    }, "right"),
     MakeWall("ms_mountain_corner_wall_left", "idle_left_corner", {
         { symbol = "wall_half_left", build = "ms_mountain_wall_idle_left_corner_build" },
-    }, Left),
-    MakeWall("ms_mountain_slope", "idle_left_slope", {
-        { symbol = "wall_half_right", build = "ms_mountain_wall_idle_left_slope_right_build" },
-        { symbol = "wall_half_left", build = "ms_mountain_wall_idle_left_slope_left_build" },
-    }, Slope),
+    }, "left"),
+    MakeWall("ms_mountain_slope", "idle", {
+        { symbol = "wall", build = "ms_mountain_wall_idle_build" },
+    }, "slope"),
     MakeWall("ms_mountain_wall_snow", "idle_snow_mountain", {
         { symbol = "wall", build = "ms_mountain_wall_idle_snow_mountain_build" },
-    }, Wall),
+    }, "wall"),
     MakeWall("ms_mountain_corner_wall_right_snow", "idle_right_corner_snow_mountain", {
         { symbol = "wall_half_right", build = "ms_mountain_wall_idle_right_corner_snow_mountain_build" },
-    }, Right),
+    }, "right"),
     MakeWall("ms_mountain_corner_wall_left_snow", "idle_left_corner_snow_mountain", {
         { symbol = "wall_half_left", build = "ms_mountain_wall_idle_left_corner_snow_mountain_build" },
-    }, Left),
-    MakeWall("ms_mountain_slope_snow", "idle_left_slope_snow_mountain", {
-        { symbol = "wall_half_right", build = "ms_mountain_wall_idle_left_slope_snow_mountain_right_build" },
-        { symbol = "wall_half_left", build = "ms_mountain_wall_idle_left_slope_snow_mountain_left_build" },
-    }, Slope),
+    }, "left"),
+    MakeWall("ms_mountain_slope_snow", "idle_snow_mountain", {
+        { symbol = "wall", build = "ms_mountain_wall_idle_snow_mountain_build" },
+    }, "slope"),
     MakeWall("ms_mountain_wall_high", "idle_high_mountain", {
         { symbol = "wall", build = "ms_mountain_wall_idle_high_mountain_build" },
-    }, Wall),
+    }, "wall"),
     MakeWall("ms_mountain_corner_wall_right_high", "idle_right_corner_high_mountain", {
         { symbol = "wall_half_right", build = "ms_mountain_wall_idle_right_corner_high_mountain_build" },
-    }, Right),
+    }, "right"),
     MakeWall("ms_mountain_corner_wall_left_high", "idle_left_corner_high_mountain", {
         { symbol = "wall_half_left", build = "ms_mountain_wall_idle_left_corner_high_mountain_build" },
-    }, Left),
-    MakeWall("ms_mountain_slope_high", "idle_left_slope_high_mountain", {
-        { symbol = "wall_half_right", build = "ms_mountain_wall_idle_left_slope_high_mountain_right_build" },
-        { symbol = "wall_half_left", build = "ms_mountain_wall_idle_left_slope_high_mountain_left_build" },
-    }, Slope)
+    }, "left"),
+    MakeWall("ms_mountain_slope_high", "idle_high_mountain", {
+        { symbol = "wall", build = "ms_mountain_wall_idle_high_mountain_build" },
+    }, "slope")
