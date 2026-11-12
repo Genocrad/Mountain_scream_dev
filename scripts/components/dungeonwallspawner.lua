@@ -270,6 +270,8 @@ function DungeonWallSpawner:SpawnArenaTeleporter()
   end
 end
 
+local FALLBACK_WALL_DISTANCE = 4.82
+
 local function spawn_5x5_area(self, level, x,y, wall, normal_tile, technical_tile)
   local tilex, tiley = TheWorld.Map:GetTileXYAtPoint(x,0,y)
   for i = -2, 2 do 
@@ -291,10 +293,10 @@ local function spawn_5x5_area(self, level, x,y, wall, normal_tile, technical_til
     new_wall.Transform:SetRotation(angle)
     new_wall:SetMountainSortDirection(-dx, -dy)
   end
-  spawnwall(4.82, 0, 90)
-  spawnwall(-4.82, 0, 90)
-  spawnwall(0, 4.82, 0)
-  spawnwall(0, -4.82, 0)
+  spawnwall(FALLBACK_WALL_DISTANCE, 0, 90)
+  spawnwall(-FALLBACK_WALL_DISTANCE, 0, 90)
+  spawnwall(0, FALLBACK_WALL_DISTANCE, 0)
+  spawnwall(0, -FALLBACK_WALL_DISTANCE, 0)
   spawnwall(3.414, 3.414, 45)
   spawnwall(3.414, -3.414, 135)
   spawnwall(-3.414, 3.414, 135)
@@ -514,13 +516,13 @@ function DungeonWallSpawner:SpawnWallsAroundPoint(level, wall, size, normal_tile
             TheWorld.net.components.dungeonmapoverwatch:AddSpawnPointsForWall(level, center_x+x*4, center_y+y*4, r-l, d-u, true)
             local spawned_climb = false
             if not spawned then
-              last_entrance_x, last_entrance_y, last_exit_x, last_exit_y, last_r, last_l, last_d, last_u = center_x+x*4 + (r * 4 - l *4) * 0.05, center_y+y*4 + (d*4 - u *4) * 0.05,
+              last_entrance_x, last_entrance_y, last_exit_x, last_exit_y, last_r, last_l, last_d, last_u = center_x+x*4, center_y+y*4,
                                                                                                            center_x+x*4 + l - r + TUNING.MS_TERRAFORMER_OFFSET_X[level]*4,
                                                                                                            center_y+y*4 + u - d + TUNING.MS_TERRAFORMER_OFFSET_Y[level]*4,
                                                                                                            r, l, d, u
               if math.random() < self.exits[level]:GetDistanceSqToPoint(center_x+x*4, 0, center_y+y*4)/(TUNING.MS_TERRAFORMER_SIZE[level] * TUNING.MS_TERRAFORMER_SIZE[level] * 16 * 10) then
                 self.entrances[level] = SpawnPrefab("ms_climbing")
-                self.entrances[level].Transform:SetPosition(center_x+x*4 + (r * 4 - l *4) * 0.05, 0, center_y+y*4 + (d*4 - u *4) * 0.05)
+                self.entrances[level].Transform:SetPosition(center_x+x*4, 0, center_y+y*4)
                 self.entrances[level].Transform:SetRotation((r==1 or l==1) and 90 or 0)
                 self.exits[level+1] = SpawnPrefab("ms_climbing_down")
                 self.exits[level+1].Transform:SetPosition(center_x+x*4 + l - r + TUNING.MS_TERRAFORMER_OFFSET_X[level]*4, 0, center_y+y*4 + u - d + TUNING.MS_TERRAFORMER_OFFSET_Y[level]*4)
@@ -535,7 +537,7 @@ function DungeonWallSpawner:SpawnWallsAroundPoint(level, wall, size, normal_tile
             if not spawned_cave_entrance and not spawned_climb then
               if math.random() < self.exits[level]:GetDistanceSqToPoint(center_x+x*4- l * 4 + r * 4, 0, center_y+y*4+ (-u * 4 + d * 4)*(r-1)*(l-1))/(TUNING.MS_TERRAFORMER_SIZE[level] * TUNING.MS_TERRAFORMER_SIZE[level] * 16 * 10) and self.cave_doors[level] then
                 local entrance = SpawnPrefab("ms_cave_entrance_vertical")
-                entrance.Transform:SetPosition(center_x+x*4 + (r * 4 - l *4) * 0.05, 0, center_y+y*4 + (d*4 - u *4) * 0.05)
+                entrance.Transform:SetPosition(center_x+x*4, 0, center_y+y*4)
                 entrance.Transform:SetRotation(r==1 and 90 or (l==1 and 270 or (u==1 and 180 or 0))) 
                 entrance:SetExitTarget(self.cave_doors[level])
                 entrance.components.teleporter.teleport_offset = {x = r * 4 - l *4, y= 0, z = d*4 - u *4}
@@ -583,9 +585,11 @@ function DungeonWallSpawner:SpawnWallsAroundPoint(level, wall, size, normal_tile
    
     if last_d + last_u + last_r + last_l == 0 then
       
+      local area_x, area_z = last_entrance_x, last_entrance_y - 4
       self.entrances[level] = SpawnPrefab("ms_climbing")
-      self.entrances[level].Transform:SetPosition(last_entrance_x, 0, last_entrance_y+1.1)
-      spawn_5x5_area(self, level, last_entrance_x, last_entrance_y-4, wall, normal_tile, technical_tile)
+      -- Match the generated area's +Z wall plane exactly.
+      self.entrances[level].Transform:SetPosition(area_x, 0, area_z + FALLBACK_WALL_DISTANCE)
+      spawn_5x5_area(self, level, area_x, area_z, wall, normal_tile, technical_tile)
     else
       
       self.entrances[level] = SpawnPrefab("ms_climbing")

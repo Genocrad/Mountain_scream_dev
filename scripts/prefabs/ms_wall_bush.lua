@@ -69,8 +69,10 @@ end
 
 local function UpdateBillboardParams(inst)
     local x, y, z = inst.Transform:GetWorldPosition()
+    local angle = math.rad(inst.Transform:GetRotation())
     inst.AnimState:SetFloatParams(x, y, z)
-    inst.AnimState:SetSortWorldOffset(0, -y + 1.25, 0)
+    -- The prop faces out from the wall; move its sort point one tile outward.
+    inst.AnimState:SetSortWorldOffset(1 * math.cos(angle), -y + 1.25, -1 * math.sin(angle))
 end
 
 local function fn()

@@ -9,8 +9,15 @@ local CLOUD_DENSITY_SCALE = 2 / 121
 local CLOUD_MAX_VOLUME = 1
 local CLOUD_FADE_RATE = 1
 local CLOUD_PROXIMITY_RATE = 1
+local CLOUD_LEVEL_BONUS = {
+    [4] = 0.2, [5] = 0.2, [6] = 0.2, -- High mountains.
+    [7] = 0.4, [8] = 0.4, -- Snow mountains.
+    [9] = 0.6, -- Summit.
+    [10] = 0.6, -- The golem arena shares the Summit ambience.
+}
+local CLOUD_LEVEL_RATE = 0.8
 
-local function GetCloudProximity(map, x, y, z)
+local function GetCloudProximity(map, x, y, z, level)
     local tile_x, tile_y = map:GetTileCoordsAtPoint(x, y, z)
     local count = 0
     for dx = -CLOUD_HALF_TILES, CLOUD_HALF_TILES do
@@ -24,7 +31,7 @@ local function GetCloudProximity(map, x, y, z)
             end
         end
     end
-    return math.min(count * CLOUD_DENSITY_SCALE, 1)
+    return math.min(math.min(count * CLOUD_DENSITY_SCALE) * CLOUD_LEVEL_RATE + (CLOUD_LEVEL_BONUS[level] or 0), 1)
 end
 
 local function PushCloudMix()
@@ -91,6 +98,7 @@ AddComponentPostInit("ambientsound", function(self)
     local cloud_proximity = 0
     local cloud_target_proximity = 0
     local cloud_player
+    local cloud_level
     local cloud_x, cloud_y, cloud_z
     local cloud_source
     local function SetCloudSound(volume, proximity)
@@ -149,9 +157,9 @@ AddComponentPostInit("ambientsound", function(self)
         local tracker = player ~= nil and player.components.dungeonplayertracker or nil
         local environment = player ~= nil and player.components.dungeonplayerenvironment or nil
         local in_mountain = tracker ~= nil and tracker:IsInMsOverWorld()
+        local level = in_mountain and tracker:GetLevel() or nil
         local selected
         if in_mountain and regional_available then
-            local level = tracker:GetLevel()
             -- Geographic floors: green foothills 2-3, rocky mountains 4-6,
             -- snow mountains 7-8, summit 9 and golem arena 10.
             if level <= 3 then
@@ -168,13 +176,15 @@ AddComponentPostInit("ambientsound", function(self)
             debug.setupvalue(onupdate, position_index, nil)
         end
         -- Match the wave scan cadence, caching scalar positions to avoid extra
-        -- vectors or per-frame scans. Re-entry and player changes force a scan.
+        -- vectors or per-frame scans. Re-entry, player and floor changes force a scan.
         local clouds_enabled = in_mountain and (environment == nil or not environment._clientinactive)
         if clouds_enabled then
-            if cloud_player ~= player or player:GetDistanceSqToPoint(cloud_x, cloud_y, cloud_z) >= 16 then
+            if cloud_player ~= player or cloud_level ~= level
+                or player:GetDistanceSqToPoint(cloud_x, cloud_y, cloud_z) >= 16 then
                 cloud_player = player
+                cloud_level = level
                 cloud_x, cloud_y, cloud_z = player.Transform:GetWorldPosition()
-                cloud_target_proximity = GetCloudProximity(component.inst.Map, cloud_x, cloud_y, cloud_z)
+                cloud_target_proximity = GetCloudProximity(component.inst.Map, cloud_x, cloud_y, cloud_z, level)
             end
         else
             cloud_player = nil
