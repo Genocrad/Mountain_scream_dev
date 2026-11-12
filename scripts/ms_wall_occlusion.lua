@@ -97,6 +97,9 @@ local function ApplyView(inst)
     -- SetErosionParams is NOT a data channel: it enables native erosion and
     -- overrides the custom effect, potentially hiding the entire wall.
     inst.AnimState:SetFloatParams(x or 0, z or 0, 1 + strength)
+    if inst._slope_right_visual ~= nil then
+        inst._slope_right_visual.AnimState:SetFloatParams(x or 0, z or 0, 1 + strength)
+    end
 end
 
 local function Project(camera, px, py, pz)

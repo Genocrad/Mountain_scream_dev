@@ -38,8 +38,8 @@ local WALL_RENDER_POINTS = {
     wall = { { -2, 0 }, { 2, 0 } },
     right = { { 0, 0 }, { 2, 0 } },
     left = { { -2, 0 }, { 0, 0 } },
-    -- Two sides meet at the tip and connect to the closing wall one tile behind it.
-    slope = { { -2, 4 }, { 0, 0 }, { 2, 4 } },
+    -- Sort the two slope faces separately at opposite points on the rear base.
+    slope = { { -1.8, 4 }, { 0, 0 }, { 1.8, 4 } },
 }
 
 local function UpdateWallPhysics(inst)
@@ -71,12 +71,17 @@ end
 local function UpdateSortWorldOffset(inst)
     local dx, dz = inst._mountain_sort_x:value(), inst._mountain_sort_z:value()
     if inst._collision_shape == "slope" then
-        -- Rotate the base midpoint into world space, using the same rotation as physics.
+        -- The parent renders the left face; its local child renders the right.
+        -- Sort offsets are world-space, so rotate each base point explicitly.
         local points = WALL_RENDER_POINTS.slope
-        local x = (points[1][1] + points[#points][1]) * 0.5
-        local z = (points[1][2] + points[#points][2]) * 0.5
         local angle = inst._mountain_wall_rotation:value() * DEGREES
-        dx, dz = x * math.cos(angle) + z * math.sin(angle), z * math.cos(angle) - x * math.sin(angle)
+        local cos, sin = math.cos(angle), math.sin(angle)
+        local left, right = points[1], points[#points]
+        dx, dz = left[1] * cos + left[2] * sin, left[2] * cos - left[1] * sin
+        if inst._slope_right_visual ~= nil then
+            inst._slope_right_visual.AnimState:SetSortWorldOffset(
+                right[1] * cos + right[2] * sin, 0, right[2] * cos - right[1] * sin)
+        end
     end
     inst.AnimState:SetSortWorldOffset(dx, 0, dz)
     UpdateWallPhysics(inst)
@@ -120,6 +125,54 @@ local function OnLoad(inst, data)
     UpdateSortWorldOffset(inst)
 end
 
+local function ConfigureWallAnimation(inst, animation, overrides)
+    inst.AnimState:SetBuild(overrides[1].build)
+    inst.AnimState:SetBank("ms_mountain_wall")
+    for i = 2, #overrides do
+        local override = overrides[i]
+        inst.AnimState:OverrideSymbol(override.symbol, override.build, override.symbol)
+    end
+    inst.AnimState:PlayAnimation(animation)
+    inst.AnimState:SetSymbolAddColour("filler", 1, 1, 1, 1)
+    inst.AnimState:SetOrientation(ANIM_ORIENTATION.OnGround)
+    inst.AnimState:SetDefaultEffectHandle(resolvefilepath("shaders/mountain_vertical_shader.ksh"))
+end
+
+local function ConfigureSlopeAnimation(inst)
+    -- These symbol values also control the slope geometry in the vertex shader.
+    inst.AnimState:SetSymbolAddColour("wall_half_right", 0.01, 0.07, 0, 1)
+    inst.AnimState:SetSymbolAddColour("wall_half_left", 0.01, 0.07, 0, 1)
+    inst.AnimState:SetSymbolLightOverride("wall_half_right", 1)
+end
+
+local function CreateSlopeRightVisual(inst, animation, overrides)
+    if TheNet:IsDedicated() then
+        return
+    end
+
+    local right = CreateEntity()
+    -- Each AnimState needs its own sort position, including the local-only face.
+    right:AddTag("can_offset_sort_pos")
+    right.entity:AddTransform()
+    right.entity:AddAnimState()
+    right.entity:SetCanSleep(TheWorld.ismastersim)
+    right:AddTag("FX")
+    right:AddTag("DECOR")
+    right:AddTag("NOCLICK")
+    right.persists = false
+
+    ConfigureWallAnimation(right, animation, overrides)
+    ConfigureSlopeAnimation(right)
+    right.AnimState:HideSymbol("wall_half_left")
+    right.AnimState:HideSymbol("filler")
+    inst.AnimState:HideSymbol("wall_half_right")
+
+    -- Inherit the full transform once (including Y scale 4). AddChild also
+    -- removes this non-networked, non-persistent visual when the wall is removed.
+    inst:AddChild(right)
+    inst._slope_right_visual = right
+end
+
 local function MakeWall(name, animation, overrides, customfn)
     local function fn()
         local inst = CreateEntity()
@@ -148,23 +201,16 @@ local function MakeWall(name, animation, overrides, customfn)
         inst:AddTag("ms_wall")
 
         inst.Transform:SetScale(1.00, 4, 1.00)
-        inst.AnimState:SetBuild(overrides[1].build)
-        inst.AnimState:SetBank("ms_mountain_wall")
-
-        for i = 2, #overrides do
-            local override = overrides[i]
-            inst.AnimState:OverrideSymbol(override.symbol, override.build, override.symbol)
-        end
-
-        inst.AnimState:PlayAnimation(animation)
-        inst.AnimState:SetSymbolAddColour("filler", 1, 1, 1, 1)
-        inst.AnimState:SetOrientation(ANIM_ORIENTATION.OnGround)
-        inst.AnimState:SetDefaultEffectHandle(resolvefilepath("shaders/mountain_vertical_shader.ksh"))
-        RegisterWallOcclusion(inst)
+        ConfigureWallAnimation(inst, animation, overrides)
 
         if customfn then
             customfn(inst)
         end
+        if inst._collision_shape == "slope" then
+            CreateSlopeRightVisual(inst, animation, overrides)
+        end
+        -- Register only the logical wall; its view parameters also reach the child.
+        RegisterWallOcclusion(inst)
 
         UpdateWallPhysics(inst)
         inst.entity:SetPristine()
@@ -209,9 +255,7 @@ end
 
 local function Slope(inst)
     inst._collision_shape = "slope"
-    inst.AnimState:SetSymbolAddColour("wall_half_right", 0.01, 0.07, 0, 1)
-    inst.AnimState:SetSymbolAddColour("wall_half_left", 0.01, 0.07, 0, 1)
-    inst.AnimState:SetSymbolLightOverride("wall_half_right", 1)
+    ConfigureSlopeAnimation(inst)
 end
 
 return MakeWall("ms_mountain_wall", "idle", {
