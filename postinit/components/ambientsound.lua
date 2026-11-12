@@ -6,7 +6,7 @@ local CLOUD_HANDLE = "ms_mountain_clouds"
 local CLOUD_PARAMETER = "cloud_proximity"
 local CLOUD_HALF_TILES = 5
 local CLOUD_DENSITY_SCALE = 2 / 121
-local CLOUD_MAX_VOLUME = 1.5
+local CLOUD_MAX_VOLUME = 1
 local CLOUD_FADE_RATE = 1
 local CLOUD_PROXIMITY_RATE = 1
 

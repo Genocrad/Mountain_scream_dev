@@ -39,7 +39,7 @@ local WALL_RENDER_POINTS = {
     right = { { 0, 0 }, { 2, 0 } },
     left = { { -2, 0 }, { 0, 0 } },
     -- Two sides meet at the tip and connect to the closing wall one tile behind it.
-    slope = { { 0, 0 }, { 0, 0 }, { 0, 0 } },
+    slope = { { -2, 4 }, { 0, 0 }, { 2, 4 } },
 }
 
 local function UpdateWallPhysics(inst)
