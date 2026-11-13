@@ -3,6 +3,9 @@ GLOBAL.MS_ITEMS_ATLAS = MODROOT.."images/inventoryimages/mountain_items.xml"
 Assets = {
 	--------------------------------------------------------
 	-- Color cubes / environment
+	Asset("IMAGE", "images/colour_cubes/ms_lowmountain_day_cc.tex"),
+	Asset("IMAGE", "images/colour_cubes/ms_lowmountain_dusk_cc.tex"),
+	Asset("IMAGE", "images/colour_cubes/ms_lowmountain_night_cc.tex"),
 	Asset("IMAGE", "images/mountainday_cc.tex"),
 	Asset("IMAGE", "images/mountaindusk_cc.tex"),
 	Asset("IMAGE", "images/mountainnight_cc.tex"),

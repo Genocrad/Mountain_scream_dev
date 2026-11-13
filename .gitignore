@@ -6027,3 +6027,6 @@ tmp_ref/
 
 # Editable audio projects, source recordings, backups, and build caches
 /sound/projects/
+
+# Editable colour-cube projects, source images, presets, and export helpers
+/images/colour_cubes/source/

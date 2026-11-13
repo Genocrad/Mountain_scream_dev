@@ -10,21 +10,21 @@ GLOBAL.setfenv(1, GLOBAL)
 local mountain_cc =
  {
   [1] = {
-    day = "images/colour_cubes/spring_day_cc.tex",
-    dusk = "images/colour_cubes/spring_dusk_cc.tex",
-    night = "images/colour_cubes/spring_dusk_cc.tex",--"images/colour_cubes/spring_night_cc.tex",
+    day = resolvefilepath("images/colour_cubes/ms_lowmountain_day_cc.tex"),
+    dusk = resolvefilepath("images/colour_cubes/ms_lowmountain_dusk_cc.tex"),
+    night = resolvefilepath("images/colour_cubes/ms_lowmountain_night_cc.tex"),
     full_moon = "images/colour_cubes/purple_moon_cc.tex"
   },
   [2] = {
-    day = "images/colour_cubes/spring_day_cc.tex",
-    dusk = "images/colour_cubes/spring_dusk_cc.tex",
-    night = "images/colour_cubes/spring_dusk_cc.tex",--"images/colour_cubes/spring_night_cc.tex",
+    day = resolvefilepath("images/colour_cubes/ms_lowmountain_day_cc.tex"),
+    dusk = resolvefilepath("images/colour_cubes/ms_lowmountain_dusk_cc.tex"),
+    night = resolvefilepath("images/colour_cubes/ms_lowmountain_night_cc.tex"),
     full_moon = "images/colour_cubes/purple_moon_cc.tex"
   },
   [3] = {
-    day = "images/colour_cubes/spring_day_cc.tex",
-    dusk = "images/colour_cubes/spring_dusk_cc.tex",
-    night = "images/colour_cubes/spring_dusk_cc.tex",--"images/colour_cubes/spring_night_cc.tex",
+    day = resolvefilepath("images/colour_cubes/ms_lowmountain_day_cc.tex"),
+    dusk = resolvefilepath("images/colour_cubes/ms_lowmountain_dusk_cc.tex"),
+    night = resolvefilepath("images/colour_cubes/ms_lowmountain_night_cc.tex"),
     full_moon = "images/colour_cubes/purple_moon_cc.tex"
     },
   [4] = {

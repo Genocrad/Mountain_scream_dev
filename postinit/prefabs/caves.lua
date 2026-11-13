@@ -43,6 +43,7 @@ end
 AddPrefabPostInit("cave", function(inst)
     
   inst:AddTag("mountain_scream_dungeons")
+  require("mountainlighting").Initialize(inst)
   
     inst.Map:AddTileCollisionSet(
         COLLISION.MS_CLOUDS,

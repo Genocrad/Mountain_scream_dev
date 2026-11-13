@@ -23,7 +23,6 @@ PrefabFiles = {
 	"ms_fx",
 	"ms_climbing",
 	"ms_climbing_down",
-	"light_fake_overworld",
 	"ms_worldmigrator",
 	"ms_worldmigrator_up_scene",
 	"ms_turfs",

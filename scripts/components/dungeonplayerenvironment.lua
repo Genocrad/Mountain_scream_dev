@@ -24,13 +24,6 @@ local DungeonPlayerEnvironment = Class(function(self, inst)
 
     inst:ListenForEvent("mslevelchanged", self._onlevelchanged)
     if TheWorld.ismastersim then
-        self.lights = {}
-        -- Two lights preserve the existing daylight intensity.
-        for i = 1, 2 do
-            local light = SpawnPrefab("light_fake_overworld")
-            light._target = inst
-            self.lights[i] = light
-        end
         inst:WatchWorldState("cavephase", self._onphase)
     end
     if not TheNet:IsDedicated() then
@@ -64,10 +57,6 @@ end
 function DungeonPlayerEnvironment:ApplyMaster()
     if not TheWorld.ismastersim or not self.tracker:IsReady() then
         return
-    end
-    local level = self.tracker:GetLevel()
-    for _, light in ipairs(self.lights) do
-        light:UpdateLevel(level)
     end
     if self.inst.components.sanity ~= nil then
         self.inst.components.sanity:SetLightDrainImmune(
@@ -203,6 +192,10 @@ function DungeonPlayerEnvironment:ApplyClient()
     if TheNet:IsDedicated() or self.inst ~= ThePlayer or self._clientinactive then
         return
     end
+    local lighting = TheWorld.components.ambientlighting
+    if lighting ~= nil and lighting.MS_RefreshLighting ~= nil then
+        lighting:MS_RefreshLighting()
+    end
     local region = self.tracker:GetRegion()
     local level = self.tracker:GetLevel()
     local changed = self._clientregion ~= region or self._clientlevel ~= level
@@ -240,6 +233,10 @@ end
 
 function DungeonPlayerEnvironment:DeactivateClient()
     self._clientinactive = true
+    local lighting = TheWorld.components.ambientlighting
+    if self.inst == ThePlayer and lighting ~= nil and lighting.MS_RefreshLighting ~= nil then
+        lighting:MS_RefreshLighting()
+    end
     self:SetCameraCloudsEnabled(false)
     self:SetMountainAnnouncements(false)
     RemoveFX(self._rain)
@@ -264,9 +261,6 @@ function DungeonPlayerEnvironment:OnRemoveFromEntity()
         self.inst:StopWatchingWorldState("cavephase", self._onphase)
         if self.inst.components.sanity ~= nil then
             self.inst.components.sanity:SetLightDrainImmune(false, self.inst)
-        end
-        for _, light in ipairs(self.lights) do
-            RemoveFX(light)
         end
     end
 end
