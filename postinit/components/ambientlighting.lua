@@ -5,12 +5,16 @@ local MountainLighting = require("mountainlighting")
 local UpvalueHacker = require("tools/upvaluehacker")
 
 local MS_MOUNTAIN_COLOURS = {}
-for phase, params in pairs(MountainLighting.PHASE_COLOURS) do
-    MS_MOUNTAIN_COLOURS[phase] =
-    {
-        CAVE_COLOUR = params,
-        default = params,
-    }
+for _, phase_colours in pairs(MountainLighting.PHASE_COLOUR_SETS) do
+    local colours = {}
+    for phase, params in pairs(phase_colours) do
+        colours[phase] =
+        {
+            CAVE_COLOUR = params,
+            default = params,
+        }
+    end
+    MS_MOUNTAIN_COLOURS[phase_colours] = colours
 end
 
 AddComponentPostInit("ambientlighting", function(self)
@@ -33,9 +37,11 @@ AddComponentPostInit("ambientlighting", function(self)
 
     local NORMAL_COLOURS = _realcolour.currentcolourset
     local function MS_ComputeTargetColour(targetsettings, timeoverride, ...)
-        if targetsettings == _overridecolour and targetsettings.currentcolourset == NORMAL_COLOURS
-            and MountainLighting.GetLocalMountainPlayer(inst) ~= nil then
-            local colours = MS_MOUNTAIN_COLOURS[MountainLighting.GetPhase(inst)]
+        local player = targetsettings == _overridecolour and targetsettings.currentcolourset == NORMAL_COLOURS
+            and MountainLighting.GetLocalMountainPlayer(inst) or nil
+        if player ~= nil then
+            local phase_colours = MountainLighting.GetPhaseColours(player.components.dungeonplayertracker:GetLevel())
+            local colours = MS_MOUNTAIN_COLOURS[phase_colours][MountainLighting.GetPhase(inst)]
             if colours ~= nil then
                 -- Replace only the local player's normal visual lighting.
                 local temp = targetsettings.currentcolourset
@@ -50,20 +56,22 @@ AddComponentPostInit("ambientlighting", function(self)
 
     debug.setupvalue(scope_fn, i, MS_ComputeTargetColour)
 
-    local current_player, current_phase
+    local current_player, current_phase, current_colours
     function self:MS_RefreshLighting()
         local player = MountainLighting.GetLocalMountainPlayer(inst)
         local phase = player ~= nil and MountainLighting.GetPhase(inst) or nil
         if phase == nil then
             player = nil
         end
-        if player == current_player and phase == current_phase then
+        local colours = player ~= nil
+            and MountainLighting.GetPhaseColours(player.components.dungeonplayertracker:GetLevel()) or nil
+        if player == current_player and phase == current_phase and colours == current_colours then
             return
         end
-        local region_changed = player ~= current_player
+        local region_changed = player ~= current_player or colours ~= current_colours
         local entering_mountain = region_changed and player ~= nil
-        current_player, current_phase = player, phase
-        -- Apply mountain lighting immediately on entry; keep normal phase fades.
+        current_player, current_phase, current_colours = player, phase, colours
+        -- Apply region lighting immediately on entry; keep normal phase fades.
         MS_ComputeTargetColour(_overridecolour, region_changed and (entering_mountain and 0 or 0.1) or nil)
         if entering_mountain then
             self:OnUpdate(0)

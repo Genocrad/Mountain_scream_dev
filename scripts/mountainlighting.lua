@@ -2,13 +2,27 @@ local MountainLighting = {}
 
 local REGION_REFRESH_INTERVAL = 1
 
-local PHASE_COLOURS =
+local PHASE_COLOUR_SETS =
 {
-    day = { colour = Point(255 / 255, 255 / 255, 230 / 255), time = 10 },
-    dusk = { colour = Point(155 / 255, 120 / 255, 80 / 255), time = 4 },
-    night = { colour = Point(0, 0, 0), time = 6 },
-    fullmoon = { colour = Point(84 / 255, 122 / 255, 156 / 255), time = 4 },
+    default =
+    {
+        day = { colour = Point(255 / 255, 255 / 255, 230 / 255), time = 10 },
+        dusk = { colour = Point(155 / 255, 120 / 255, 80 / 255), time = 4 },
+        night = { colour = Point(0, 0, 0), time = 6 },
+        fullmoon = { colour = Point(84 / 255, 122 / 255, 156 / 255), time = 4 },
+    },
+    highmountain =
+    {
+        day = { colour = Point(244 / 255, 248 / 255, 255 / 255), time = 10 },
+        dusk = { colour = Point(145 / 255, 158 / 255, 180 / 255), time = 4 },
+        night = { colour = Point(0, 0, 0), time = 6 },
+        fullmoon = { colour = Point(84 / 255, 122 / 255, 156 / 255), time = 4 },
+    },
 }
+
+function MountainLighting.GetPhaseColours(level)
+    return (level == 4 or level == 5) and PHASE_COLOUR_SETS.highmountain or PHASE_COLOUR_SETS.default
+end
 
 function MountainLighting.IsMountainWorld(world)
     return world ~= nil and world:HasTag("mountain_scream_dungeons")
@@ -20,7 +34,7 @@ function MountainLighting.GetPhase(world)
     if phase == "night" and state.iscavefullmoon then
         return "fullmoon"
     end
-    return PHASE_COLOURS[phase] ~= nil and phase or nil
+    return PHASE_COLOUR_SETS.default[phase] ~= nil and phase or nil
 end
 
 function MountainLighting.GetLocalMountainPlayer(world)
@@ -34,8 +48,8 @@ function MountainLighting.GetLocalMountainPlayer(world)
         and (environment == nil or not environment._clientinactive) and player or nil
 end
 
-local function GetPhaseLightValue(phase)
-    local params = PHASE_COLOURS[phase]
+local function GetPhaseLightValue(colours, phase)
+    local params = colours[phase]
     if params == nil then
         return 0
     end
@@ -53,10 +67,12 @@ local function OnPhaseChanged(world)
     local phase = MountainLighting.GetPhase(world)
     if phase ~= state.phase then
         local now = GetTime()
-        state.from = state.phase ~= nil and GetCurrentLightValue(state, now) or GetPhaseLightValue(phase)
-        state.target = GetPhaseLightValue(phase)
-        state.starttime = now
-        state.duration = phase ~= nil and PHASE_COLOURS[phase].time or 0
+        for colours, light in pairs(state.lights) do
+            light.from = state.phase ~= nil and GetCurrentLightValue(light, now) or GetPhaseLightValue(colours, phase)
+            light.target = GetPhaseLightValue(colours, phase)
+            light.starttime = now
+            light.duration = phase ~= nil and colours[phase].time or 0
+        end
         state.phase = phase
     end
 end
@@ -64,14 +80,22 @@ end
 function MountainLighting.Initialize(world)
     if world._ms_ambientlight == nil then
         local phase = MountainLighting.GetPhase(world)
-        local value = GetPhaseLightValue(phase)
+        local now = GetTime()
+        local lights = {}
+        for _, colours in pairs(PHASE_COLOUR_SETS) do
+            local value = GetPhaseLightValue(colours, phase)
+            lights[colours] =
+            {
+                from = value,
+                target = value,
+                starttime = now,
+                duration = 0,
+            }
+        end
         world._ms_ambientlight =
         {
             phase = phase,
-            from = value,
-            target = value,
-            starttime = GetTime(),
-            duration = 0,
+            lights = lights,
             regions = {},
             regioncount = 0,
         }
@@ -81,12 +105,12 @@ function MountainLighting.Initialize(world)
     return world._ms_ambientlight
 end
 
-local function GetAmbientValue(world)
-    if not MountainLighting.IsMountainWorld(world) then
+local function GetAmbientValue(world, level)
+    if not MountainLighting.IsMountainWorld(world) or level == nil or level > TUNING.MS_CAVES_START then
         return 0
     end
     local state = MountainLighting.Initialize(world)
-    return GetCurrentLightValue(state, GetTime())
+    return GetCurrentLightValue(state.lights[MountainLighting.GetPhaseColours(level)], GetTime())
 end
 
 local function RefreshRegions(state, overwatch)
@@ -112,11 +136,11 @@ local function RefreshRegions(state, overwatch)
     end
 end
 
-local function IsMountainAtPoint(world, x, z)
+local function GetMountainLevelAtPoint(world, x, z)
     local state = world._ms_ambientlight
     local overwatch = world.net ~= nil and world.net.components.dungeonmapoverwatch or nil
     if overwatch == nil then
-        return false
+        return nil
     end
     RefreshRegions(state, overwatch)
 
@@ -134,30 +158,41 @@ local function IsMountainAtPoint(world, x, z)
     end
     if nearest ~= nil and nearest <= TUNING.MS_CAVES_START then
         local region = state.regions[nearest]
-        return region.minx ~= nil and x > region.minx and x < region.maxx
-            and z > region.minz and z < region.maxz
+        if region.minx ~= nil and x > region.minx and x < region.maxx
+            and z > region.minz and z < region.maxz then
+            return nearest
+        end
     end
-    return false
+    return nil
 end
 
 function MountainLighting.GetAmbientValueAtPoint(world, x, y, z)
-    local value = GetAmbientValue(world)
-    return value > 0 and IsMountainAtPoint(world, x, z) and value or 0
+    if not MountainLighting.IsMountainWorld(world) then
+        return 0
+    end
+    local state = MountainLighting.Initialize(world)
+    local now = GetTime()
+    -- Skip region queries while every lighting profile is dark.
+    for _, light in pairs(state.lights) do
+        if GetCurrentLightValue(light, now) > 0 then
+            local level = GetMountainLevelAtPoint(world, x, z)
+            return level ~= nil
+                and GetCurrentLightValue(state.lights[MountainLighting.GetPhaseColours(level)], now) or 0
+        end
+    end
+    return 0
 end
 
 function MountainLighting.GetAmbientValueForEntity(inst)
-    local value = GetAmbientValue(TheWorld)
-    if value <= 0 then
-        return 0
-    end
     local tracker = inst.components.dungeonplayertracker
     if tracker ~= nil then
-        return tracker:IsInMsOverWorld() and value or 0
+        return tracker:IsInMsOverWorld() and GetAmbientValue(TheWorld, tracker:GetLevel()) or 0
     end
-    local x, _, z = inst.Transform:GetWorldPosition()
-    return IsMountainAtPoint(TheWorld, x, z) and value or 0
+    local x, y, z = inst.Transform:GetWorldPosition()
+    return MountainLighting.GetAmbientValueAtPoint(TheWorld, x, y, z)
 end
 
-MountainLighting.PHASE_COLOURS = PHASE_COLOURS
+MountainLighting.PHASE_COLOURS = PHASE_COLOUR_SETS.default
+MountainLighting.PHASE_COLOUR_SETS = PHASE_COLOUR_SETS
 
 return MountainLighting

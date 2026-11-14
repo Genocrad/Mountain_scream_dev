@@ -28,15 +28,15 @@ local mountain_cc =
     full_moon = "images/colour_cubes/purple_moon_cc.tex"
     },
   [4] = {
-    day = "images/colour_cubes/snow_cc.tex",
-    dusk = "images/colour_cubes/snowdusk_cc.tex",
-    night = "images/colour_cubes/night04_cc.tex",
+    day = resolvefilepath("images/colour_cubes/ms_highmountain_day_cc.tex"),
+    dusk = resolvefilepath("images/colour_cubes/ms_highmountain_dusk_cc.tex"),
+    night = resolvefilepath("images/colour_cubes/ms_highmountain_night_cc.tex"),
     full_moon = "images/colour_cubes/purple_moon_cc.tex"
   },
     [5] = {
-    day = "images/colour_cubes/snow_cc.tex",
-    dusk = "images/colour_cubes/snowdusk_cc.tex",
-    night = "images/colour_cubes/night04_cc.tex",
+    day = resolvefilepath("images/colour_cubes/ms_highmountain_day_cc.tex"),
+    dusk = resolvefilepath("images/colour_cubes/ms_highmountain_dusk_cc.tex"),
+    night = resolvefilepath("images/colour_cubes/ms_highmountain_night_cc.tex"),
     full_moon = "images/colour_cubes/purple_moon_cc.tex"
     },
   [6] = {  
