@@ -7,58 +7,8 @@ local PlayerVision = require("components/playervision")
 local ENV = env
 GLOBAL.setfenv(1, GLOBAL)
  
-local mountain_cc =
- {
-  [1] = {
-    day = resolvefilepath("images/colour_cubes/ms_lowmountain_day_cc.tex"),
-    dusk = resolvefilepath("images/colour_cubes/ms_lowmountain_dusk_cc.tex"),
-    night = resolvefilepath("images/colour_cubes/ms_lowmountain_night_cc.tex"),
-    full_moon = "images/colour_cubes/purple_moon_cc.tex"
-  },
-  [2] = {
-    day = resolvefilepath("images/colour_cubes/ms_lowmountain_day_cc.tex"),
-    dusk = resolvefilepath("images/colour_cubes/ms_lowmountain_dusk_cc.tex"),
-    night = resolvefilepath("images/colour_cubes/ms_lowmountain_night_cc.tex"),
-    full_moon = "images/colour_cubes/purple_moon_cc.tex"
-  },
-  [3] = {
-    day = resolvefilepath("images/colour_cubes/ms_lowmountain_day_cc.tex"),
-    dusk = resolvefilepath("images/colour_cubes/ms_lowmountain_dusk_cc.tex"),
-    night = resolvefilepath("images/colour_cubes/ms_lowmountain_night_cc.tex"),
-    full_moon = "images/colour_cubes/purple_moon_cc.tex"
-    },
-  [4] = {
-    day = resolvefilepath("images/colour_cubes/ms_highmountain_day_cc.tex"),
-    dusk = resolvefilepath("images/colour_cubes/ms_highmountain_dusk_cc.tex"),
-    night = resolvefilepath("images/colour_cubes/ms_highmountain_night_cc.tex"),
-    full_moon = "images/colour_cubes/purple_moon_cc.tex"
-  },
-    [5] = {
-    day = resolvefilepath("images/colour_cubes/ms_highmountain_day_cc.tex"),
-    dusk = resolvefilepath("images/colour_cubes/ms_highmountain_dusk_cc.tex"),
-    night = resolvefilepath("images/colour_cubes/ms_highmountain_night_cc.tex"),
-    full_moon = "images/colour_cubes/purple_moon_cc.tex"
-    },
-  [6] = {  
-      day = resolvefilepath("images/mountainday_cc.tex"),
-      dusk = resolvefilepath("images/mountaindusk_cc.tex"),
-      night = resolvefilepath("images/mountainnight_cc.tex"),
-      full_moon = "images/colour_cubes/purple_moon_cc.tex"
-    },
-  [7] = {  
-      day = resolvefilepath("images/mountainday_cc.tex"),
-      dusk = resolvefilepath("images/mountaindusk_cc.tex"),
-      night = resolvefilepath("images/mountainnight_cc.tex"),
-      full_moon = "images/colour_cubes/purple_moon_cc.tex"
-    },
-      [8] = {  
-      day = resolvefilepath("images/mountainday_cc.tex"),
-      dusk = resolvefilepath("images/mountaindusk_cc.tex"),
-      night = resolvefilepath("images/mountainnight_cc.tex"),
-      full_moon = "images/colour_cubes/purple_moon_cc.tex"
-    },
-  }      
-    
+local mountain_cc = require("mountaincolourcubes")
+
 local old_updatecc = PlayerVision.UpdateCCTable
 
 local NIGHTVISION_COLOURCUBES = UpvalueHacker.GetUpvalue(old_updatecc, "NIGHTVISION_COLOURCUBES")

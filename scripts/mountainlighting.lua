@@ -7,7 +7,7 @@ local PHASE_COLOUR_SETS =
     default =
     {
         day = { colour = Point(255 / 255, 255 / 255, 230 / 255), time = 10 },
-        dusk = { colour = Point(155 / 255, 120 / 255, 80 / 255), time = 4 },
+        dusk = { colour = Point(190 / 255, 110 / 255, 120 / 255), time = 4 },
         night = { colour = Point(0, 0, 0), time = 6 },
         fullmoon = { colour = Point(84 / 255, 122 / 255, 156 / 255), time = 4 },
     },
@@ -18,9 +18,19 @@ local PHASE_COLOUR_SETS =
         night = { colour = Point(0, 0, 0), time = 6 },
         fullmoon = { colour = Point(84 / 255, 122 / 255, 156 / 255), time = 4 },
     },
+    snowmountain =
+    {
+        day = { colour = Point(248 / 255, 251 / 255, 255 / 255), time = 10 },
+        dusk = { colour = Point(180 / 255, 168 / 255, 188 / 255), time = 4 },
+        night = { colour = Point(0, 0, 0), time = 6 },
+        fullmoon = { colour = Point(84 / 255, 122 / 255, 156 / 255), time = 4 },
+    },
 }
 
 function MountainLighting.GetPhaseColours(level)
+    if level ~= nil and level >= 7 and level <= 10 then
+        return PHASE_COLOUR_SETS.snowmountain
+    end
     return (level == 4 or level == 5) and PHASE_COLOUR_SETS.highmountain or PHASE_COLOUR_SETS.default
 end
 

@@ -25,6 +25,7 @@ AddComponentPostInit("ambientlighting", function(self)
     local inst = self.inst
     local _realcolour = UpvalueHacker.GetUpvalue(self.OnUpdate, "_realcolour")
     local _overridecolour = UpvalueHacker.GetUpvalue(self.OnUpdate, "_overridecolour")
+    local PushCurrentColour, push_index, push_scope = UpvalueHacker.GetUpvalue(self.OnUpdate, "PushCurrentColour")
     local DoUpdateFlash = UpvalueHacker.GetUpvalue(self.OnUpdate, "DoUpdateFlash")
     local ComputeTargetColour, i, scope_fn
     if type(DoUpdateFlash) == "function" then
@@ -55,6 +56,32 @@ AddComponentPostInit("ambientlighting", function(self)
     end
 
     debug.setupvalue(scope_fn, i, MS_ComputeTargetColour)
+
+    if type(PushCurrentColour) == "function" then
+        local preview_colour
+        debug.setupvalue(push_scope, push_index, function(...)
+            PushCurrentColour(...)
+            if preview_colour ~= nil then
+                TheSim:SetVisualAmbientColour(preview_colour:Get())
+            end
+        end)
+
+        function self:MS_SetLookPreview(colour)
+            preview_colour = colour
+            if colour == nil then
+                MS_ComputeTargetColour(_overridecolour, 0)
+            end
+            self:OnUpdate(0)
+        end
+
+        local GetVisualAmbientValue = self.GetVisualAmbientValue
+        function self:GetVisualAmbientValue(...)
+            if preview_colour ~= nil then
+                return (preview_colour.x + preview_colour.y + preview_colour.z) / 3
+            end
+            return GetVisualAmbientValue(self, ...)
+        end
+    end
 
     local current_player, current_phase, current_colours
     function self:MS_RefreshLighting()

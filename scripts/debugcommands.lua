@@ -1,6 +1,66 @@
 -- 控制台调试：c_give 会把物品直接给当前玩家
 -- 用法：d_spawn_tools() / d_spawn_plants() / d_spawn_nests()
 
+-- Local client console: c_mslook("dusk", "snow") previews ambient lighting and colour grading.
+-- Phases: day, dusk, night, fullmoon. Regions: low, high, snow, or levels 1-10 (6 uses the legacy mountain look).
+-- Omitting the region uses the player's current level. The preview stays active until c_mslook() resets it.
+-- Affects local visuals only; world time and server-side light checks remain unchanged.
+do
+	local REGIONS = { low = 1, high = 4, snow = 7 }
+	local PHASES = { day = "day", dusk = "dusk", night = "night", fullmoon = "full_moon" }
+
+	local function Fail(message)
+		print("[c_mslook] " .. message)
+		return false
+	end
+
+	function c_mslook(phase, region)
+		local MountainLighting = require("mountainlighting")
+		local MountainColourCubes = require("mountaincolourcubes")
+
+		if TheNet == nil or TheNet:IsDedicated() then
+			return Fail("请在游戏内客户端的本地控制台执行。")
+		end
+		if ThePlayer == nil or not ThePlayer:IsValid() or TheWorld == nil then
+			return Fail("当前没有可用的本地玩家，请进入游戏后重试。")
+		end
+		local ambient = TheWorld.components.ambientlighting
+		local colourcube = TheWorld.components.colourcube
+		if ambient == nil or ambient.MS_SetLookPreview == nil
+			or colourcube == nil or colourcube.MS_SetLookPreview == nil then
+			return Fail("当前世界的客户端光照预览接口尚未就绪。")
+		end
+
+		if phase == nil and region == nil then
+			ambient:MS_SetLookPreview(nil)
+			colourcube:MS_SetLookPreview(nil)
+			print("[c_mslook] 已恢复当前区域与时间的自然光照和滤镜。")
+			return true
+		end
+		if PHASES[phase] == nil then
+			return Fail('时段为 "day"、"dusk"、"night" 或 "fullmoon"；c_mslook() 恢复。')
+		end
+
+		local level
+		if region == nil then
+			local tracker = ThePlayer.components.dungeonplayertracker
+			level = tracker ~= nil and tracker:GetLevel() or nil
+		elseif type(region) == "string" then
+			level = REGIONS[region] or tonumber(region)
+		elseif type(region) == "number" then
+			level = region
+		end
+		if level == nil or MountainColourCubes[level] == nil then
+			return Fail('区域为 "low"、"high"、"snow" 或 1 到 10 的整数；省略时使用当前山地区域。')
+		end
+
+		ambient:MS_SetLookPreview(MountainLighting.GetPhaseColours(level)[phase].colour)
+		colourcube:MS_SetLookPreview(MountainColourCubes[level][PHASES[phase]])
+		print(string.format("[c_mslook] 本地预览：%s，区域 %d。输入 c_mslook() 恢复。", phase, level))
+		return true
+	end
+end
+
 function d_spawn_tools()
 	c_give("mountain_yoth_lance")
 	c_give("mountain_armor_copper")
