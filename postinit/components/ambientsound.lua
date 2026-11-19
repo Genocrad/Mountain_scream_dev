@@ -1,6 +1,8 @@
 local AddComponentPostInit = AddComponentPostInit
 GLOBAL.setfenv(1, GLOBAL)
 
+local MountainTiles = require("ms_tiles")
+
 local CLOUD_SOUND = "ms_mountain_wind/ambience/wind"
 local CLOUD_HANDLE = "ms_mountain_clouds"
 local CLOUD_PARAMETER = "cloud_proximity"
@@ -32,8 +34,7 @@ local function GetCloudProximity(map, x, y, z, level)
             local tile = map:GetTile(tile_x + dx, tile_y + dy)
             -- Mountain cloud tiles use their own range, outside native
             -- ImpassableTiles. Both cloud colours border the playable land.
-            if tile ~= nil and (tile == WORLD_TILES.CLOUDS_WHITE
-                or tile == WORLD_TILES.CLOUDS_DARK) then
+            if MountainTiles.IsCloudTile(tile) then
                 count = count + 1
             end
         end

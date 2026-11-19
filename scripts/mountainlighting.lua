@@ -31,7 +31,7 @@ function MountainLighting.GetPhaseColours(level)
     if level ~= nil and level >= 7 and level <= 10 then
         return PHASE_COLOUR_SETS.snowmountain
     end
-    return (level == 4 or level == 5) and PHASE_COLOUR_SETS.highmountain or PHASE_COLOUR_SETS.default
+    return (level == 4 or level == 5 or level == 6) and PHASE_COLOUR_SETS.highmountain or PHASE_COLOUR_SETS.default
 end
 
 function MountainLighting.IsMountainWorld(world)

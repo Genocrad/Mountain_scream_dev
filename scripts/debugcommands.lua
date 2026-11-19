@@ -2,7 +2,7 @@
 -- 用法：d_spawn_tools() / d_spawn_plants() / d_spawn_nests()
 
 -- Local client console: c_mslook("dusk", "snow") previews ambient lighting and colour grading.
--- Phases: day, dusk, night, fullmoon. Regions: low, high, snow, or levels 1-10 (6 uses the legacy mountain look).
+-- Phases: day, dusk, night, fullmoon. Regions: low (1-3), high (4-6), snow (7-10), or a level number.
 -- Omitting the region uses the player's current level. The preview stays active until c_mslook() resets it.
 -- Affects local visuals only; world time and server-side light checks remain unchanged.
 do

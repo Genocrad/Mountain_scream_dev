@@ -20,38 +20,35 @@ TileManager.RegisterTileRange(TileRanges.MS_CLOUDS, 40000, 40257)
 
 -- Special void type, that does not have a collision.
 TileGroups.MS_CLOUDS = TileGroupManager:AddTileGroup()
-TileGroups.MS_NON_CLOUDS = TileGroupManager:AddTileGroup()
 TileGroups.MS_TECHNICAL = TileGroupManager:AddTileGroup()
 TileGroups.MS_ICE_BRIDGE = TileGroupManager:AddTileGroup()
-TileGroups.MS_FALLOFF_1 = TileGroupManager:AddTileGroup()
-TileGroups.MS_FALLOFF_2 = TileGroupManager:AddTileGroup()
-TileGroups.MS_FALLOFF_3 = TileGroupManager:AddTileGroup()
+local cloud_regions = {}
+local cloud_tiles = {}
 
-TileManager.AddTile(
-    "CLOUDS_DARK",
-    TileRanges.MS_CLOUDS,
-    {ground_name = "Clouds Dark"},
-    nil,
-    {
-        name = "map_edge",
-        noise_texture = "ms_clouds_dark_noise",
-    }
-)
-
-
-
-TileManager.AddTile(
-    "CLOUDS_WHITE",
-    TileRanges.MS_CLOUDS,
-    {ground_name = "Clouds White"},
-    nil,
-    {
-        name = "map_edge",
-        noise_texture = "ms_clouds_noise",
-    }
-)
-
-
+-- Cloud IDs carry the region so any default-falloff land tile can use its cliffs.
+for _, name in ipairs({ "LOW", "HIGH", "SNOW" }) do
+    local region = { group = TileGroupManager:AddTileGroup() }
+    TileGroups["MS_CLOUDS_" .. name] = region.group
+    cloud_regions[#cloud_regions + 1] = region
+    for _, colour in ipairs({ "DARK", "WHITE" }) do
+        local tile_name = "CLOUDS_" .. colour .. "_" .. name
+        TileManager.AddTile(
+            tile_name,
+            TileRanges.MS_CLOUDS,
+            { ground_name = "Clouds " .. colour },
+            nil,
+            {
+                name = "map_edge",
+                noise_texture = colour == "DARK" and "ms_clouds_dark_noise" or "ms_clouds_noise",
+            }
+        )
+        local tile = WORLD_TILES[tile_name]
+        region[string.lower(colour)] = tile
+        cloud_tiles[tile] = true
+        TileGroupManager:AddValidTile(TileGroups.MS_CLOUDS, tile)
+        TileGroupManager:AddValidTile(region.group, tile)
+    end
+end
 
 TileManager.AddTile(
     "MS_MOUNTAIN_LOW_TECHNICAL",
@@ -366,23 +363,6 @@ TileManager.ChangeTileRenderOrder(WORLD_TILES.MS_MOUNTAIN_LOW_2_TECHNICAL, WORLD
 TileManager.ChangeTileRenderOrder(WORLD_TILES.MS_MOUNTAIN_HIGH_TECHNICAL, WORLD_TILES.QUAGMIRE_GATEWAY)
 TileManager.ChangeTileRenderOrder(WORLD_TILES.MS_PERMAFROST_TECHNICAL, WORLD_TILES.QUAGMIRE_GATEWAY)
 
-TileGroupManager:AddValidTile(TileGroups.MS_CLOUDS, WORLD_TILES.CLOUDS_WHITE)
-TileGroupManager:AddValidTile(TileGroups.MS_CLOUDS, WORLD_TILES.CLOUDS_DARK)
-
--- Default mountain_falloff for tiles not given a dedicated falloff.
-TileGroupManager:AddValidTile(TileGroups.MS_NON_CLOUDS, WORLD_TILES.MS_HIGHLAND)
-TileGroupManager:AddValidTile(TileGroups.MS_NON_CLOUDS, WORLD_TILES.MS_SNOW)
-TileGroupManager:AddValidTile(TileGroups.MS_NON_CLOUDS, WORLD_TILES.ROCKY)
-
-TileGroupManager:AddValidTile(TileGroups.MS_FALLOFF_1, WORLD_TILES.MS_BRICK)
-TileGroupManager:AddValidTile(TileGroups.MS_FALLOFF_1, WORLD_TILES.MS_MOUNTAIN_LOW)
-TileGroupManager:AddValidTile(TileGroups.MS_FALLOFF_1, WORLD_TILES.MS_MOUNTAIN_LOW_2)
-TileGroupManager:AddValidTile(TileGroups.MS_FALLOFF_1, WORLD_TILES.MS_CAVE)
-
-TileGroupManager:AddValidTile(TileGroups.MS_FALLOFF_2, WORLD_TILES.MS_MOUNTAIN_HIGH)
-
-TileGroupManager:AddValidTile(TileGroups.MS_FALLOFF_3, WORLD_TILES.MS_PERMAFROST)
-
 TileGroupManager:AddValidTile(TileGroups.MS_ICE_BRIDGE, WORLD_TILES.MS_BRIDGE)
 
 TileGroupManager:AddValidTile(TileGroups.MS_TECHNICAL, WORLD_TILES.VOID_TECHNICAL)
@@ -402,4 +382,15 @@ TURF_NUMBER_TO_NAME = {
   [WORLD_TILES.MS_MOUNTAIN_HIGH] = "ms_mountain_high",
   [WORLD_TILES.MS_PERMAFROST] = "ms_permafrost",
 }
-  
+
+local function GetCloudTile(level, dark)
+    -- Destination geographic levels: low 1-3, high 4-6, snow 7-10.
+    local region = cloud_regions[level >= 7 and 3 or level >= 4 and 2 or 1]
+    return dark and region.dark or region.white
+end
+
+return {
+    cloud_regions = cloud_regions,
+    GetCloudTile = GetCloudTile,
+    IsCloudTile = function(tile) return cloud_tiles[tile] == true end,
+}

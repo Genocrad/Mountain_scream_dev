@@ -1,4 +1,4 @@
-
+local MountainTiles = require("ms_tiles")
 
 local DungeonWallSpawner = Class(function(self, inst)
     self.inst = inst
@@ -176,7 +176,7 @@ function DungeonWallSpawner:SpawnArenaTeleporter()
       for i = -10, 10 do 
         for j = -10, 10 do
           if TheWorld.Map:GetTile(tile_x + i + TUNING.MS_TERRAFORMER_OFFSET_X[8], tile_z + j + TUNING.MS_TERRAFORMER_OFFSET_Y[8]) == 1 and math.sqrt(i*i+j*j) < 50 then
-            TheWorld.Map:SetTile(tile_x + i + TUNING.MS_TERRAFORMER_OFFSET_X[8], tile_z + j + TUNING.MS_TERRAFORMER_OFFSET_Y[8], WORLD_TILES.CLOUDS_WHITE)  
+            TheWorld.Map:SetTile(tile_x + i + TUNING.MS_TERRAFORMER_OFFSET_X[8], tile_z + j + TUNING.MS_TERRAFORMER_OFFSET_Y[8], MountainTiles.GetCloudTile(9))
           end
         end
       end
@@ -217,7 +217,7 @@ function DungeonWallSpawner:SpawnArenaTeleporter()
   for i = -14, 14 do 
     for j = -14, 14 do
       if TheWorld.Map:GetTile(tile_x + i + TUNING.MS_TERRAFORMER_OFFSET_X[8] + TUNING.MS_TERRAFORMER_OFFSET_X[9], tile_z + j + TUNING.MS_TERRAFORMER_OFFSET_Y[8] + TUNING.MS_TERRAFORMER_OFFSET_Y[9] ) == 1 then
-          TheWorld.Map:SetTile(tile_x + i + TUNING.MS_TERRAFORMER_OFFSET_X[8] + TUNING.MS_TERRAFORMER_OFFSET_X[9], tile_z + j + TUNING.MS_TERRAFORMER_OFFSET_Y[8] + TUNING.MS_TERRAFORMER_OFFSET_Y[9], WORLD_TILES.CLOUDS_WHITE)  
+          TheWorld.Map:SetTile(tile_x + i + TUNING.MS_TERRAFORMER_OFFSET_X[8] + TUNING.MS_TERRAFORMER_OFFSET_X[9], tile_z + j + TUNING.MS_TERRAFORMER_OFFSET_Y[8] + TUNING.MS_TERRAFORMER_OFFSET_Y[9], MountainTiles.GetCloudTile(10))
       end
     end
   end
@@ -810,7 +810,7 @@ function DungeonWallSpawner:SanityCheck(entrance, exit)
     local deltaz = math.abs(z1-z)/(z1-z) * 4
     for j = z - deltaz * 5, z1 + deltaz * 5, deltaz do 
       local tile = TheWorld.Map:GetTileAtPoint(i, 0, j)
-      if tile ~= 1 and tile ~= WORLD_TILES.CLOUDS_WHITE and tile ~= WORLD_TILES.CLOUDS_DARK then
+      if tile ~= 1 and not MountainTiles.IsCloudTile(tile) then
         sanity_x[i] = sanity_x[i] + 1
       end
     end
@@ -821,7 +821,7 @@ function DungeonWallSpawner:SanityCheck(entrance, exit)
     local deltax = math.abs(x1-x)/(x1-x) * 4
     for i = x - deltax * 5, x1 + deltax * 5, deltax do
       local tile = TheWorld.Map:GetTileAtPoint(i, 0, j)
-      if tile ~= 1 and tile ~= WORLD_TILES.CLOUDS_WHITE and tile ~= WORLD_TILES.CLOUDS_DARK then
+      if tile ~= 1 and not MountainTiles.IsCloudTile(tile) then
         sanity_y[j] = sanity_y[j] + 1
       end
     end
@@ -840,7 +840,7 @@ function DungeonWallSpawner:SanityCheck(entrance, exit)
 
       local tile = TheWorld.Map:GetTileAtPoint(x - deltax * i, 0, z - deltay * i)
 
-      if tile == 1 or tile == WORLD_TILES.CLOUDS_WHITE or tile == WORLD_TILES.CLOUDS_DARK then
+      if tile == 1 or MountainTiles.IsCloudTile(tile) then
         local tile_x, tile_y = TheWorld.Map:GetTileXYAtPoint(x - deltax * i, 0, z - deltay * i)
 
         for i = -7, 7 do
@@ -861,6 +861,7 @@ function DungeonWallSpawner:SpawnClouds()
   local dungeonow  = TheWorld.net.components.dungeonmapoverwatch
 
   for level = 2, TUNING.MS_CAVES_START do
+    local cloud_tile = MountainTiles.GetCloudTile(level)
     local centerx, centery = dungeonow._map_points_level_x:value()[level], dungeonow._map_points_level_y:value()[level]
     local xp, xn, yp, yn = dungeonow.level_limits_xp[level], dungeonow.level_limits_xn[level], dungeonow.level_limits_yp[level], dungeonow.level_limits_yn[level]
     for i = -(xn+10), (xp+10) do
@@ -871,8 +872,9 @@ function DungeonWallSpawner:SpawnClouds()
         if centerx + i >= 0 and centery + j >= 0 then 
           if dungeonow.cloud_tiles_planned_cords[centerx + i][centery + j] == true then
             
-            if (not TileGroupManager:IsLandTile(tile)) and not (tile == WORLD_TILES.CLOUDS_DARK) and not (tile == WORLD_TILES.VOID_TECHNICAL) then
-              TheWorld.Map:SetTile(centerx + i, centery + j, WORLD_TILES.CLOUDS_WHITE)
+            -- Preserve existing clouds and their region when floor bounds overlap.
+            if not TileGroupManager:IsLandTile(tile) and not MountainTiles.IsCloudTile(tile) and tile ~= WORLD_TILES.VOID_TECHNICAL then
+              TheWorld.Map:SetTile(centerx + i, centery + j, cloud_tile)
             end
           end
         end

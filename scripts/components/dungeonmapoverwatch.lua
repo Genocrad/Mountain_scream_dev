@@ -1,4 +1,4 @@
-
+local MountainTiles = require("ms_tiles")
 
 local DungeonMapOverwatch = Class(function(self, inst)
     self.inst = inst
@@ -64,8 +64,7 @@ local DungeonMapOverwatch = Class(function(self, inst)
           local tile = map:GetTile(tile_x, tile_y)
           if tile ~= nil and tile ~= 1 and
              tile ~= WORLD_TILES.VOID_TECHNICAL and
-             tile ~= WORLD_TILES.CLOUDS_WHITE and
-             tile ~= WORLD_TILES.CLOUDS_DARK and
+             not MountainTiles.IsCloudTile(tile) and
              TileGroupManager:IsLandTile(tile) then
             min_tile_x = min_tile_x == nil and tile_x or math.min(min_tile_x, tile_x)
             max_tile_x = max_tile_x == nil and tile_x or math.max(max_tile_x, tile_x)

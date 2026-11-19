@@ -1,73 +1,44 @@
-local TileManager = require("tilemanager")
+local MountainTiles = require("ms_tiles")
 
--- Needs to be loaded after tiles
+-- Keep the native land membership, including tiles registered by other mods.
+TileGroups.MS_LAND_WITH_FALLOFF = TileGroupManager:AddTileGroup(TileGroups.LandTilesWithDefaultFalloff)
+TileGroupManager:AddInvalidTile(TileGroups.MS_LAND_WITH_FALLOFF, WORLD_TILES.MS_BRIDGE)
 
-GLOBAL.mod_protect_TileManager = false
+-- Clouds suppress adjacent vanilla cliffs without becoming cliff sources.
+TileGroups.MS_DEFAULT_FALLOFF_NEIGHBORS = TileGroupManager:AddTileGroup(TileGroups.LandTilesWithDefaultFalloff)
+TileGroupManager:AddValidTile(TileGroups.MS_DEFAULT_FALLOFF_NEIGHBORS, WORLD_TILES.MS_BRIDGE)
+for _, region in ipairs(MountainTiles.cloud_regions) do
+    TileGroupManager:AddValidTile(TileGroups.MS_DEFAULT_FALLOFF_NEIGHBORS, region.white)
+    TileGroupManager:AddValidTile(TileGroups.MS_DEFAULT_FALLOFF_NEIGHBORS, region.dark)
+end
 
-FALLOFF_IDS.MOUNTAIN_FALLOFF = GetTableSize(FALLOFF_IDS)
-FALLOFF_IDS.ICE_BRIDGE_FALLOFF = FALLOFF_IDS.MOUNTAIN_FALLOFF + 1
-FALLOFF_IDS.MS_FALLOFF_1 = FALLOFF_IDS.ICE_BRIDGE_FALLOFF + 1
-FALLOFF_IDS.MS_FALLOFF_2 = FALLOFF_IDS.MS_FALLOFF_1 + 1
-FALLOFF_IDS.MS_FALLOFF_3 = FALLOFF_IDS.MS_FALLOFF_2 + 1
+SetFalloffProperty(FALLOFF_IDS.FALLOFF, "should_have_falloff", TileGroups.MS_LAND_WITH_FALLOFF)
+SetFalloffProperty(FALLOFF_IDS.FALLOFF, "should_have_falloff_result", true)
+SetFalloffProperty(FALLOFF_IDS.FALLOFF, "neighbor_needs_falloff", TileGroups.MS_DEFAULT_FALLOFF_NEIGHBORS)
+SetFalloffProperty(FALLOFF_IDS.FALLOFF, "neighbor_needs_falloff_result", false)
 
-TileManager.AddFalloffTexture(
-	FALLOFF_IDS.MOUNTAIN_FALLOFF,
-	{
-		name = "mountain_falloff",
-		noise_texture = "square.tex",
-		neighbor_needs_falloff = TileGroups.MS_CLOUDS,
-		neighbor_needs_falloff_result = true,
-		should_have_falloff = TileGroups.MS_NON_CLOUDS,
-		should_have_falloff_result = true,
-	}
-)
+local next_id = 0
+for _, id in pairs(FALLOFF_IDS) do
+    next_id = math.max(next_id, id)
+end
 
-TileManager.AddFalloffTexture(
-	FALLOFF_IDS.ICE_BRIDGE_FALLOFF,
-	{
-		name = "ice_bridge_falloff",
-		noise_texture = "square.tex",
-		neighbor_needs_falloff = TileGroups.MS_CLOUDS,
-		neighbor_needs_falloff_result = true,
-		should_have_falloff = TileGroups.MS_ICE_BRIDGE,
-		should_have_falloff_result = true,
-	}
-)
+local function AddMountainFalloff(id_name, texture, land_group, neighbor_group, neighbor_result)
+    next_id = next_id + 1
+    FALLOFF_IDS[id_name] = next_id
+    AddFalloffTexture(next_id, {
+        name = texture,
+        noise_texture = "square.tex",
+        should_have_falloff = land_group,
+        should_have_falloff_result = true,
+        neighbor_needs_falloff = neighbor_group,
+        neighbor_needs_falloff_result = neighbor_result,
+    })
+end
 
-TileManager.AddFalloffTexture(
-	FALLOFF_IDS.MS_FALLOFF_1,
-	{
-		name = "ms_falloff_1",
-		noise_texture = "square.tex",
-		neighbor_needs_falloff = TileGroups.MS_CLOUDS,
-		neighbor_needs_falloff_result = true,
-		should_have_falloff = TileGroups.MS_FALLOFF_1,
-		should_have_falloff_result = true,
-	}
-)
+for i, region in ipairs(MountainTiles.cloud_regions) do
+    AddMountainFalloff("MS_FALLOFF_" .. i, "ms_falloff_" .. i,
+        TileGroups.MS_LAND_WITH_FALLOFF, region.group, true)
+end
 
-TileManager.AddFalloffTexture(
-	FALLOFF_IDS.MS_FALLOFF_2,
-	{
-		name = "ms_falloff_2",
-		noise_texture = "square.tex",
-		neighbor_needs_falloff = TileGroups.MS_CLOUDS,
-		neighbor_needs_falloff_result = true,
-		should_have_falloff = TileGroups.MS_FALLOFF_2,
-		should_have_falloff_result = true,
-	}
-)
-
-TileManager.AddFalloffTexture(
-	FALLOFF_IDS.MS_FALLOFF_3,
-	{
-		name = "ms_falloff_3",
-		noise_texture = "square.tex",
-		neighbor_needs_falloff = TileGroups.MS_CLOUDS,
-		neighbor_needs_falloff_result = true,
-		should_have_falloff = TileGroups.MS_FALLOFF_3,
-		should_have_falloff_result = true,
-	}
-)
-
-GLOBAL.mod_protect_TileManager = true
+AddMountainFalloff("ICE_BRIDGE_FALLOFF", "ice_bridge_falloff",
+    TileGroups.MS_ICE_BRIDGE, TileGroups.MS_ICE_BRIDGE, false)

@@ -13,12 +13,5 @@ end
 local low = CustomColours("lowmountain")
 local high = CustomColours("highmountain")
 local snow = CustomColours("snowmountain")
-local legacy =
-{
-    day = resolvefilepath("images/mountainday_cc.tex"),
-    dusk = resolvefilepath("images/mountaindusk_cc.tex"),
-    night = resolvefilepath("images/mountainnight_cc.tex"),
-    full_moon = "images/colour_cubes/purple_moon_cc.tex",
-}
 
-return { low, low, low, high, high, legacy, snow, snow, snow, snow }
+return { low, low, low, high, high, high, snow, snow, snow, snow }

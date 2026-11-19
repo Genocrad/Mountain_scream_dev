@@ -1,3 +1,5 @@
+local MountainTiles = require("ms_tiles")
+
 local assets = { }
 
 local function IsInvalidTileTerraformer(tile)
@@ -224,7 +226,7 @@ local function MakeTerraformer(name, tiles, tile_rarity, snow_randomseed, snow_r
                   TheWorld.Map:SetTile(x,y, WORLD_TILES.VOID_TECHNICAL)
                   SetTileOrNoiseOrNoise(tiles, tile_rarity, x-deltax+70,y-deltay+70, snow_randomseed, snow_rarity, level)
                 else
-                  TheWorld.Map:SetTile(x+spawn_offset_x,y+spawn_offset_y, WORLD_TILES.CLOUDS_DARK)
+                  TheWorld.Map:SetTile(x+spawn_offset_x,y+spawn_offset_y, MountainTiles.GetCloudTile(level + 1, true))
                 end
               end
             end

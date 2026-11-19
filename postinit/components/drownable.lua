@@ -6,11 +6,6 @@ local old_Teleport = Drownable.Teleport
 local ENV = env
 GLOBAL.setfenv(1, GLOBAL)
 
-local function IsMsClouds(tile)
-  return tile == WORLD_TILES.CLOUDS_WHITE or
-         tile == WORLD_TILES.CLOUDS_DARK 
-end
-
 local function IsMsTechnicalTile(tile)
   return tile == WORLD_TILES.VOID_TECHNICAL or
          tile == WORLD_TILES.MS_MOUNTAIN_LOW_TECHNICAL or

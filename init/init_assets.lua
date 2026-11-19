@@ -13,11 +13,6 @@ Assets = {
 	Asset("IMAGE", "images/colour_cubes/ms_snowmountain_dusk_cc.tex"),
 	Asset("IMAGE", "images/colour_cubes/ms_snowmountain_night_cc.tex"),
 	Asset("IMAGE", "images/colour_cubes/ms_snowmountain_fullmoon_cc.tex"),
-	Asset("IMAGE", "images/mountainday_cc.tex"),
-	Asset("IMAGE", "images/mountaindusk_cc.tex"),
-	Asset("IMAGE", "images/mountainnight_cc.tex"),
-	Asset("IMAGE", "images/mountainlow_day_cc.tex"),
-	Asset("IMAGE", "images/mountainlow_night_cc.tex"),
 	Asset("IMAGE", "images/wave_clouds.tex"),
 	Asset("IMAGE", "images/wave_null.tex"),
 

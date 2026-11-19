@@ -9,14 +9,6 @@ local assets = {
     Asset("ANIM", "anim/ms_mountain_wall_variants/ms_mountain_wall_idle_build.zip"),
     Asset("ANIM", "anim/ms_mountain_wall_variants/ms_mountain_wall_idle_high_mountain_build.zip"),
     Asset("ANIM", "anim/ms_mountain_wall_variants/ms_mountain_wall_idle_snow_mountain_build.zip"),
-
-    Asset("ANIM", "anim/ms_mountain_wall_variants/ms_mountain_wall_idle_left_corner_build.zip"),
-    Asset("ANIM", "anim/ms_mountain_wall_variants/ms_mountain_wall_idle_left_corner_high_mountain_build.zip"),
-    Asset("ANIM", "anim/ms_mountain_wall_variants/ms_mountain_wall_idle_left_corner_snow_mountain_build.zip"),
-
-    Asset("ANIM", "anim/ms_mountain_wall_variants/ms_mountain_wall_idle_right_corner_snow_mountain_build.zip"),
-    Asset("ANIM", "anim/ms_mountain_wall_variants/ms_mountain_wall_idle_right_corner_high_mountain_build.zip"),
-    Asset("ANIM", "anim/ms_mountain_wall_variants/ms_mountain_wall_idle_right_corner_build.zip"),
 }
 
 local WALL_COLLISION_HEIGHT = 4
@@ -112,20 +104,15 @@ local function OnLoad(inst, data)
     UpdateSortWorldOffset(inst)
 end
 
-local function ConfigureWallAnimation(inst, animation, overrides)
-    inst.AnimState:SetBuild(overrides[1].build)
+local function ConfigureWallAnimation(inst, animation, build)
+    inst.AnimState:SetBuild(build)
     inst.AnimState:SetBank("ms_mountain_wall")
-    for i = 2, #overrides do
-        local override = overrides[i]
-        inst.AnimState:OverrideSymbol(override.symbol, override.build, override.symbol)
-    end
     inst.AnimState:PlayAnimation(animation)
-    inst.AnimState:SetSymbolAddColour("filler", 1, 1, 1, 1)
     inst.AnimState:SetOrientation(ANIM_ORIENTATION.OnGround)
     inst.AnimState:SetDefaultEffectHandle(resolvefilepath("shaders/mountain_vertical_shader.ksh"))
 end
 
-local function CreateSlopeFaces(inst, animation, overrides)
+local function CreateSlopeFaces(inst, animation, build)
     if TheNet:IsDedicated() then
         return
     end
@@ -144,17 +131,17 @@ local function CreateSlopeFaces(inst, animation, overrides)
         face.persists = false
 
         local symbol = "slope_face_" .. side
-        ConfigureWallAnimation(face, animation:gsub("^idle", symbol), overrides)
+        ConfigureWallAnimation(face, animation:gsub("^idle", symbol), build)
         face.AnimState:SetDefaultEffectHandle(resolvefilepath("shaders/mountain_slope_shader.ksh"))
 
-        -- B/D vertices and frame bounds match exactly in both builds. Keep
+        -- B/D vertices and frame bounds match exactly in both symbols. Keep
         -- the children at the same origin, with no per-face rotation or scale.
         inst:AddChild(face)
         inst._slope_faces[i] = face
     end
 end
 
-local function MakeWall(name, animation, overrides, shape)
+local function MakeWall(name, animation, build, symbol, shape)
     local function fn()
         local inst = CreateEntity()
 
@@ -186,10 +173,10 @@ local function MakeWall(name, animation, overrides, shape)
         if shape == "slope" then
             -- The networked parent owns physics/save data; only its two local
             -- children render the sloping triangles with separate sort points.
-            CreateSlopeFaces(inst, animation, overrides)
+            CreateSlopeFaces(inst, animation, build)
         else
-            ConfigureWallAnimation(inst, animation, overrides)
-            inst.AnimState:SetSymbolAddColour(overrides[1].symbol, 0, 0, 1, 1)
+            ConfigureWallAnimation(inst, animation, build)
+            inst.AnimState:SetSymbolAddColour(symbol, 0, 0, 1, 1)
             if shape == "right" then
                 inst._sort_half = 1
             elseif shape == "left" then
@@ -223,39 +210,27 @@ local function MakeWall(name, animation, overrides, shape)
     return Prefab(name, fn, assets)
 end
 
-return MakeWall("ms_mountain_wall", "idle", {
-        { symbol = "wall", build = "ms_mountain_wall_idle_build" },
-    }, "wall"),
-    MakeWall("ms_mountain_corner_wall_right", "idle_right_corner", {
-        { symbol = "wall_half_right", build = "ms_mountain_wall_idle_right_corner_build" },
-    }, "right"),
-    MakeWall("ms_mountain_corner_wall_left", "idle_left_corner", {
-        { symbol = "wall_half_left", build = "ms_mountain_wall_idle_left_corner_build" },
-    }, "left"),
-    MakeWall("ms_mountain_slope", "idle", {
-        { symbol = "wall", build = "ms_mountain_wall_idle_build" },
-    }, "slope"),
-    MakeWall("ms_mountain_wall_snow", "idle_snow_mountain", {
-        { symbol = "wall", build = "ms_mountain_wall_idle_snow_mountain_build" },
-    }, "wall"),
-    MakeWall("ms_mountain_corner_wall_right_snow", "idle_right_corner_snow_mountain", {
-        { symbol = "wall_half_right", build = "ms_mountain_wall_idle_right_corner_snow_mountain_build" },
-    }, "right"),
-    MakeWall("ms_mountain_corner_wall_left_snow", "idle_left_corner_snow_mountain", {
-        { symbol = "wall_half_left", build = "ms_mountain_wall_idle_left_corner_snow_mountain_build" },
-    }, "left"),
-    MakeWall("ms_mountain_slope_snow", "idle_snow_mountain", {
-        { symbol = "wall", build = "ms_mountain_wall_idle_snow_mountain_build" },
-    }, "slope"),
-    MakeWall("ms_mountain_wall_high", "idle_high_mountain", {
-        { symbol = "wall", build = "ms_mountain_wall_idle_high_mountain_build" },
-    }, "wall"),
-    MakeWall("ms_mountain_corner_wall_right_high", "idle_right_corner_high_mountain", {
-        { symbol = "wall_half_right", build = "ms_mountain_wall_idle_right_corner_high_mountain_build" },
-    }, "right"),
-    MakeWall("ms_mountain_corner_wall_left_high", "idle_left_corner_high_mountain", {
-        { symbol = "wall_half_left", build = "ms_mountain_wall_idle_left_corner_high_mountain_build" },
-    }, "left"),
-    MakeWall("ms_mountain_slope_high", "idle_high_mountain", {
-        { symbol = "wall", build = "ms_mountain_wall_idle_high_mountain_build" },
-    }, "slope")
+return MakeWall("ms_mountain_wall", "idle",
+        "ms_mountain_wall_idle_build", "wall", "wall"),
+    MakeWall("ms_mountain_corner_wall_right", "idle_right_corner",
+        "ms_mountain_wall_idle_build", "wall_half_right", "right"),
+    MakeWall("ms_mountain_corner_wall_left", "idle_left_corner",
+        "ms_mountain_wall_idle_build", "wall_half_left", "left"),
+    MakeWall("ms_mountain_slope", "idle",
+        "ms_mountain_wall_idle_build", "wall", "slope"),
+    MakeWall("ms_mountain_wall_snow", "idle_snow_mountain",
+        "ms_mountain_wall_idle_snow_mountain_build", "wall", "wall"),
+    MakeWall("ms_mountain_corner_wall_right_snow", "idle_right_corner_snow_mountain",
+        "ms_mountain_wall_idle_snow_mountain_build", "wall_half_right", "right"),
+    MakeWall("ms_mountain_corner_wall_left_snow", "idle_left_corner_snow_mountain",
+        "ms_mountain_wall_idle_snow_mountain_build", "wall_half_left", "left"),
+    MakeWall("ms_mountain_slope_snow", "idle_snow_mountain",
+        "ms_mountain_wall_idle_snow_mountain_build", "wall", "slope"),
+    MakeWall("ms_mountain_wall_high", "idle_high_mountain",
+        "ms_mountain_wall_idle_high_mountain_build", "wall", "wall"),
+    MakeWall("ms_mountain_corner_wall_right_high", "idle_right_corner_high_mountain",
+        "ms_mountain_wall_idle_high_mountain_build", "wall_half_right", "right"),
+    MakeWall("ms_mountain_corner_wall_left_high", "idle_left_corner_high_mountain",
+        "ms_mountain_wall_idle_high_mountain_build", "wall_half_left", "left"),
+    MakeWall("ms_mountain_slope_high", "idle_high_mountain",
+        "ms_mountain_wall_idle_high_mountain_build", "wall", "slope")
