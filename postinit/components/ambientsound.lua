@@ -14,8 +14,8 @@ local CLOUD_PROXIMITY_RATE = 1
 local CLOUD_LEVEL_BONUS = {
     [4] = 0.2, [5] = 0.2, [6] = 0.2, -- High mountains.
     [7] = 0.4, [8] = 0.4, -- Snow mountains.
-    [9] = 0.6, -- Summit.
-    [10] = 0.6, -- The golem arena shares the Summit ambience.
+    [9] = 0.4, -- Summit.
+    [10] = 0.4, -- The golem arena shares the Summit ambience.
 }
 local CLOUD_LEVEL_RATE = 0.8
 
