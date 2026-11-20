@@ -42,22 +42,6 @@ local function GetCloudProximity(map, x, y, z, level)
     return math.min(math.min(count * CLOUD_DENSITY_SCALE) * CLOUD_LEVEL_RATE + (CLOUD_LEVEL_BONUS[level] or 0), 1)
 end
 
-local function PushCloudMix()
-    if TheMixer.mixes[CLOUD_HANDLE] == nil then
-        -- The normal mix mutes the cloud bus. Copy all its levels because the
-        -- mixer uses only the top mix, rather than merging individual buses.
-        local normal = TheMixer.mixes.normal
-        local levels = {}
-        for channel, volume in pairs(normal.levels) do
-            levels[channel] = volume
-        end
-        levels["set_ambience/cloud"] = 1
-        -- Native zoom, pause, death and menu mixes retain higher priority.
-        TheMixer:AddNewMix(CLOUD_HANDLE, 1, normal.priority + .1, levels)
-    end
-    TheMixer:PushMix(CLOUD_HANDLE)
-end
-
 local function FindUpvalue(fn, wanted)
     local index = 1
     while true do
@@ -169,14 +153,9 @@ AddComponentPostInit("ambientsound", function(self)
                 cloud_source.SoundEmitter:KillSound(CLOUD_HANDLE)
             end
             if source ~= nil then
-                if cloud_source == nil then
-                    PushCloudMix()
-                end
                 source.SoundEmitter:PlaySound(CLOUD_SOUND, CLOUD_HANDLE)
                 source.SoundEmitter:SetParameter(CLOUD_HANDLE, CLOUD_PARAMETER, proximity)
                 source.SoundEmitter:SetVolume(CLOUD_HANDLE, volume)
-            elseif cloud_source ~= nil then
-                TheMixer:PopMix(CLOUD_HANDLE)
             end
             cloud_source = source
         elseif source ~= nil then
