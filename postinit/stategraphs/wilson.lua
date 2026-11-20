@@ -34,6 +34,16 @@ local function ToggleOnPhysics(inst)
   end
 end
 
+local function ForceStopHeavyLifting(inst)
+    if inst.components.inventory:IsHeavyLifting() then
+        inst.components.inventory:DropItem(
+            inst.components.inventory:Unequip(EQUIPSLOTS.BODY),
+            true,
+            true
+        )
+    end
+end
+
 -- Im a bit lazy today, no desire to mess with upvaluehacker
 local function SetSleeperSleepState(inst)
     if inst.components.grue ~= nil then
@@ -573,3 +583,44 @@ AddStategraphPostInit("wilson", function(sg)
     end
   end
 end)
+
+-- For the grab)
+AddStategraphState("wilson",
+	State{
+		name = "incapacitated",
+		tags = { "busy", "nopredict", "nomorph", "nointerrupt", "nodangle" },
+		onenter = function(inst)
+			ForceStopHeavyLifting(inst)
+			inst.components.rider:ActualDismount()
+			inst.components.locomotor:Stop()
+			inst.components.locomotor:Clear()
+			inst:ClearBufferedAction()
+			inst:ShowHUD(false)
+
+			inst.AnimState:PlayAnimation("incapacitated")
+			inst.DynamicShadow:Enable(false)
+			ToggleOffPhysics(inst)
+			if inst.components.playercontroller then
+				inst.components.playercontroller:Enable(false)
+			end
+		end,
+    
+    events = {
+      EventHandler("animover", function(inst)
+				if inst.AnimState:AnimDone() then
+          inst.AnimState:PlayAnimation("incapacitated_loop", true)
+				end
+			end),
+    },
+    
+		onexit = function(inst)
+			inst:ShowHUD(true)
+			inst.DynamicShadow:Enable(true)
+			ToggleOnPhysics(inst)
+			if inst.components.playercontroller then
+				inst.components.playercontroller:Enable(true)
+			end
+      inst.Follower:StopFollowing()
+		end,
+	}
+)
