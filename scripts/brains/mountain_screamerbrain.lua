@@ -54,6 +54,24 @@ local function GetLoiterPos(inst)
 	return inst._loiter_pos or inst:GetPosition()
 end
 
+local function ChooseAttackRangeCombat(inst)
+  local target = inst.components.combat.target
+	if target == nil or not target:IsValid() or target:GetDistanceSqToInst(inst) < inst.ranged_detect*inst.ranged_detect then
+		return false
+	end
+  if not inst.components.timer:TimerExists("small_special_cd") and math.random() < 0.2 then -- randomness to prevent "chaining" of casts
+    inst.sg:GoToState("cast_rancor", target)
+    inst.components.timer:StopTimer("ranged_retaliation_cd")
+    inst.components.timer:StartTimer("ranged_retaliation_cd", TUNING.MOUNTAIN_SCREAMER.RANGED_RETALIATION_CD + math.random() * TUNING.MOUNTAIN_SCREAMER.RANGED_RETALIATION_DEVIATION )
+    return true
+  else
+    inst.sg:GoToState("blink_out", target)
+    inst.components.timer:StopTimer("ranged_retaliation_cd")
+    inst.components.timer:StartTimer("ranged_retaliation_cd", TUNING.MOUNTAIN_SCREAMER.RANGED_RETALIATION_CD + math.random() * TUNING.MOUNTAIN_SCREAMER.RANGED_RETALIATION_DEVIATION )
+    return true
+  end
+end
+
 function Mountain_ScreamerBrain:OnStart()
 	local root = PriorityNode({
 		WhileNode(
@@ -73,8 +91,19 @@ function Mountain_ScreamerBrain:OnStart()
 								}, 0.25)),
 
 							WhileNode(function() return ShouldChase(self.inst) end, "chase and attack",
-								ChaseAndAttack(self.inst)),
-
+                PriorityNode({
+                  IfNode(function() 
+                    if self.inst.components.combat.target ~= nil and self.inst.components.combat.target:IsValid() then
+                      if self.inst:GetDistanceSqToInst(self.inst.components.combat.target) > self.inst.ranged_detect*self.inst.ranged_detect and not self.inst.components.timer:TimerExists("ranged_retaliation_cd")  then
+                        return true
+                      end
+                    end
+                    return false
+                  end, "ranged attack pls?",
+                  StandStill(self.inst, ChooseAttackRangeCombat)
+                  ),
+                  ChaseAndAttack(self.inst),
+                }, 0.25)),
 							-- 脱战等待天亮：在脱战点附近闲逛，复活的玩家可被重新索敌
 							Wander(self.inst, GetLoiterPos, 8, {
 								minwalktime = 2,

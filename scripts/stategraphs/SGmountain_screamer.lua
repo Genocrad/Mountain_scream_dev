@@ -3,6 +3,18 @@ require("stategraphs/commonstates")
 local AOEUtil = require("aoeutil")
 
 --------------------------------------------------------------------------
+-- Some stuff for grab targets
+--------------------------------------------------------------------------
+
+local function DoHurtSound(inst)
+    if inst.hurtsoundoverride ~= nil then
+        inst.SoundEmitter:PlaySound(inst.hurtsoundoverride, nil, inst.hurtsoundvolume)
+    elseif not inst:HasTag("mime") then
+        inst.SoundEmitter:PlaySound((inst.talker_path_override or "dontstarve/characters/")..(inst.soundsname or inst.prefab).."/hurt", nil, inst.hurtsoundvolume)
+    end
+end
+
+--------------------------------------------------------------------------
 
 local SCREAM_DRAIN_MUST = { "_combat", "_health" }
 local SCREAM_DRAIN_CANT = { "INLIMBO", "flight", "invisible", "notarget", "playerghost", "mountain_screamer", "FX", "DECOR" }
@@ -42,6 +54,42 @@ local function DestroyStuff(inst, dist, radius)
 			end
 		end
 	end
+end
+local function RemoveTag(inst)
+  inst:RemoveTag("tempnontarget")
+end
+local function DoAttack(inst, swipe_angle, hardlanding, givetempprotection, isgrab) 
+  local x,y,z = inst.Transform:GetWorldPosition()
+  local angle = -math.rad(inst.Transform:GetRotation())
+  for i, v in ipairs(TheSim:FindEntities(x, y, z, TUNING.MOUNTAIN_SCREAMER.ATTACK_RANGE, {"_health"}, {"NOCLICK", "FX", "DECOR", "playerghost", "INLIMBO", "tempnontarget", "mountain_screamer"})) do       
+    if v:IsValid() and not v.components.health:IsDead() then
+      local vx, vy, vz = v.Transform:GetWorldPosition()
+      if IsWithinAngle(Vector3(x-math.cos(angle),y,z-math.sin(angle)), Vector3(math.cos(angle), 0, math.sin(angle)), swipe_angle/RADIANS, Vector3(vx, vy, vz)) then
+        if isgrab and v:HasTag("player") and not inst.grabtarget then
+          inst.grabtarget = v
+          v:AddTag("tempnontarget")
+          v:DoTaskInTime(1, RemoveTag)
+          v.entity:AddFollower()
+          v.Follower:FollowSymbol(inst.GUID, "grab_follow", 0, 0, 1)
+          v.sg:GoToState("incapacitated")
+        else
+          inst.components.combat:DoAttack(v)
+          if givetempprotection then
+            v:AddTag("tempnontarget")
+            v:DoTaskInTime(1, RemoveTag)
+          end  
+          v:PushEvent("knockback", {
+            knocker = inst,
+            radius = TUNING.MOUNTAIN_SCREAMER.ATTACK_RANGE,
+            strengthmult = TUNING.MOUNTAIN_SCREAMER.ATTACK_KNOCKBACK_STRENGTH,
+            forcelanded = not hardlanding,
+          })
+        end
+      end
+    end
+  end
+
+  DestroyStuff(inst, TUNING.MOUNTAIN_SCREAMER.DESTROY_WORK_DIST, TUNING.MOUNTAIN_SCREAMER.DESTROY_WORK_RADIUS)
 end
 
 local function ChooseIdleAnim(inst)
@@ -89,6 +137,7 @@ local function ClearScreamBloodFx(target)
 end
 
 local function ClearScreamAffected(inst)
+  inst.SoundEmitter:KillSound("scream")
 	local affected = inst.sg ~= nil and inst.sg.statemem.scream_affected or nil
 	if affected ~= nil then
 		for target in pairs(affected) do
@@ -115,7 +164,6 @@ local function EnsureScreamBloodFx(target)
 		end
 	end)
 end
-
 -- 飞行吸血粒子：与挂身 ms_blood_fx 并存；尖啸结束不打断，飞到 Screamer 后 land 再回血
 local function SpawnScreamBloodingFx(screamer, victim, heal)
 	if screamer == nil or not screamer:IsValid() or victim == nil or not victim:IsValid() then
@@ -231,7 +279,18 @@ local function DoScreamDrain(inst)
 		end
 	end
 	inst.sg.statemem.scream_affected = now_affected
+  -- Do not force the players to wait forever, schedule the end if no players are nearby.
+  -- Huh? why table.getn does not work? Da fuck?
+  local isitfalse
+  for k, v in pairs(now_affected) do
+    isitfalse = true
+  end
+  if not isitfalse and not inst.sg.statemem.scheduled_end then
+    inst:DoTaskInTime(TUNING.MOUNTAIN_SCREAMER.SCREAM_DELAY_END, function(inst) inst.sg:GoToState("scream_pst") end)
+    inst.sg.statemem.scheduled_end = true
+  end
 end
+
 
 local function CanBlinkTo(inst, target)
 	if target == nil or not target:IsValid() then
@@ -248,7 +307,17 @@ end
 
 local function GetBlinkLandingPos(target)
 	local x, y, z = target.Transform:GetWorldPosition()
-	return Vector3(x, 0, z)
+  -- Way to easy to dodge. Like we need to just stay at the same spot so it does land
+  -- Hmmmm... Let's account how player moves into the position!
+  if target.components.locomotor then
+    local speed = target.components.locomotor:GetWalkSpeed()
+    local angle = -math.rad(target.Transform:GetRotation())
+    -- Sometimes, target will not move, obviously
+    if target.sg:HasStateTag("moving") then
+      x,z  = x + speed * math.cos(angle), z + speed * math.sin(angle)
+    end
+  end
+  return Vector3(x, 0, z)
 end
 
 local function ClearBlinkWarning(inst)
@@ -291,26 +360,56 @@ local function DoBlinkImpact(inst)
 	ShakeAllCameras(CAMERASHAKE.FULL, 0.55, 0.03, 0.35, inst, 28)
 end
 
-local function ChooseAttack(inst, target)
+------------------------------------------------------
+-- The attack scheme is something like this:
+-- 
+--                 cast rancor
+--                  /\
+--                  |
+--                  |
+--                 can we cast small special attack? ->  teleport attack on the player
+--                  /\                                        
+--                  |                                   cast big special attack           cast small special attack
+--                  | yes                                    /\                                   /\
+--  start(idle) -- enemy far              ------> can we cast big special attack -> can we cast small special attack? -> attack normally
+--
+-- smal special attacks are: cast rancor and dash attack and rarely blink
+-- big attacks are: whirlpool and scream
+-------------------------------------------------------
+
+local function ChooseAttackCloseCombat(inst, target)
 	if target == nil or not target:IsValid() then
 		return false
 	end
-	-- 瞬移闪烁：消失 → 目标脚下出现并击飞
-	if CanBlinkTo(inst, target) then
-		inst.sg:GoToState("blink_out", target)
-		return true
-	end
-	-- 血量不满且尖啸冷却完毕 → 尖啸汲取
-	if not inst.components.timer:TimerExists("scream_cd")
-		and inst.components.health:GetPercent() < 1
-	then
-		inst.sg:GoToState("scream_pre", target)
-		return true
-	end
-	inst.sg:GoToState("attack", target)
-	return true
+  
+  if not inst.components.timer:TimerExists("big_special_cd") then
+    local state = weighted_random_choice(TUNING.MOUNTAIN_SCREAMER.WEIGHTS_BIG)
+    inst.sg:GoToState(state, target)
+    return true
+  elseif not inst.components.timer:TimerExists("small_special_cd") then
+    local state = weighted_random_choice(TUNING.MOUNTAIN_SCREAMER.WEIGHTS_SMALL)
+    inst.sg:GoToState(state, target)
+    return true
+  else
+    inst.sg:GoToState("attack", target)
+    return true
+  end
+  
 end
 
+-- More special attacks the less hp the boss has.
+local function GetCDSmall(inst)
+  if inst.components.health and not inst.components.health:IsDead() then
+    return (TUNING.MOUNTAIN_SCREAMER.SMALL_SPECIAL_CD + math.random()*TUNING.MOUNTAIN_SCREAMER.SMALL_SPECIAL_DEVIATION) * (inst.components.health:GetPercent()*0.5 + 0.5)
+  end
+end
+
+
+local function GetCDBig(inst)
+  if inst.components.health and not inst.components.health:IsDead() then
+    return (TUNING.MOUNTAIN_SCREAMER.BIG_SPECIAL_CD + math.random()*TUNING.MOUNTAIN_SCREAMER.BIG_SPECIAL_DEVIATION) * (inst.components.health:GetPercent()*0.5 + 0.5)
+  end
+end
 --------------------------------------------------------------------------
 
 local events =
@@ -320,13 +419,14 @@ local events =
 	CommonHandlers.OnFallInVoid(),
 	CommonHandlers.OnDeath(),
 
-	EventHandler("doattack", function(inst, data)
+  
+  EventHandler("doattack", function(inst, data)
 		if inst._stalking or inst.sg:HasStateTag("busy") or inst.components.health:IsDead() then
 			return
 		end
-		ChooseAttack(inst, data ~= nil and data.target or inst.components.combat.target)
+		ChooseAttackCloseCombat(inst, data ~= nil and data.target or inst.components.combat.target)
 	end),
-
+  
 	EventHandler("attacked", function(inst, data)
 		if inst.components.health:IsDead() then
 			return
@@ -453,7 +553,7 @@ local states =
 		timeline =
 		{
 			FrameEvent(1, function(inst)
-				inst.SoundEmitter:PlaySound("dontstarve/creatures/together/stalker/appear")
+				inst.SoundEmitter:PlaySound("ms_sfx/ms_fx/screamer_portal")
 			end),
 		},
 
@@ -578,7 +678,7 @@ local states =
 		timeline =
 		{
 			FrameEvent(1, function(inst)
-				inst.SoundEmitter:PlaySound("dontstarve/creatures/together/stalker/appear")
+				inst.SoundEmitter:PlaySound("ms_sfx/ms_fx/screamer_portal")
 			end),
 		},
 
@@ -654,8 +754,8 @@ local states =
 					})
 				else
 					ClearBlinkWarning(inst)
-					inst.components.timer:StopTimer("blink_cd")
-					inst.components.timer:StartTimer("blink_cd", TUNING.MOUNTAIN_SCREAMER.BLINK_CD)
+					inst.components.timer:StopTimer("small_special_cd")
+					inst.components.timer:StartTimer("small_special_cd", GetCDSmall(inst))
 					inst.sg:GoToState("idle")
 				end
 			end),
@@ -691,10 +791,12 @@ local states =
 		timeline =
 		{
 			FrameEvent(1, function(inst)
-				inst.SoundEmitter:PlaySound("dontstarve/creatures/together/stalker/appear")
+				inst.SoundEmitter:PlaySound("ms_sfx/ms_fx/screamer_portal")
 			end),
+      FrameEvent(2, DoBlinkImpact),
 			-- 落地冲击略往后挪，给预警后的走位时间
-			FrameEvent(16, DoBlinkImpact),
+      -- This is way to much time and it looks way off.
+			--FrameEvent(16, DoBlinkImpact),
 			FrameEvent(22, function(inst)
 				inst.sg:RemoveStateTag("noattack")
 				inst.components.health:SetInvincible(false)
@@ -705,8 +807,8 @@ local states =
 		{
 			EventHandler("animover", function(inst)
 				if inst.AnimState:AnimDone() then
-					inst.components.timer:StopTimer("blink_cd")
-					inst.components.timer:StartTimer("blink_cd", TUNING.MOUNTAIN_SCREAMER.BLINK_CD)
+					inst.components.timer:StopTimer("small_special_cd")
+					inst.components.timer:StartTimer("small_special_cd", GetCDSmall(inst))
 					inst.sg:GoToState("idle")
 				end
 			end),
@@ -715,8 +817,8 @@ local states =
 		onexit = function(inst)
 			ClearBlinkWarning(inst)
 			inst.components.health:SetInvincible(false)
-			if not inst.components.timer:TimerExists("blink_cd") then
-				inst.components.timer:StartTimer("blink_cd", TUNING.MOUNTAIN_SCREAMER.BLINK_CD)
+			if not inst.components.timer:TimerExists("small_special_cd") then
+				inst.components.timer:StartTimer("small_special_cd", GetCDSmall(inst))
 			end
 		end,
 	},
@@ -777,7 +879,7 @@ local states =
 			local target = inst._stalk_target
 			if target ~= nil and target:IsValid() then
 				inst:ForceFacePoint(target.Transform:GetWorldPosition())
-			end
+      end
 		end,
 
 		ontimeout = function(inst)
@@ -800,27 +902,15 @@ local states =
 				inst:ForceFacePoint(target.Transform:GetWorldPosition())
 			end
 			inst.AnimState:PlayAnimation("atk_Rhand")
+      inst.SoundEmitter:PlaySound("ms_sfx/ms_fx/screamer_whoosh")
 		end,
 
 		timeline =
 		{
-			FrameEvent(20, function(inst)
+      FrameEvent(20, function(inst)
 				-- 官方单目标：打中才 PushEvent("knockback")
-				local target = inst.sg.statemem.target
-				local canhit = target ~= nil and target:IsValid() and inst.components.combat:CanHitTarget(target)
-				inst.components.combat:DoAttack(target)
-				if canhit then
-					target:PushEvent("knockback", {
-						knocker = inst,
-						radius = TUNING.MOUNTAIN_SCREAMER.ATTACK_RANGE,
-						strengthmult = TUNING.MOUNTAIN_SCREAMER.ATTACK_KNOCKBACK_STRENGTH,
-					})
-				end
-				DestroyStuff(
-					inst,
-					TUNING.MOUNTAIN_SCREAMER.DESTROY_WORK_DIST,
-					TUNING.MOUNTAIN_SCREAMER.DESTROY_WORK_RADIUS
-				)
+        -- Updating this to be half-circle
+        DoAttack(inst, 210, true)
 			end),
 			FrameEvent(30, function(inst)
 				inst.sg:AddStateTag("caninterrupt")
@@ -836,7 +926,7 @@ local states =
 			end),
 		},
 	},
-
+  
 	State{
 		name = "hit",
 		tags = { "hit", "busy" },
@@ -901,14 +991,8 @@ local states =
 			inst._just_engaged_from_stalk = nil
 			inst.components.locomotor:Stop()
 			inst.AnimState:PlayAnimation("taunt")
+      inst.SoundEmitter:PlaySound("ms_sfx/ms_fx/screamer_whoosh")
 		end,
-
-		timeline =
-		{
-			FrameEvent(5, function(inst)
-				inst.SoundEmitter:PlaySound("dontstarve/creatures/together/stalker/taunt")
-			end),
-		},
 
 		events =
 		{
@@ -997,12 +1081,14 @@ local states =
 				inst:ForceFacePoint(target.Transform:GetWorldPosition())
 			end
 			inst.AnimState:PlayAnimation("scream_pre")
+      -- To prevent them being called immediatly after a big attack
+      inst.components.timer:StopTimer("small_special_cd")
 		end,
 
 		timeline =
 		{
 			FrameEvent(5, function(inst)
-				inst.SoundEmitter:PlaySound("dontstarve/creatures/together/stalker/scream")
+				inst.SoundEmitter:PlaySound("ms_sfx/ms_fx/screamer_scream", "scream")
 			end),
 		},
 
@@ -1029,6 +1115,8 @@ local states =
 			-- 延迟织影恐惧，留给玩家投掷铝器打断
 			ScheduleScreamFear(inst)
 			DoScreamDrain(inst)
+      inst.ranged_detect = TUNING.MOUNTAIN_SCREAMER.SCREAM_RANGE
+
 		end,
 
 		onupdate = function(inst)
@@ -1041,8 +1129,10 @@ local states =
 
 		ontimeout = function(inst)
 			inst.sg:GoToState("scream_pst")
+      inst:DoTaskInTime(4, function(inst) inst.ranged_detect = TUNING.MOUNTAIN_SCREAMER.RANGED_RETALIATION_RANGE end)
 		end,
 
+  
 		onexit = function(inst)
 			CancelPendingScreamFear(inst)
 			ClearScreamAffected(inst)
@@ -1056,8 +1146,10 @@ local states =
 		onenter = function(inst)
 			inst.components.locomotor:Stop()
 			inst.AnimState:PlayAnimation("scream_pst")
-			inst.components.timer:StopTimer("scream_cd")
-			inst.components.timer:StartTimer("scream_cd", TUNING.MOUNTAIN_SCREAMER.SCREAM_CD)
+			inst.components.timer:StopTimer("big_special_cd")
+			inst.components.timer:StartTimer("big_special_cd", GetCDBig(inst))
+      inst.components.timer:ResumeTimer("small_special_cd")
+      
 		end,
 
 		events =
@@ -1077,8 +1169,9 @@ local states =
 		onenter = function(inst)
 			inst.components.locomotor:Stop()
 			inst.AnimState:PlayAnimation("scream_breakoff")
-			inst.components.timer:StopTimer("scream_cd")
-			inst.components.timer:StartTimer("scream_cd", TUNING.MOUNTAIN_SCREAMER.SCREAM_CD_BREAK)
+			inst.components.timer:StopTimer("big_special_cd")
+			inst.components.timer:StartTimer("big_special_cd", GetCDBig(inst))
+      inst.components.timer:ResumeTimer("small_special_cd")
 			CommonHandlers.UpdateHitRecoveryDelay(inst)
 		end,
 
@@ -1111,6 +1204,9 @@ local states =
 
 		timeline =
 		{
+      FrameEvent(2, function(inst)
+        inst.SoundEmitter:PlaySound("ms_sfx/ms_fx/screamer_chew")
+      end),
 			FrameEvent(8, function(inst)
 				local target = inst.sg.statemem.target
 				if target ~= nil and target:IsValid() and not target:IsInLimbo() then
@@ -1150,6 +1246,287 @@ local states =
 			end),
 		},
 	},
+  
+  State{
+		name = "cast_rancor",
+		tags = { "busy" },
+
+		onenter = function(inst)
+			inst.components.locomotor:Stop()
+			inst.AnimState:PlayAnimation("taunt")
+		end,
+
+		timeline =
+		{
+			FrameEvent(1, function(inst)
+				inst.SoundEmitter:PlaySound("ms_sfx/ms_fx/screamer_rancor")
+			end),
+		},
+
+		events =
+		{
+			EventHandler("animover", function(inst)
+				if inst.AnimState:AnimDone() then
+          local random_angle = math.random(0, 30)
+					for i=1, 4 do
+            local x,y,z = inst.Transform:GetWorldPosition()
+            local rancor = SpawnPrefab("mountain_screamer_rancor")
+            rancor.Transform:SetPosition(x + 3*math.cos(math.rad(i*90 + random_angle)), 0, z - 3*math.sin(math.rad(i*90 + random_angle)))
+            rancor.Transform:SetRotation(i*90+random_angle)
+            rancor.target = inst.components.combat.target
+          end
+          inst.components.timer:StopTimer("small_special_cd")
+          inst.components.timer:StartTimer("small_special_cd", GetCDSmall(inst))
+          if not inst.components.timer:TimerExists("big_special_cd") then
+            inst.components.timer:StartTimer("big_special_cd", GetCDBig(inst))
+          end
+          inst.sg:GoToState("idle")
+				end
+			end),
+		},
+	},
+  State{
+		name = "cast_whirlpool",
+		tags = { "busy", "whirlpool", "donotdespawnpls"},
+
+		onenter = function(inst)
+			inst.components.locomotor:Stop()
+			inst.AnimState:PlayAnimation("disappear")
+      inst.components.timer:StopTimer("small_special_cd")
+		end,
+
+		timeline =
+		{
+			FrameEvent(1, function(inst)
+				inst.SoundEmitter:PlaySound("dontstarve/creatures/together/stalker/disappear")
+			end),
+		},
+
+  events =
+		{
+			EventHandler("animover", function(inst)
+				if inst.AnimState:AnimDone() then
+          local x,y,z = inst.Transform:GetWorldPosition()
+          local whirlpool = SpawnPrefab("mountain_screamer_whirlpool")
+          whirlpool.Transform:SetPosition(x, 0, z)
+          whirlpool.screamer = inst
+          whirlpool.screamer.devoured_inst = {}
+				end
+			end),
+      EventHandler("whirlpool_end", function(inst)
+        if inst.devoured_inst then
+          for k,v in pairs(inst.devoured_inst) do
+            if v ~= nil and v:IsValid() then
+              if v:HasTag("player") then
+                v:PushEvent("knockback", { knocker = inst, radius = TUNING.MOUNTAIN_SCREAMER.WHIRLPOOL_RADIUS, strengthmult = TUNING.MOUNTAIN_SCREAMER.WHIRLPOOL_KNOCKBACK, forcelanded = true })
+                inst.components.combat:DoAttack(v)
+              end
+            end
+          end
+        end
+        inst.sg:GoToState("reappear") 
+      end)
+		},
+	},
+  State{
+		name = "reappear",
+		tags = { "busy", "attack", "noattack", "nointerrupt"},
+
+		onenter = function(inst, data)
+			inst.components.locomotor:Stop()
+			inst.AnimState:PlayAnimation("appearbig")
+			inst.DynamicShadow:Enable(true)
+		end,
+
+		timeline =
+		{
+			FrameEvent(1, function(inst)
+				inst.SoundEmitter:PlaySound("ms_sfx/ms_fx/screamer_portal")
+			end),
+			FrameEvent(22, function(inst)
+				inst.sg:RemoveStateTag("noattack")
+				inst.components.health:SetInvincible(false)
+			end),
+		},
+
+		events =
+		{
+			EventHandler("animover", function(inst)
+				if inst.AnimState:AnimDone() then
+					inst.components.timer:StopTimer("big_special_cd")
+          inst.components.timer:StopTimer("ranged_retaliation_cd")
+          inst.components.timer:StartTimer("ranged_retaliation_cd", TUNING.MOUNTAIN_SCREAMER.RANGED_RETALIATION_WHIRLPOOL_CD)
+          inst.components.timer:StartTimer("big_special_cd", GetCDBig(inst))
+          inst.components.timer:ResumeTimer("small_special_cd")
+					inst.sg:GoToState("idle")
+				end
+			end),
+		},
+
+		onexit = function(inst)
+			inst.components.health:SetInvincible(false)
+		end,
+	},
+  
+  -- Tau: Logic is: run away from first to hits, then run into the screamer to dodge the third.
+  State{ 
+		name = "double_attack_attack",
+		tags = { "attack", "busy" },
+
+		onenter = function(inst, target)
+      inst.SoundEmitter:PlaySound("ms_sfx/ms_fx/screamer_attack")
+			inst.components.locomotor:Stop()
+			if target ~= nil and target:IsValid() then
+				inst.sg.statemem.target = target
+				inst:ForceFacePoint(target.Transform:GetWorldPosition())
+			end
+			inst.AnimState:PlayAnimation("atk_Rhand")
+      inst.components.locomotor:SetExternalSpeedMultiplier(inst, "tempdash", 1.2)
+      inst.components.locomotor:WalkForward(true)
+      inst.SoundEmitter:PlaySound("ms_sfx/ms_fx/screamer_whoosh")
+		end,
+
+		timeline =
+		{
+      FrameEvent(20, function(inst)
+        DoAttack(inst, 210)
+			end),
+		},
+
+		events =
+		{
+			EventHandler("animover", function(inst)
+				if inst.AnimState:AnimDone() then
+          inst.components.locomotor:SetExternalSpeedMultiplier(inst, "tempdash", 1)
+          inst.sg:GoToState("double_attack_dash", inst.sg.statemem.target)
+        end
+			end),
+		},
+	},
+  State{ 
+		name = "double_attack_dash",
+		tags = { "attack", "busy" },
+
+		onenter = function(inst, target)
+			inst.components.locomotor:Stop()
+			if target ~= nil and target:IsValid() then
+				inst.sg.statemem.target = target
+        inst:ForceFacePoint(target.Transform:GetWorldPosition())
+			end
+      inst.AnimState:HideSymbol("bone_block")
+      inst.AnimState:PlayAnimation("atk_Rhand")
+      inst.AnimState:SetTime(0.1)
+      inst.components.locomotor:WalkForward(true)
+      inst.SoundEmitter:PlaySound("ms_sfx/ms_fx/screamer_whoosh")
+      inst.components.locomotor:SetExternalSpeedMultiplier(inst, "tempdash", 10)
+      
+		end,
+
+		timeline =
+		{
+      FrameEvent(10, function(inst)
+        inst.components.locomotor:SetExternalSpeedMultiplier(inst, "tempdash", 3)  
+        DoAttack(inst, 90, true, true, true) 
+			end),
+      FrameEvent(20, function(inst)
+        inst.components.locomotor:SetExternalSpeedMultiplier(inst, "tempdash", 3)  
+        DoAttack(inst, 140, true, true, true) 
+			end),
+      FrameEvent(32, function(inst)
+        DoAttack(inst, 180, true, true, true)
+        inst.components.locomotor:SetExternalSpeedMultiplier(inst, "tempdash", 1)
+        inst.components.locomotor:Stop()    
+        inst.AnimState:SetDeltaTimeMultiplier(1)
+        inst.components.timer:StopTimer("small_special_cd")
+        inst.components.timer:StartTimer("small_special_cd", GetCDSmall(inst))
+        inst.components.combat:RestartCooldown()
+        if inst.grabtarget then
+          inst.sg:GoToState("grab_eat_pre")
+        else
+          inst.sg:GoToState("idle") 
+        end
+        
+			end)
+      
+		},
+	},
+  State{
+		name = "grab_eat_pre",
+		tags = { "busy", "eating", "donotdespawnpls"},
+
+		onenter = function(inst)
+			inst.components.locomotor:Stop()
+			inst.sg.statemem.target = inst.grabtarget
+			inst.AnimState:PlayAnimation("eat_pre")
+		end,
+
+		events =
+		{
+			EventHandler("animover", function(inst)
+				if inst.AnimState:AnimDone() then
+					inst.sg:GoToState("grab_eat_loop", inst.sg.statemem.ate)
+				end
+			end),
+		},
+	},
+
+	State{
+		name = "grab_eat_loop",
+		tags = { "busy", "donotdespawnpls"},
+
+		onenter = function(inst, ate)
+			inst.AnimState:PlayAnimation("eat_loop", true)
+		end,
+
+    timeline =
+		{
+      FrameEvent(2, function(inst)
+        if inst.grabtarget:IsValid() and not inst.grabtarget.components.health:IsDead() then
+          inst.SoundEmitter:PlaySound("ms_sfx/ms_fx/screamer_chew")
+          DoHurtSound(inst.grabtarget)
+          inst.grabtarget.components.health:DoDelta(-TUNING.MOUNTAIN_SCREAMER.DAMAGE_CHOMP)
+        end
+      end),
+      FrameEvent(53, function(inst)
+        if inst.grabtarget:IsValid() and not inst.grabtarget.components.health:IsDead() then 
+          inst.SoundEmitter:PlaySound("ms_sfx/ms_fx/screamer_chew")
+          DoHurtSound(inst.grabtarget)
+          inst.grabtarget.components.health:DoDelta(-TUNING.MOUNTAIN_SCREAMER.DAMAGE_CHOMP)
+        end
+      end),
+      FrameEvent(102, function(inst)
+        if inst.grabtarget:IsValid() and not inst.grabtarget.components.health:IsDead() then
+          inst.SoundEmitter:PlaySound("ms_sfx/ms_fx/screamer_chew")
+          inst.grabtarget.components.health:DoDelta(-TUNING.MOUNTAIN_SCREAMER.DAMAGE_CHOMP)
+          DoHurtSound(inst.grabtarget)      
+          inst.grabtarget.sg:GoToState("knockback", {
+            knocker = inst,
+            radius = TUNING.MOUNTAIN_SCREAMER.ATTACK_RANGE,
+            strengthmult = TUNING.MOUNTAIN_SCREAMER.ATTACK_KNOCKBACK_STRENGTH,
+            forcelanded = false,
+            })
+        end
+        inst.grabtarget = nil
+        inst.sg:GoToState("grab_eat_pst")
+        
+			end),
+    },
+  },
+	State{
+		name = "grab_eat_pst",
+		tags = { "busy", "donotdespawnpls"},
+		onenter = function(inst, ate)
+			inst.AnimState:PlayAnimation("eat_pst")
+		end,
+    events =
+		{
+			EventHandler("animover", function(inst)
+				if inst.AnimState:AnimDone() then
+					inst.sg:GoToState("idle")
+				end
+			end),
+		},
+  }
 }
 
 CommonStates.AddWalkStates(states)

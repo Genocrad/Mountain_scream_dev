@@ -1281,19 +1281,44 @@ TUNING.MOUNTAIN_GOLEM = {
 TUNING.MOUNTAIN_SCREAMER = {
 	HEALTH = 16000,               -- 最大生命
 	DAMAGE = 50,                  -- 右手近战伤害
+  DAMAGE_CHOMP = 20,           -- Damage for the eating. Smaller as it ingores armour)
 	ATTACK_PERIOD = 3,           -- 攻击间隔（秒）
-	ATTACK_RANGE = 4,            -- 近战攻击距离
+	ATTACK_RANGE = 5,            -- 近战攻击距离
 	HIT_RECOVERY = 1.5,          -- 受击硬直间隔（秒）
 	SPEED = 2,                 	 -- 基础移动速度
 	COMBAT_RANGE = 20,           -- 活动范围（距苏醒点）
 	DEAGGRO_DIST = 35,           -- 脱战距离
-	SCREAM_CD = 25,              -- 尖啸成功冷却（秒）
+  
+  WEIGHTS_SMALL = {
+    cast_rancor = 4,
+    double_attack_attack = 6,
+    blink_out = 4,
+  },
+  WEIGHTS_BIG = {
+    cast_whirlpool = 1,
+    scream_pre = 1,
+    cast_rancor = 1,
+  },
+  
+  BIG_SPECIAL_CD  = 25,        -- Cooldowns for our special attacks.
+  SMALL_SPECIAL_CD = 15,
+  BIG_SPECIAL_DEVIATION  = 5,        
+  SMALL_SPECIAL_DEVIATION = 5,
+  
+  RANGED_RETALIATION_CD = 4,
+  RANGED_RETALIATION_DEVIATION = 3,
+  RANGED_RETALIATION_WHIRLPOOL_CD = 6, -- Give some time to reaproach the screamer before he tp on you
+  RANGED_RETALIATION_RANGE = 16, --  How far away is our target when we activate tp
+  
+  SCREAM_CD = 25,              -- 尖啸成功冷却（秒）
 	SCREAM_CD_BREAK = 15,        -- 尖啸被打断冷却（秒）
 	SCREAM_DURATION = 20,        -- 尖啸持续施法时间（秒）
-	SCREAM_RANGE = 12,           -- 尖啸作用范围
+	SCREAM_DELAY_END = 4,        -- How much do we wait after no targets for scream are there?
+  SCREAM_RANGE = 12,           -- 尖啸作用范围
 	SCREAM_DRAIN_PERIOD = 0.5,   -- 持续跳伤间隔（秒）；20s ≈ 40 跳
 	
-	SCREAM_PLAYER_DAMAGE = 6,
+  
+  SCREAM_PLAYER_DAMAGE = 6,
 	SCREAM_CREATURE_DAMAGE = 12,
 	SCREAM_PLAYER_SANITY = 2,    -- 每跳理智
 	SCREAM_HEAL_RATIO = 1,       -- 回血 = 本跳实际伤害 × 比例
@@ -1302,12 +1327,13 @@ TUNING.MOUNTAIN_SCREAMER = {
 	SCREAM_FEAR_FADE_IN = 0.75,  -- 黑影占屏渐入时间（秒）；满屏后才锁操作
 	SCREAM_PANIC_TIME = 1.25,    -- 生物恐慌刷新时长（秒，在圈内每跳刷新）
 	SCREAM_BLOOD_FX_SPEED = 0.5, -- ms_blood_fx idle 播放速度
-	-- 吸血飞行粒子 ms_blooding_fx：受害者 → Screamer，land 时回血
+  	-- 吸血飞行粒子 ms_blooding_fx：受害者 → Screamer，land 时回血
 	SCREAM_BLOODING_FX_SPEED_MIN = 8,
 	SCREAM_BLOODING_FX_SPEED_MAX = 10,
 	SCREAM_BLOODING_FX_SPAWN_Y = 1.2,
 	SCREAM_BLOODING_FX_LAND_Y = 2.5,
 	SCREAM_BLOODING_FX_HIT_DIST = 0.75,
+  
 	SCREAM_FACE_HIT_HEIGHT = 3,  -- 铝器砸脸投掷瞄准高度（相对地面）
 	SCREAM_FACE_THROW_DIST = 12, -- 右键砸脸最大距离
 
@@ -1315,24 +1341,39 @@ TUNING.MOUNTAIN_SCREAMER = {
 	BLINK_RANGE = 18,            -- 瞬移技能最大锁定距离
 	BLINK_MIN_DIST = 8,          -- 目标太近不使用瞬移
 	BLINK_DAMAGE = 50,           -- 闪烁出现命中伤害
-	BLINK_HIT_RADIUS = 3,        -- 落地冲击/击飞半径（官方：hit 半径兼作 knockback radius）
+	BLINK_HIT_RADIUS = 4,        -- 落地冲击/击飞半径（官方：hit 半径兼作 knockback radius）
 	BLINK_KNOCKBACK_STRENGTH = 1.5, -- 击飞力度（重甲/heavybody 用 1）
 	BLINK_WARNING_SCALE = 1.8,   -- warningshadow 缩放
 
-	-- 近战击飞：AOE 半径用 ATTACK_RANGE
+  RANCOR_AMOUNT = 4,
+  RANCOR_SPEED_LAUNCH = 4,
+  RANCOR_SPEED_START = 5,
+  RANCOR_DAMAGE = 40,
+  
+  WHIRLPOOL_RADIUS = 2,
+  WHIRLPOOL_DAMAGE = 100,
+  WHIRLPOOL_KNOCKBACK = 2,
+  WHIRLPOOL_HEAL_NONPLAYER = 30,
+  WHIRLPOOL_HEAL_PLAYER = 100,
+  WHIRLPOOL_PROJ = 40,
+  WHIRLPOOL_PULL_RANGE = 20,
+  WHIRLPOOL_BONE_IN_WAVE = 3,
+  WHIRLPOOL_BONE_WAVES = 8,
+  WHIRLPOOL_MAX = 5,
+	-- 近战击飞：AOE 半径用 ATTACK_RANGE；strengthmult 同官方 PushEvent("knockback")
 	ATTACK_KNOCKBACK_STRENGTH = 1.25,
-	-- 攻击/闪烁落地摧毁建筑
+	-- 攻击/闪烁落地摧毁建筑（熊獾式 Destroy）；半径相对自身朝前偏移
 	DESTROY_WORK_DIST = 1.5,
 	DESTROY_WORK_RADIUS = 3,
 
-	-- 夜间注视遭遇
+	-- 夜间注视遭遇（刷出候选仍用 IsInstInMSOverWorld；追击改软校验，掉落换层可跟上）
 	STALK_SPAWN_CHANCE = 0.9,    -- 入夜基础出现概率，默认20%，测试阶段调的比较大
 	STALK_SPAWN_DELAY_MIN = 5,   -- 入夜后刷出延迟下限（秒）
 	STALK_SPAWN_DELAY_MAX = 10,  -- 入夜后刷出延迟上限（秒）
 	STALK_SPAWN_DIST_MIN = 6,    -- 刷出/跟随落点距玩家最小
 	STALK_SPAWN_DIST_MAX = 10,   -- 刷出/跟随落点距玩家最大
 	STALK_FOLLOW_DIST = 15,      -- 同层走出该距离后 disappear→appear 跟上
-	-- 跨层/坠落追击
+	-- 跨层/坠落追击（参考 falcon：level nil 中途粘住，落地后再瞬移）
 	CROSS_FLOOR_DIST = 45,       -- 与目标水平距离超过此值视为换层/坠落，触发瞬移追击
 	LOST_TARGET_TIME = 12,       -- 目标彻底离开山域多久后放弃（秒）
 

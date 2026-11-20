@@ -54,11 +54,13 @@ Assets = {
 	Asset("ANIM", "anim/ms_tree_rock_normal.zip"),
 	Asset("ANIM", "anim/player_wx78_actions.zip"), -- tornado sorbet transform
 	Asset("ANIM", "anim/player_actions_ms_umbrella_glide.zip"),
+  Asset("ANIM", "anim/player_incapacitated.zip"), -- For grab attack of ms
 	Asset("SHADER", "shaders/cave_vertical_shader.ksh"),
 	Asset("SHADER", "shaders/mountain_vertical_shader.ksh"),
 	Asset("SHADER", "shaders/clickable_vertical_shader.ksh"),
 	Asset("SHADER", "shaders/rotation_vertical_shader.ksh"),
 	Asset("SHADER", "shaders/map_bounds_mask.ksh"),
+  Asset("IMAGE", "images/rancor_smoke.tex"),
 }
 
 --------------------------------------------------------

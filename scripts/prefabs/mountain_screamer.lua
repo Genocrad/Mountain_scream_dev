@@ -470,7 +470,7 @@ local function OnNewTarget(inst, data)
 end
 
 local function OnDroppedTarget(inst, data)
-	if inst._stalking or not inst._engaged or inst.components.health:IsDead() then
+	if inst._stalking or not inst._engaged or inst.components.health:IsDead() or inst.sg:HasStateTag("donotdespawnpls") then
 		return
 	end
 
@@ -660,7 +660,7 @@ local function fn()
 	inst.AnimState:SetBank("mountain_screamer")
 	inst.AnimState:SetBuild("mountain_screamer")
 	inst.AnimState:PlayAnimation("idle", true)
-
+  
 	inst:SetPhysicsRadiusOverride(1.2)
 	MakeGiantCharacterPhysics(inst, 500, inst.physicsradiusoverride)
 
@@ -677,6 +677,7 @@ local function fn()
 	inst._wants_victory_laugh = false
 	inst._pursue_can_sleep = true
 	inst.recentlycharged = {}
+  inst.ranged_detect = TUNING.MOUNTAIN_SCREAMER.RANGED_RETALIATION_RANGE 
 	inst.Physics:SetCollisionCallback(OnCollide)
 
 	inst:AddComponent("inspectable")
@@ -700,7 +701,10 @@ local function fn()
 	inst.components.combat.battlecryenabled = false
 
 	inst:AddComponent("timer")
-
+  -- 
+  inst.components.timer:StartTimer("small_special_cd",  TUNING.MOUNTAIN_SCREAMER.BIG_SPECIAL_CD + math.random()*TUNING.MOUNTAIN_SCREAMER.SMALL_SPECIAL_DEVIATION)
+  inst.components.timer:StartTimer("big_special_cd",  TUNING.MOUNTAIN_SCREAMER.BIG_SPECIAL_CD + math.random()*TUNING.MOUNTAIN_SCREAMER.BIG_SPECIAL_DEVIATION)
+  
 	inst:AddComponent("lootdropper")
 	inst.components.lootdropper:SetChanceLootTable("mountain_screamer")
 
