@@ -375,6 +375,8 @@ mod_protect_TileManager = true
 -- Luigi: Idk where to put this otherwise 
 -- Values are for contentspawner component
 
+-- Ardent: CONSTANT maybe?
+
 TURF_NUMBER_TO_NAME = {
   [WORLD_TILES.ROCKY] = "rocky",
   [WORLD_TILES.MS_MOUNTAIN_LOW] = "ms_mountain_low",
