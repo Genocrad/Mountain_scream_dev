@@ -38,6 +38,7 @@ modimport("postinit/components/moisture")
 modimport("postinit/components/sleepingbaguser")
 modimport("postinit/components/workable")
 modimport("postinit/components/explosive")
+modimport("postinit/components/quaker")
 
 modimport("postinit/widgets/mapwidget")
 modimport("postinit/widgets/uiclock")

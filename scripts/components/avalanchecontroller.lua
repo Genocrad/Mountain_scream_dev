@@ -31,7 +31,12 @@ function AvalancheController:OnUpdate()
         if ents[1] then
           local x1,y1,z1 = ents[1].Transform:GetWorldPosition()
           local dirx, dirz = x - x1, z - z1
-          self:SpawnAvalancheAtPoint(k, x1 + (dirx)/math.abs(dirx) * self.dist_between, z1 + (dirz)/math.abs(dirz) * self.dist_between, TUNING.MS_LEVEL_AVALANCHE[level].size, (dirx)/(self.dist_between * math.max(math.abs(dirx), math.abs(dirz))), (dirz)/(2*math.max(math.abs(dirx), math.abs(dirz))))
+          
+          -- Give players a few moments to run away
+          self.inst:DoTaskInTime(1, function(inst)
+            self:SpawnAvalancheAtPoint(k, x1 + (dirx)/math.abs(dirx) * self.dist_between, z1 + (dirz)/math.abs(dirz) * self.dist_between, TUNING.MS_LEVEL_AVALANCHE[level].size, (dirx)/(self.dist_between * math.max(math.abs(dirx), math.abs(dirz))), (dirz)/(2*math.max(math.abs(dirx), math.abs(dirz))))
+          end)
+          v._avalancherumble:set(true)
           self.avalanche_counter = - math.random(0, 3000)
         end
       end
@@ -67,8 +72,6 @@ function AvalancheController:SpawnWave(playernmb, srs_x,srs_z, amount, wave_amou
       return a[1] < b[1]
     end)
   
-    
-  
   -- choose first options.
     for i=1, wave_amount do
       if self.avalance_grid[playernmb][weighted_spaces[i][2]][weighted_spaces[i][3]] == 0 then
@@ -92,7 +95,6 @@ function AvalancheController:SpawnWave(playernmb, srs_x,srs_z, amount, wave_amou
         
         for j=4, hyp, 4 do
           local fx_x, fx_y, fx_z = srs_x +  self.dist_between * weighted_spaces[i][2]*(j / hyp), math.abs(weighted_spaces[i][2]*(j / hyp))/4, srs_z + self.dist_between *  weighted_spaces[i][3]*(j / hyp)  
-          print("timefx", 0.2 * weighted_spaces[i][1]*(j / hyp))
           pile:DoTaskInTime(0.2 * weighted_spaces[i][1]*(j / hyp), function(inst, data) local fx_x, fx_y, fx_z = data[1], data[2], data[3] inst:SpawnFxAtPoint(fx_x, fx_y, fx_z) end, {fx_x, fx_y, fx_z})
         end
         
@@ -107,6 +109,9 @@ function AvalancheController:SpawnWave(playernmb, srs_x,srs_z, amount, wave_amou
     if wave_amount>amount then
       self.wavetask[playernmb]:Cancel()
       self.fx_wavetask[playernmb]:Cancel()
+      for k,v in pairs(AllPlayers) do
+        v._avalancherumble:set(false)
+      end
     end
 
 end

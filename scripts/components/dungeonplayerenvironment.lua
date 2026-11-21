@@ -21,7 +21,8 @@ local DungeonPlayerEnvironment = Class(function(self, inst)
     self._ondoor = function() self:UpdateCameraTarget() end
     self._ondeactivated = function() self:DeactivateClient() end
     self._oncameraupdate = function() self:UpdateCameraClouds() end
-
+    self._onavalanche = function() self:OnAvalanche() end
+  
     inst:ListenForEvent("mslevelchanged", self._onlevelchanged)
     if TheWorld.ismastersim then
         inst:WatchWorldState("cavephase", self._onphase)
@@ -31,6 +32,7 @@ local DungeonPlayerEnvironment = Class(function(self, inst)
         inst:ListenForEvent("playeractivated", self._onrefresh)
         inst:ListenForEvent("playerdeactivated", self._ondeactivated)
         inst:ListenForEvent("isusingmsdoordirty", self._ondoor)
+        inst:ListenForEvent("onavalancherumbledirty", self._onavalanche)
     end
     self._inittask = inst:DoTaskInTime(0, function()
         self._inittask = nil
@@ -188,6 +190,22 @@ function DungeonPlayerEnvironment:SetMountainAnnouncements(enabled)
     end
 end
 
+function DungeonPlayerEnvironment:OnAvalanche()
+  if TheNet:IsDedicated() or self.inst ~= ThePlayer or self._clientinactive or not IsInstInMSOverWorld(self.inst) then
+    return
+  end
+  if self.inst._avalancherumble:value() then
+    TheWorld.SoundEmitter:PlaySound("dontstarve/cave/earthquake", "avalanche")
+    self.inst._shake_task = self.inst:DoPeriodicTask(0.5, function(inst) inst:ShakeCamera(CAMERASHAKE.FULL, 0.5, 0.02, .75) end)
+  else
+    TheWorld.SoundEmitter:KillSound("avalanche")
+    if self.inst._shake_task then
+      self.inst._shake_task:Cancel()
+      self.inst._shake_task = nil
+    end
+  end
+end
+
 function DungeonPlayerEnvironment:ApplyClient()
     if TheNet:IsDedicated() or self.inst ~= ThePlayer or self._clientinactive then
         return
@@ -252,6 +270,7 @@ function DungeonPlayerEnvironment:OnRemoveFromEntity()
     if self._inittask ~= nil then
         self._inittask:Cancel()
     end
+    self.inst:RemoveEventCallback("onavalancherumbledirty", self._onavalanche)
     self.inst:RemoveEventCallback("mslevelchanged", self._onlevelchanged)
     self.inst:RemoveEventCallback("setowner", self._onrefresh)
     self.inst:RemoveEventCallback("playeractivated", self._onrefresh)

@@ -14,7 +14,8 @@ AddPlayerPostInit(function(inst)
 
     inst._isusingmsdoor = net_ushortint(inst.GUID, "inst._isusingmsdoor", "isusingmsdoordirty")
     inst._isusingmsdoor:set(2)
-
+    inst._avalancherumble = net_bool(inst.GUID, "inst._avalancherumble", "onavalancherumbledirty")
+    inst._avalancherumble:set(false)
     inst:AddComponent("dungeonplayertracker")
     if TheWorld:HasTag("mountain_scream_dungeons") then
         inst:AddComponent("dungeonplayerenvironment")
